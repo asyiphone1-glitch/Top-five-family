@@ -149,6 +149,12 @@ input{font:inherit;color:var(--ink)}
       <button id="pinClear" class="btn quiet" type="button">הסרת הקוד</button>
       <p id="setMsg" class="msg" role="status"></p>
     </div>
+    <div class="card">
+      <h3>הקוד המשפחתי</h3>
+      <p class="date">צריך אותו כדי לחבר טלפון חדש.</p>
+      <button id="codeShow" class="btn quiet" type="button">הצגת הקוד</button>
+      <p id="codeOut" class="msg ok" dir="ltr" style="font-size:1.3rem;user-select:all;-webkit-user-select:all" hidden></p>
+    </div>
     <button id="btnSwitch" class="btn quiet" type="button">החלפת פרופיל</button>
     <button id="btnForget" class="btn danger" type="button">ניתוק הטלפון הזה מהמשפחה</button>
     <p class="hint">גרסה: שלב 1, בדיקת חיבור וסנכרון. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
@@ -430,6 +436,7 @@ $('pinOk').onclick=tryPin;
 $('pinIn').addEventListener('keydown',e=>{if(e.key==='Enter')tryPin();});
 ['today','home','set'].forEach(k=>{$('nv-'+k).onclick=()=>tab(k);});
 $('btnSwitch').onclick=()=>showWho();
+$('codeShow').onclick=()=>{const o=$('codeOut');o.textContent=code;o.hidden=!o.hidden;$('codeShow').textContent=o.hidden?'הצגת הקוד':'הסתרת הקוד';};
 $('pinSave').onclick=async()=>{
   const v=$('newPin').value;
   if(!/^\d{4}$/.test(v)){say($('setMsg'),'הקוד חייב להיות בן 4 ספרות.');return;}
