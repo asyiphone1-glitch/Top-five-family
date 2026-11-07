@@ -2,11 +2,11 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8">
-<title>Top Five Family</title>
+<title>yaya</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Top Five">
+<meta name="apple-mobile-web-app-title" content="yaya">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#2F5BFF">
 <link rel="manifest" href="manifest.webmanifest">
@@ -94,6 +94,34 @@ input{font:inherit;color:var(--ink)}
 .nav button{flex:1;min-height:56px;border:0;border-radius:14px;background:transparent;color:var(--mute);font:700 .8rem var(--body);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}
 .nav button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .nav button.on{color:var(--accent);background:var(--soft)}
+.wknav{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:6px 0 10px}
+.wknav b{font:700 1.05rem var(--display);text-align:center;flex:1}
+.btn.sm{min-height:44px;margin:0;width:auto;padding:8px 14px;font-size:.95rem}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px 14px;margin-top:12px}
+.day.now{border:2px solid var(--accent)}
+.day h3{margin:0 0 4px;font:700 1.05rem var(--display)}
+.slot{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;padding:10px 0;border-top:1px solid var(--line);align-items:center}
+.slot:first-of-type{border-top:0}
+.slot .tm{font-weight:700;min-width:5.2em}
+.slot .tm small{display:block;font-weight:400;color:var(--mute);font-size:.78rem;line-height:1.2}
+.slot .who2{font-weight:700}
+.slot .who2.me{color:var(--accent)}
+.slot .st{color:var(--mute);font-size:.9rem}
+.slot .st.ok{color:var(--good);font-weight:700}
+.slot .acts{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+.slot.done .who2{text-decoration:line-through;color:var(--mute)}
+.swform{grid-column:1/-1;display:grid;gap:8px;background:var(--soft);border-radius:12px;padding:10px}
+.swform select{font:inherit;color:var(--ink);background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:10px;width:100%}
+.cnts{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.cnt{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:.88rem}
+.cnt b{color:var(--accent)}
+.note{background:var(--warn-soft);border-radius:14px;padding:12px 14px;margin-top:12px}
+.note.ok{background:var(--soft)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px}
+.chip{min-height:44px;padding:6px 14px;border-radius:999px;border:2px solid var(--line);background:transparent;color:var(--ink);font:600 .95rem var(--body);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.chip:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.qsel{font:inherit;color:var(--ink);background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:10px;min-width:5em}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -101,7 +129,7 @@ input{font:inherit;color:var(--ink)}
 <div id="net" class="net" data-s="connecting" hidden><i></i><span>מתחבר...</span></div>
 
 <section id="s-setup" class="screen" hidden>
-  <h1>Top Five Family</h1>
+  <h1>yaya</h1>
   <p class="lead">הקוד המשפחתי מחבר את כל הטלפונים של הבית. מקלידים אותו פעם אחת בכל טלפון.</p>
   <label for="code">קוד משפחתי</label>
   <input id="code" class="field" dir="ltr" autocapitalize="none" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="למשל: dog-family-2026">
@@ -134,12 +162,23 @@ input{font:inherit;color:var(--ink)}
     <ul id="tasks" class="tasks"></ul>
   </div>
 
+  <div id="tab-dog" hidden>
+    <div id="dogBox"></div>
+  </div>
+
   <div id="tab-home" hidden>
     <div class="card"><h3>מי מחובר עכשיו</h3><div id="presence"></div></div>
-    <div class="soon"><b>בשלב הבא:</b> תורנויות הכלבה, כפתור "הוצאתי" והחלפות בין אחיות.</div>
+    <div class="soon"><b>בשלב הבא:</b> היום שלי עם סדר עדיפויות ושעות, תזכורות וסיכום שבועי.</div>
   </div>
 
   <div id="tab-set" hidden>
+    <div class="card">
+      <h3>השאלון שלי לתורנויות הכלבה</h3>
+      <p class="date">השיבוץ השבועי נבנה לפי התשובות כאן.</p>
+      <div id="quiz"></div>
+      <button id="quizSave" class="btn pri" type="button">שמירת השאלון</button>
+      <p id="quizMsg" class="msg" role="status"></p>
+    </div>
     <div class="card">
       <h3>קוד אישי לפרופיל</h3>
       <p class="date" id="pinState"></p>
@@ -162,6 +201,7 @@ input{font:inherit;color:var(--ink)}
 
   <nav class="nav" aria-label="ניווט">
     <button id="nv-today" type="button"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>היום שלי</button>
+    <button id="nv-dog" type="button"><svg viewBox="0 0 24 24"><path d="M4 9l2-4 3 2h6l3-2 2 4v4a8 8 0 0 1-16 0z"/><path d="M9.5 12.5h.01M14.5 12.5h.01M10.5 16c1 .8 2 .8 3 0"/></svg>הכלבה</button>
     <button id="nv-home" type="button"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>הבית</button>
     <button id="nv-set" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>הגדרות</button>
   </nav>
@@ -170,7 +210,7 @@ input{font:inherit;color:var(--ink)}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {getAuth,onAuthStateChanged,signInAnonymously} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,setDoc,getDocFromServer,onSnapshot}
+import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,setDoc,deleteDoc,deleteField,runTransaction,getDocFromServer,onSnapshot}
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const firebaseConfig={
@@ -314,7 +354,13 @@ function pick(pid){
     show('s-pin');setTimeout(()=>$('pinIn').focus(),50);
   }else enter(pid);
 }
-function enter(pid){me=pid;LS.set('tff.me',pid);openMain();}
+function enter(pid){
+  me=pid;LS.set('tff.me',pid);qz=null;openMain();
+  if(!(people[pid]||{}).pin&&!LS.get('tff.pinask.'+pid)){
+    LS.set('tff.pinask.'+pid,'1');
+    tab('set');say($('setMsg'),'מומלץ להגדיר כאן קוד אישי בן 4 ספרות, כדי שאחרים לא ייכנסו לפרופיל שלך.',true);
+  }
+}
 
 /* ---------- היום שלי ---------- */
 function myState(){
@@ -390,15 +436,18 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden){beat();pa
 
 /* ---------- מסך ראשי ---------- */
 function tab(n){
-  ['today','home','set'].forEach(k=>{
+  ['today','dog','home','set'].forEach(k=>{
     $('tab-'+k).hidden=(k!==n);
     $('nv-'+k).classList.toggle('on',k===n);
   });
   if(n==='home')paintHome();
   if(n==='set')paintSettings();
+  if(n==='dog')paintDog();
 }
 function paintSettings(){
   $('pinState').textContent=(people[me]||{}).pin?'לפרופיל שלך מוגדר קוד אישי.':'אין קוד אישי לפרופיל שלך.';
+  if(!qz)qz=loadPrefs();
+  paintQuiz();
 }
 function openMain(){
   const p=byId[me];
@@ -408,18 +457,329 @@ function openMain(){
   $('hello').textContent='היי '+p.name;
   $('dateTxt').textContent=new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
   show('s-main');tab('today');renderTasks();startBeat();
+  weekStart=sunday(new Date());subWeek();subSwaps();
   clearInterval(homeT);homeT=setInterval(()=>{if(!$('tab-home').hidden)paintHome();},30000);
 }
 function onPeople(snap){
   if(!$('s-who').hidden)paintWho();
   if(!me||$('s-main').hidden)return;
-  paintHome();paintSettings();
+  paintHome();
+  if(!$('tab-dog').hidden)paintDog();
   const mine=snap.docs.find(d=>d.id===me);
   if(!mine||mine.metadata.hasPendingWrites||dirty)return;
   const a=document.activeElement;
   if(a&&a.tagName==='INPUT')return;
   const s=myState();
   if(JSON.stringify(s)!==JSON.stringify(work)){work=s;renderTasks();}
+}
+
+
+/* ---------- תורנויות הכלבה ---------- */
+const SLOTS=[
+  {k:'m',n:'בוקר',t:'לפני בית הספר'},
+  {k:'s',n:'אחרי בית הספר',t:'כשחוזרים'},
+  {k:'a',n:'17:30',t:''},
+  {k:'b',n:'20:00',t:''},
+  {k:'n',n:'22:00',t:''}
+];
+const DAYN=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+const hasSlot=(d,k)=>k!=='s'||d<=4;
+const slotName=k=>SLOTS.find(x=>x.k===k).n;
+const isAdult=id=>id==='dad'||id==='mom';
+function sunday(d0){const d=new Date(d0.getFullYear(),d0.getMonth(),d0.getDate());d.setDate(d.getDate()-d.getDay());return d;}
+function fmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function parseKey(w){const a=w.split('-').map(Number);return new Date(a[0],a[1]-1,a[2]);}
+function addDays(d,n){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()+n);return x;}
+function slotText(week,key){
+  const a=key.split('_');const d=addDays(parseKey(week),+a[0]);
+  return 'יום '+DAYN[+a[0]]+' '+d.getDate()+'/'+(d.getMonth()+1)+', '+slotName(a[1]);
+}
+const wkRef=w=>doc(db,'families',code,'weeks',w);
+let weekStart=sunday(new Date()),wk={slots:{},done:{}},wkUnsub=null,swaps=[],swUnsub=null,draft=null,confirmGen=false,dogMsg='',qz=null;
+
+function subWeek(){
+  if(wkUnsub)wkUnsub();
+  wk={slots:{},done:{}};
+  wkUnsub=onSnapshot(wkRef(fmt(weekStart)),s=>{
+    const d=s.exists()?s.data():{};
+    wk={slots:d.slots||{},done:d.done||{}};
+    paintDog();
+  },()=>{});
+  paintDog();
+}
+function subSwaps(){
+  if(swUnsub)swUnsub();
+  swUnsub=onSnapshot(collection(db,'families',code,'swaps'),snap=>{
+    swaps=snap.docs.map(d=>Object.assign({id:d.id},d.data()));
+    paintDog();
+  },()=>{});
+}
+
+/* שאלון והעדפות */
+function loadPrefs(){
+  const p=(people[me]||{}).prefs||{};
+  return {hard:(p.hard||[]).slice(),like:(p.like||[]).slice(),avoid:(p.avoid||[]).slice(),
+          max:p.max||(me==='dad'?10:me==='mom'?2:5)};
+}
+function chipRow(list,arr,label){
+  const row=h('div','chips');
+  list.forEach(o=>{
+    const b=h('button','chip',o.n);b.type='button';
+    b.setAttribute('aria-pressed',arr.includes(o.v)?'true':'false');
+    b.onclick=()=>{
+      const i=arr.indexOf(o.v);
+      if(i>=0)arr.splice(i,1);else arr.push(o.v);
+      b.setAttribute('aria-pressed',arr.includes(o.v)?'true':'false');
+    };
+    row.append(b);
+  });
+  row.setAttribute('role','group');row.setAttribute('aria-label',label);
+  return row;
+}
+function paintQuiz(){
+  const q=$('quiz');q.innerHTML='';
+  const days=DAYN.map((n,i)=>({n:n,v:i}));
+  const sl=SLOTS.map(x=>({n:x.n==='בוקר'||x.n==='אחרי בית הספר'?x.n:'שעה '+x.n,v:x.k}));
+  const add=(t,node)=>{const l=h('label',null,t);q.append(l,node);};
+  add('באילו ימים יש לי חוגים או שקשה לי?',chipRow(days,qz.hard,'ימים קשים'));
+  add('באילו שעות נוח לי להוציא?',chipRow(sl,qz.like,'שעות נוחות'));
+  add('באילו שעות הכי קשה לי?',chipRow(sl,qz.avoid,'שעות קשות'));
+  const l=h('label',null,'כמה תורנויות בשבוע אני מוכן/ה לקחת, לכל היותר?');l.setAttribute('for','qmax');
+  const sel=h('select','qsel');sel.id='qmax';
+  for(let i=1;i<=12;i++){const o=h('option',null,String(i));o.value=i;if(i===qz.max)o.selected=true;sel.append(o);}
+  sel.onchange=()=>{qz.max=+sel.value;};
+  q.append(l,sel);
+}
+$('quizSave').onclick=()=>{
+  if(!qz)return;
+  qz.hard.sort();qz.like.sort();qz.avoid.sort();
+  setDoc(pdoc(me),{prefs:qz,prefsDone:true},{merge:true})
+    .then(()=>say($('quizMsg'),'השאלון נשמר.',true))
+    .catch(()=>say($('quizMsg'),'השמירה נכשלה. בדקו חיבור.'));
+};
+
+/* אלגוריתם השיבוץ */
+function planWeek(weekNo){
+  const prefs={};
+  PEOPLE.forEach(p=>{
+    const r=(people[p.id]||{}).prefs||{};
+    prefs[p.id]={hard:r.hard||[],like:r.like||[],avoid:r.avoid||[],max:r.max||(p.id==='dad'?10:p.id==='mom'?2:5)};
+  });
+  const rot=((weekNo%7)+7)%7;
+  const asg={},load={};PEOPLE.forEach(p=>load[p.id]=0);
+  const byDay={};
+  const give=(key,id)=>{asg[key]=id;load[id]++;const d=key.split('_')[0];(byDay[d]=byDay[d]||{})[id]=(byDay[d][id]||0)+1;};
+  /* אמא: פעמיים בשבוע, בימים שאינם קשים לה */
+  const mp=prefs.mom;
+  const mslot=['a','b','s'].find(k=>mp.like.includes(k))||'a';
+  const days=[0,1,2,3,4].map(i=>(i+rot)%5).filter(d=>!mp.hard.includes(d));
+  const pick=[];
+  for(const d of days){if(pick.length<mp.max&&pick.every(x=>Math.abs(x-d)>1))pick.push(d);}
+  for(const d of days){if(pick.length<mp.max&&!pick.includes(d))pick.push(d);}
+  pick.slice(0,2).forEach(d=>give(d+'_'+mslot,'mom'));
+  /* שאר המשבצות */
+  const ids=PEOPLE.map(p=>p.id).filter(i=>i!=='mom');
+  const dayOrder=[0,1,2,3,4,5,6].map(i=>(i+rot)%7);
+  const tasks=[];
+  for(const d of dayOrder){tasks.push([d,'n'],[d,'m']);}
+  for(const k of ['b','a','s']){for(const d of dayOrder)tasks.push([d,k]);}
+  {
+    for(const [d,k] of tasks){
+      const key=d+'_'+k;
+      if(!hasSlot(d,k)||asg[key])continue;
+      let best=null,bc=1e9;
+      ids.forEach((id,ix)=>{
+        const pr=prefs[id];
+        let c=load[id]*(id==='dad'&&(k==='m'||k==='n')?2:10);
+        if(pr.hard.includes(d))c+=100;
+        if(pr.avoid.includes(k))c+=60;
+        if(pr.like.includes(k))c-=12;
+        c+=((byDay[d]||{})[id]||0)*18;
+        if(asg[(d-1)+'_'+k]===id)c+=4;
+        if(id==='dad'&&k!=='m'&&k!=='n')c+=80;
+        if(id!=='dad'&&(k==='m'||k==='n'))c+=20;
+        if(load[id]>=pr.max)c+=200;
+        c+=((ix+rot)%ids.length)*0.1;
+        if(c<bc){bc=c;best=id;}
+      });
+      give(key,best);
+    }
+  }
+  return asg;
+}
+function weekNo(d){return Math.floor(d.getTime()/604800000);}
+
+/* תצוגה */
+function h(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;}
+function genderTake(){return me==='dad'?'אני לוקח':'אני לוקחת';}
+function paintDog(){
+  const box=$('dogBox');if(!box)return;
+  box.innerHTML='';
+  if(!me||!code)return;
+  const wkey=fmt(weekStart);
+  const cur=fmt(sunday(new Date()));
+
+  /* ניווט שבועות */
+  const nav=h('div','wknav');
+  const bn=h('button','btn quiet sm','שבוע הבא');bn.type='button';
+  bn.onclick=()=>{weekStart=addDays(weekStart,7);draft=null;confirmGen=false;subWeek();};
+  const bp=h('button','btn quiet sm','שבוע קודם');bp.type='button';
+  bp.onclick=()=>{weekStart=addDays(weekStart,-7);draft=null;confirmGen=false;subWeek();};
+  const e=addDays(weekStart,6);
+  const lab=h('b',null,(wkey===cur?'השבוע: ':'שבוע ')+weekStart.getDate()+'/'+(weekStart.getMonth()+1)+' עד '+e.getDate()+'/'+(e.getMonth()+1));
+  nav.append(bp,lab,bn);box.append(nav);
+  if(wkey!==cur){const g=h('button','btn quiet sm','חזרה להשבוע');g.type='button';g.style.marginBottom='8px';
+    g.onclick=()=>{weekStart=sunday(new Date());draft=null;subWeek();};box.append(g);}
+
+  if(dogMsg){const m=h('div','note ok',dogMsg);m.setAttribute('role','status');box.append(m);}
+
+  /* שאלון חסר */
+  if(!(people[me]||{}).prefsDone){
+    const n=h('div','note');
+    n.append(h('div',null,'עוד לא מילאת את השאלון. בלעדיו השיבוץ לא יודע מה קשה לך.'));
+    const b=h('button','btn pri sm','מילוי השאלון');b.type='button';b.style.marginTop='8px';
+    b.onclick=()=>tab('set');n.append(b);box.append(n);
+  }
+
+  /* בקשות החלפה אלי */
+  swaps.filter(s=>s.to===me&&s.status==='pending').forEach(s=>{
+    const n=h('div','note');
+    let t=byId[s.from].name+' מבקש/ת להעביר אליך את '+slotText(s.week,s.slot)+'.';
+    if(s.take)t+=' בתמורה לתורנות שלך ב'+slotText(s.week,s.take)+'.';
+    n.append(h('div',null,t));
+    const row=h('div');row.style.cssText='display:flex;gap:8px;margin-top:8px;flex-wrap:wrap';
+    const ok=h('button','btn pri sm','אישור');ok.type='button';
+    ok.onclick=()=>respondSwap(s,true);
+    const no=h('button','btn quiet sm','דחייה');no.type='button';
+    no.onclick=()=>respondSwap(s,false);
+    row.append(ok,no);n.append(row);box.append(n);
+  });
+  /* תשובות לבקשות שלי */
+  swaps.filter(s=>s.from===me&&s.status!=='pending').forEach(s=>{
+    const txt={approved:'אושרה',declined:'נדחתה',void:'בוטלה כי השיבוץ השתנה'}[s.status]||'טופלה';
+    const n=h('div','note ok',byId[s.to].name+': הבקשה להעברת '+slotText(s.week,s.slot)+' '+txt+'.');
+    const b=h('button','btn quiet sm','הבנתי');b.type='button';b.style.cssText='margin-top:8px;display:block';
+    b.onclick=()=>deleteDoc(doc(db,'families',code,'swaps',s.id)).catch(()=>{});
+    n.append(b);box.append(n);
+  });
+
+  const has=Object.keys(wk.slots).length>0;
+
+  /* מונים */
+  if(has){
+    const c=h('div','cnts');
+    PEOPLE.forEach(p=>{
+      const a=Object.keys(wk.slots).filter(k=>wk.slots[k]===p.id).length;
+      const d=Object.keys(wk.done).filter(k=>wk.done[k]&&wk.done[k].by===p.id).length;
+      const x=h('span','cnt');x.append(p.name+' ');const bb=h('b',null,a+'/'+d);x.append(bb);
+      x.title='תורנויות / הוצאות';c.append(x);
+    });
+    box.append(c);
+    box.append(h('p','hint','המספרים: כמה תורנויות שובצו / כמה הוצאו בפועל.'));
+  }
+
+  /* שיבוץ */
+  if(isAdult(me)){
+    const missing=PEOPLE.filter(p=>!(people[p.id]||{}).prefsDone).map(p=>p.name);
+    if(!has||confirmGen||true){
+      const g=h('button',has?'btn quiet':'btn pri',confirmGen?'ללחוץ שוב לאישור: שיבוץ מחדש ימחק סימוני הוצאה':(has?'שיבוץ מחדש של השבוע':'שיבוץ השבוע לפי השאלונים'));
+      g.type='button';
+      g.onclick=()=>{
+        if(has&&!confirmGen){confirmGen=true;paintDog();return;}
+        confirmGen=false;
+        const asg=planWeek(weekNo(weekStart));
+        setDoc(wkRef(wkey),{slots:asg,done:{},gen:Date.now(),by:me})
+          .then(()=>{dogMsg='';paintDog();})
+          .catch(()=>{dogMsg='השיבוץ לא נשמר. בדקו חיבור.';paintDog();});
+      };
+      box.append(g);
+      if(missing.length&&!has)box.append(h('p','hint','עוד לא מילאו שאלון: '+missing.join(', ')+'. אפשר לשבץ גם כך, ולשבץ מחדש אחר כך.'));
+    }
+  }else if(!has){
+    box.append(h('p','lead','עוד לא נעשה שיבוץ לשבוע הזה. אבא או אמא יכולים להפעיל אותו מכאן.'));
+  }
+
+  /* ימים */
+  const todayK=fmt(new Date());
+  for(let d=0;d<7;d++){
+    const date=addDays(weekStart,d);
+    const card=h('section','day'+(fmt(date)===todayK?' now':''));
+    card.append(h('h3',null,'יום '+DAYN[d]+' '+date.getDate()+'/'+(date.getMonth()+1)));
+    SLOTS.forEach(sl=>{
+      if(!hasSlot(d,sl.k))return;
+      const key=d+'_'+sl.k;
+      const a=wk.slots[key],dn=wk.done[key];
+      const row=h('div','slot'+(dn?' done':''));
+      const tm=h('div','tm',sl.n);if(sl.t)tm.append(h('small',null,sl.t));
+      const mid=h('div');
+      const who=h('div','who2'+(a===me?' me':''),a?(a===me?'את/ה':byId[a].name):'פנוי');
+      mid.append(who);
+      const pend=swaps.find(s=>s.week===wkey&&s.slot===key&&s.status==='pending');
+      if(dn){mid.append(h('div','st ok','✓ הוצא/ה על ידי '+(byId[dn.by]?byId[dn.by].name:'?')));}
+      else if(pend){mid.append(h('div','st','ממתין לאישור של '+byId[pend.to].name));}
+      row.append(tm,mid);
+      const acts=h('div','acts');
+      const mk=(t,cls,fn)=>{const b=h('button','btn sm '+cls,t);b.type='button';b.onclick=fn;acts.append(b);};
+      if(dn){
+        if(dn.by===me||a===me)mk('ביטול סימון','quiet',()=>setDoc(wkRef(wkey),{done:{[key]:deleteField()}},{merge:true}).catch(()=>{dogMsg='הפעולה נכשלה. בדקו חיבור.';paintDog();}));
+      }else if(!a){
+        mk(genderTake()+' את התורנות','pri',()=>setDoc(wkRef(wkey),{slots:{[key]:me}},{merge:true}).catch(()=>{}));
+      }else if(a===me){
+        mk('הוצאתי','pri',()=>setDoc(wkRef(wkey),{done:{[key]:{by:me,at:Date.now()}}},{merge:true}).catch(()=>{dogMsg='הפעולה נכשלה. בדקו חיבור.';paintDog();}));
+        if(!pend)mk('החלפה או העברה','quiet',()=>{draft=(draft===key?null:key);paintDog();});
+      }else{
+        mk('הוצאתי במקומו/ה','quiet',()=>setDoc(wkRef(wkey),{done:{[key]:{by:me,at:Date.now()}}},{merge:true}).catch(()=>{dogMsg='הפעולה נכשלה. בדקו חיבור.';paintDog();}));
+      }
+      if(acts.childNodes.length)row.append(acts);
+      if(draft===key&&a===me&&!dn)row.append(swapForm(wkey,key));
+      card.append(row);
+    });
+    box.append(card);
+  }
+}
+function swapForm(wkey,key){
+  const f=h('div','swform');
+  f.append(h('div',null,'למי להעביר את '+slotText(wkey,key)+'?'));
+  const to=h('select');to.setAttribute('aria-label','למי להעביר');
+  PEOPLE.filter(p=>p.id!==me).forEach(p=>{const o=h('option',null,p.name);o.value=p.id;to.append(o);});
+  const take=h('select');take.setAttribute('aria-label','בתמורה לתורנות');
+  const fill=()=>{
+    take.innerHTML='';
+    const o0=h('option',null,'בלי תמורה');o0.value='';take.append(o0);
+    Object.keys(wk.slots).filter(k=>wk.slots[k]===to.value&&!wk.done[k]).sort().forEach(k=>{
+      const o=h('option',null,'בתמורה ל'+slotText(wkey,k));o.value=k;take.append(o);
+    });
+  };
+  fill();to.onchange=fill;
+  const row=h('div');row.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
+  const ok=h('button','btn pri sm','שליחת בקשה');ok.type='button';
+  ok.onclick=()=>{
+    setDoc(doc(collection(db,'families',code,'swaps')),{week:wkey,slot:key,from:me,to:to.value,take:take.value||null,status:'pending',at:Date.now()})
+      .then(()=>{draft=null;dogMsg='הבקשה נשלחה ל'+byId[to.value].name+'. התורנות תעבור רק אחרי אישור.';paintDog();})
+      .catch(()=>{dogMsg='שליחת הבקשה נכשלה. בדקו חיבור.';paintDog();});
+  };
+  const no=h('button','btn quiet sm','ביטול');no.type='button';no.onclick=()=>{draft=null;paintDog();};
+  row.append(ok,no);f.append(to,take,row);
+  return f;
+}
+async function respondSwap(s,yes){
+  const sref=doc(db,'families',code,'swaps',s.id);
+  try{
+    if(!yes){await setDoc(sref,{status:'declined'},{merge:true});return;}
+    let stale=false;
+    await runTransaction(db,async tx=>{
+      const ref=wkRef(s.week);
+      const sn=await tx.get(ref);
+      const d=sn.exists()?sn.data():{};
+      const sl=d.slots||{},dn=d.done||{};
+      if(sl[s.slot]!==s.from||dn[s.slot]||(s.take&&(sl[s.take]!==s.to||dn[s.take]))){stale=true;return;}
+      const upd={};upd[s.slot]=s.to;if(s.take)upd[s.take]=s.from;
+      tx.set(ref,{slots:upd},{merge:true});
+    });
+    await setDoc(sref,{status:stale?'void':'approved'},{merge:true});
+    dogMsg=stale?'ההעברה לא בוצעה כי השיבוץ השתנה בינתיים.':'ההעברה אושרה ועודכנה בלוח.';
+    paintDog();
+  }catch(e){dogMsg='הפעולה נכשלה. בדקו חיבור ונסו שוב.';paintDog();}
 }
 
 /* ---------- אירועים ---------- */
@@ -434,7 +794,7 @@ async function tryPin(){
 }
 $('pinOk').onclick=tryPin;
 $('pinIn').addEventListener('keydown',e=>{if(e.key==='Enter')tryPin();});
-['today','home','set'].forEach(k=>{$('nv-'+k).onclick=()=>tab(k);});
+['today','dog','home','set'].forEach(k=>{$('nv-'+k).onclick=()=>tab(k);});
 $('btnSwitch').onclick=()=>showWho();
 $('codeShow').onclick=()=>{const o=$('codeOut');o.textContent=code;o.hidden=!o.hidden;$('codeShow').textContent=o.hidden?'הצגת הקוד':'הסתרת הקוד';};
 $('pinSave').onclick=async()=>{
