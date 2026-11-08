@@ -221,7 +221,7 @@ input{font:inherit;color:var(--ink)}
     </div>
     <button id="btnSwitch" class="btn quiet" type="button">החלפת פרופיל</button>
     <button id="btnForget" class="btn danger" type="button">ניתוק הטלפון הזה מהמשפחה</button>
-    <p class="hint">גרסה: שלב 2, כולל משימות משפחתיות ותצוגת הבנות לאבא. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
+    <p class="hint">גרסה: שלב 2, כולל משימות משפחתיות ותצוגת הבנות להורים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
   </div>
 
   <nav class="nav" aria-label="ניווט">
@@ -480,8 +480,9 @@ function subFam(){
 /* ---------- אבא: המשימות של הבנות ---------- */
 function paintKids(){
   const card=$('kidsCard');if(!card)return;
-  card.hidden=me!=='dad';
-  if(me!=='dad')return;
+  const adult=me==='dad'||me==='mom';
+  card.hidden=!adult;
+  if(!adult)return;
   const box=$('kidsBox');box.innerHTML='';
   PEOPLE.filter(p=>p.id!=='dad'&&p.id!=='mom').forEach(p=>{
     const st=listState(people[p.id]);
