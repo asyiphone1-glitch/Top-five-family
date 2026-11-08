@@ -309,6 +309,13 @@ input{font:inherit;color:var(--ink)}
       <p id="quizMsg" class="msg" role="status"></p>
     </div>
     <div class="card">
+      <h3>התראות כשהאפליקציה סגורה</h3>
+      <p class="date">ההודעה תקפוץ גם כשאתם באפליקציה אחרת או שהמסך כבוי. היא יכולה להגיע עד כרבע שעה אחרי הזמן, כי השליחה עוברת דרך שירות חינמי.</p>
+      <button id="pushOn" class="btn pri" type="button">הפעלת התראות בטלפון הזה</button>
+      <button id="pushTest" class="btn quiet" type="button" hidden>שליחת התראת ניסיון</button>
+      <p id="pushMsg" class="msg" role="status"></p>
+    </div>
+    <div class="card">
       <h3>קוד אישי לפרופיל</h3>
       <p class="date" id="pinState"></p>
       <label for="newPin">קוד חדש בן 4 ספרות</label>
@@ -325,7 +332,7 @@ input{font:inherit;color:var(--ink)}
     </div>
     <button id="btnSwitch" class="btn quiet" type="button">החלפת פרופיל</button>
     <button id="btnForget" class="btn danger" type="button">ניתוק הטלפון הזה מהמשפחה</button>
-    <p class="hint">גרסה: שלב 3.3, כולל רשימת קניות, משימות מההורים עם צלצול, משימות פתוחות, שיבוץ כלבה עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
+    <p class="hint">גרסה: שלב 3.4, כולל התראות כשהאפליקציה סגורה, רשימת קניות, משימות מההורים עם צלצול, משימות פתוחות, שיבוץ כלבה עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
   </div>
 
   <nav class="nav" aria-label="ניווט">
@@ -693,7 +700,7 @@ function tab(n){
     $('nv-'+k).classList.toggle('on',k===n);
   });
   if(n==='home')paintHome();
-  if(n==='set')paintSettings();
+  if(n==='set'){paintSettings();paintPush();}
   if(n==='dog')paintDog();
   if(n==='jobs'||n==='today')paintJobs();
   if(n==='shop')paintShop();
@@ -713,6 +720,9 @@ function openMain(){
   show('s-main');tab('today');renderTasks();startBeat();
   weekStart=sunday(new Date());subWeek();subSwaps();subFam();subJobs();subAdv();subCurWk();paintJobForm();subShop();
   clearInterval(homeT);homeT=setInterval(()=>{if(!$('tab-home').hidden)paintHome();},30000);
+  syncPush();
+  const qt=new URLSearchParams(location.search).get('tab');
+  if(qt&&$('tab-'+qt)){tab(qt);history.replaceState(null,'',location.pathname);}
 }
 function onPeople(snap){
   if(!$('s-who').hidden)paintWho();
@@ -1774,6 +1784,62 @@ $('btnForget').onclick=()=>{
   LS.del('tff.code');LS.del('tff.me');
   if(unsub)unsub();
   location.reload();
+};
+
+/* ---------- התראות כשהאפליקציה סגורה ---------- */
+const VAPID_PUB='BP2DfRuPoADshH2Pa1jkpdeTA0id0OvlMayYX1E7G5oDirf1hOK9jccPk7ttX0cQeiXWhYyNQU1ZcKcFlSo1hig';
+const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const standalone=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const pushOK=()=>'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
+let swReg=null;
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(r=>{swReg=r;syncPush();}).catch(()=>{});
+  navigator.serviceWorker.addEventListener('message',e=>{const t=e.data&&e.data.yayaTab;if(t&&me&&$('tab-'+t))tab(t);});
+}
+function b64u(s){const p='='.repeat((4-s.length%4)%4),b=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(b,c=>c.charCodeAt(0));}
+async function subId(ep){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(ep));return Array.from(new Uint8Array(b)).slice(0,12).map(x=>x.toString(16).padStart(2,'0')).join('');}
+async function saveSub(sub){
+  if(!code||!me||!sub)return;
+  const j=sub.toJSON();
+  await setDoc(doc(db,'families',code,'push',await subId(j.endpoint)),{who:me,sub:JSON.stringify(j),at:Date.now(),ios:isIOS});
+}
+/* כשמחליפים פרופיל בטלפון, ההתראות עוברות לפרופיל החדש */
+async function syncPush(){
+  try{
+    if(!swReg||!me||!code||!pushOK()||Notification.permission!=='granted')return paintPush();
+    const sub=await swReg.pushManager.getSubscription();
+    if(sub){const v=me+'|'+sub.endpoint;if(LS.get('yaya.push.last')!==v){await saveSub(sub);LS.set('yaya.push.last',v);}}
+  }catch(e){}
+  paintPush();
+}
+async function paintPush(){
+  const b=$('pushOn'),m=$('pushMsg'),t=$('pushTest');if(!b)return;
+  t.hidden=true;b.hidden=false;
+  if(!pushOK()){
+    b.hidden=true;
+    say(m,isIOS&&!standalone?'באייפון התראות עובדות רק כשפותחים את yaya מהאייקון שעל מסך הבית. פתחו משם ונסו שוב.':'הטלפון או הדפדפן הזה לא תומכים בהתראות. באייפון צריך iOS 16.4 ומעלה.');
+    return;
+  }
+  if(Notification.permission==='denied'){b.hidden=true;say(m,'ההתראות חסומות בטלפון הזה. מאפשרים אותן בהגדרות הטלפון ← התראות ← yaya.');return;}
+  let sub=null;try{sub=swReg&&await swReg.pushManager.getSubscription();}catch(e){}
+  if(Notification.permission==='granted'&&sub){b.hidden=true;t.hidden=false;say(m,'ההתראות פעילות בטלפון הזה, עבור '+byId[me].name+'.',true);}
+  else say(m,'');
+}
+$('pushOn').onclick=async()=>{
+  const m=$('pushMsg');
+  try{
+    if(!swReg)swReg=await navigator.serviceWorker.register('sw.js');
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted'){paintPush();if(perm!=='denied')say(m,'לא אושר. נסו שוב ולחצו "אפשר".');return;}
+    say(m,'מפעיל...',true);
+    let sub=await swReg.pushManager.getSubscription();
+    if(!sub)sub=await swReg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID_PUB)});
+    await saveSub(sub);LS.set('yaya.push.last',me+'|'+sub.endpoint);
+    paintPush();
+  }catch(e){say(m,'ההפעלה נכשלה. בדקו חיבור ונסו שוב.');}
+};
+$('pushTest').onclick=()=>{
+  swReg&&swReg.showNotification('yaya',{body:'ככה תיראה התראה. ההתראות האמיתיות נשלחות מהשרת.',icon:'icon-180.png',lang:'he',dir:'rtl'});
 };
 
 /* ---------- אתחול ---------- */
