@@ -260,6 +260,7 @@ input{font:inherit;color:var(--ink)}
 
   <div id="tab-home" hidden>
     <div id="advCard" class="card" hidden><h3 id="advH">המלצות צוות היועצים</h3><p class="date">כל המלצה נכנסת לאפליקציה רק אם תלחצו "מקבל". אפשר לשנות החלטה בכל זמן.</p><div id="advBox"></div></div>
+    <div id="weekCard" class="card rep" hidden></div>
     <div id="kidsCard" class="card" hidden><h3>המשימות של הבנות היום</h3><div id="kidsBox"></div></div>
     <div class="card"><h3>מי מחובר עכשיו</h3><div id="presence"></div></div>
   </div>
@@ -289,7 +290,7 @@ input{font:inherit;color:var(--ink)}
     </div>
     <button id="btnSwitch" class="btn quiet" type="button">החלפת פרופיל</button>
     <button id="btnForget" class="btn danger" type="button">ניתוק הטלפון הזה מהמשפחה</button>
-    <p class="hint">גרסה: שלב 3, משימות מההורים עם צלצול, משימות פתוחות, שיבוץ כלבה עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
+    <p class="hint">גרסה: שלב 3.1, משימות מההורים עם צלצול, משימות פתוחות, שיבוץ כלבה עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
   </div>
 
   <nav class="nav" aria-label="ניווט">
@@ -588,8 +589,34 @@ function paintKids(){
 }
 
 /* ---------- הבית: מי מחובר ---------- */
+function paintWeekSum(){
+  const c=$('weekCard');if(!c)return;
+  c.hidden=!on('r_week');if(c.hidden)return;
+  c.innerHTML='';
+  const ws=sunday(new Date()).getTime(),fri=new Date().getDay()>=5;
+  c.append(h('h3',null,(fri?'סיכום השבוע':'השבוע עד עכשיו')));
+  PEOPLE.forEach(p=>{
+    const took=jobs.filter(j=>j.to==='all'&&j.claim===p.id&&(j.claimAt||j.at||0)>=ws).length;
+    const did=jobs.filter(j=>j.done&&j.doneBy===p.id&&(j.doneAt||0)>=ws).length;
+    const walks=Object.values(curWk.done||{}).filter(d=>d&&d.by===p.id).length;
+    const parts=[];
+    if(did)parts.push(did===1?'משימה אחת בוצעה':did+' משימות בוצעו');
+    if(took)parts.push(took===1?'משימה פתוחה אחת נלקחה':took+' משימות פתוחות נלקחו');
+    if(walks)parts.push(walks===1?'הוצאה אחת של הכלבה':walks+' הוצאות של הכלבה');
+    const r=h('div');r.style.cssText='display:flex;align-items:center;gap:10px';
+    r.append(avatar(p.id,32),h('span',null,p.name+': '+(parts.length?parts.join(', '):'עוד אין פעילות השבוע')));
+    c.append(r);
+  });
+  c.append(h('p','hint','הסיכום מתאפס בכל יום ראשון.'));
+}
+function weekPop(){
+  if(!on('r_week')||new Date().getDay()!==5||!me)return;
+  const k='yaya.wk.'+fmt(sunday(new Date()));
+  if(LS.get(k))return;LS.set(k,'1');
+  toast('סיכום השבוע מחכה בלשונית "הבית"');
+}
 function paintHome(){
-  paintKids();paintAdvice();
+  paintKids();paintAdvice();paintWeekSum();
   const box=$('presence');if(!box)return;
   box.innerHTML='';
   const now=Date.now();
@@ -1162,7 +1189,10 @@ const RECS=[
 ];
 let adv={},advUnsub=null;
 const advDoc=()=>doc(db,'families',code,'prefs','advice');
-function on(id){return (adv[id]||{}).s==='yes';}
+/* החלטות שאבא קיבל בשיחה (8/11/2026). החלטה שנשמרת באפליקציה גוברת עליהן */
+const ADV0={r_dogring:'yes',r_pre10:'yes',r_limit2:'no',r_release:'no',r_approve:'yes',r_fair:'yes',r_cheer:'yes',r_push:'yes',r_week:'yes'};
+function decision(id){return adv[id]||(ADV0[id]?{s:ADV0[id],by:'dad'}:null);}
+function on(id){return (decision(id)||{}).s==='yes';}
 function subAdv(){
   if(advUnsub)advUnsub();
   advUnsub=onSnapshot(advDoc(),snap=>{adv=snap.exists()?snap.data():{};paintAdvice();paintJobs();},()=>{});
@@ -1171,21 +1201,21 @@ function paintAdvice(){
   const card=$('advCard');if(!card)return;
   card.hidden=!isAdult(me);if(card.hidden)return;
   const box=$('advBox');box.innerHTML='';
-  const pend=RECS.filter(r=>!adv[r.id]).length;
+  const pend=RECS.filter(r=>!decision(r.id)).length;
   $('advH').textContent='המלצות צוות היועצים'+(pend?' ('+pend+' מחכות להחלטה)':'');
   const yes=me==='mom'?'מקבלת':'מקבל',no=me==='mom'?'לא מקבלת':'לא מקבל';
   RECS.forEach(r=>{
-    const m=TEAM[r.w],st=adv[r.id];
+    const m=TEAM[r.w],st=decision(r.id);
     const row=h('div','rec');
     const a=h('span','avl');a.style.cssText='width:44px;height:44px;font-size:1rem;background:'+m.c;a.textContent=m.n.replace('ד"ר ','').split(' ').map(x=>x[0]).join('');a.setAttribute('aria-hidden','true');
     const b=h('div');
     b.append(h('div','who3',m.n+' · '+m.r));
-    const t=h('div','rt',r.t);if(r.build)t.append(h('span','tag','דורש בנייה'));
+    const t=h('div','rt',r.t);if(r.build&&r.id!=='r_week')t.append(h('span','tag','דורש בנייה'));
     b.append(t,h('div','rd',r.d));
     let stt='ממתין להחלטה',cls='rs';
     if(st){
       const bp=byId[st.by],who=bp?bp.name:'';
-      if(st.s==='yes'){stt=(r.build?'אושר לבנייה בשלב הבא':'פעיל באפליקציה')+(who?' · '+who+(bp.g==='m'?' אישר':' אישרה'):'');cls+=' yes';}
+      if(st.s==='yes'){stt=(r.build?(r.id==='r_week'?'פעיל באפליקציה':'אושר לבנייה בשלב הבא'):'פעיל באפליקציה')+(who?' · '+who+(bp.g==='m'?' אישר':' אישרה'):'');cls+=' yes';}
       else{stt='לא התקבל'+(who?' · '+who:'');cls+=' no';}
     }
     b.append(h('div',cls,stt));
@@ -1213,7 +1243,8 @@ function subJobs(){
       cleaned=true;const old=Date.now()-14*864e5;
       jobs.filter(j=>j.done&&j.doneAt&&j.doneAt<old).forEach(j=>deleteDoc(jobRef(j.id)).catch(()=>{}));
     }
-    paintJobs();checkRem();
+    paintJobs();checkRem();weekPop();
+    if(!$('tab-home').hidden)paintWeekSum();
   },()=>{});
 }
 const resp=j=>j.to==='all'?(j.claim||null):j.to;
