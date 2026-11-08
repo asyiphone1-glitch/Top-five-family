@@ -242,6 +242,7 @@ input{font:inherit;color:var(--ink)}
     <div id="jobNote" class="note" hidden></div>
     <p id="progress" class="progress"></p>
     <ul id="tasks" class="tasks"></ul>
+    <div id="todayJobs" hidden></div>
     <div id="famBox" hidden>
       <h2 class="sec">משימות משפחתיות</h2>
       <p class="date">משותפות לאבא ולאמא. כל אחד יכול להוסיף ולסמן.</p>
@@ -267,7 +268,7 @@ input{font:inherit;color:var(--ink)}
     <div id="jobsBox"></div>
     <div class="card">
       <h3>צלצול תזכורת</h3>
-      <p class="date">כשמגיעה שעת משימה, הטלפון מצלצל צלצול קצר ומציג הודעה. זה עובד כשהאפליקציה פתוחה, ובכניסה הבאה מופיעות תזכורות שהוחמצו. כדאי לוודא שהטלפון לא על שקט.</p>
+      <p class="date">כשמגיעה שעת משימה, הטלפון מצלצל כמה שניות ומציג הודעה. זה עובד כשהאפליקציה פתוחה, ובכניסה הבאה מופיעות תזכורות שהוחמצו. עוצמת הצלצול נקבעת לפי עוצמת המדיה בטלפון (הכפתורים בצד כשמתנגן משהו), ולא לפי עוצמת הצלצול של שיחות.</p>
       <button id="ringTest" class="btn quiet" type="button">בדיקת צלצול</button>
     </div>
   </div>
@@ -290,7 +291,7 @@ input{font:inherit;color:var(--ink)}
   </div>
 
   <div id="tab-home" hidden>
-    <div id="advCard" class="card" hidden><h3 id="advH">המלצות צוות היועצים</h3><p class="date">כל המלצה נכנסת לאפליקציה רק אם תלחצו "מקבל". אפשר לשנות החלטה בכל זמן.</p><div id="advBox"></div></div>
+    <div id="advCard" class="card" hidden><h3 id="advH">המלצות צוות היועצים</h3><p class="date">כל המלצה נכנסת לאפליקציה רק אם תלחצו "מקבל". יום אחרי ההחלטה ההמלצה יורדת מהמסך, ואפשר לראות ולשנות אותה ב"החלטות קודמות".</p><div id="advBox"></div></div>
     <div id="weekCard" class="card rep" hidden></div>
     <div id="kidsCard" class="card" hidden><h3>המשימות של הבנות היום</h3><div id="kidsBox"></div></div>
     <div class="card"><h3>מי מחובר עכשיו</h3><div id="presence"></div></div>
@@ -321,7 +322,7 @@ input{font:inherit;color:var(--ink)}
     </div>
     <button id="btnSwitch" class="btn quiet" type="button">החלפת פרופיל</button>
     <button id="btnForget" class="btn danger" type="button">ניתוק הטלפון הזה מהמשפחה</button>
-    <p class="hint">גרסה: שלב 3.2, כולל רשימת קניות, משימות מההורים עם צלצול, משימות פתוחות, שיבוץ כלבה עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
+    <p class="hint">גרסה: שלב 3.3, כולל רשימת קניות, משימות מההורים עם צלצול, משימות פתוחות, שיבוץ כלבה עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
   </div>
 
   <nav class="nav" aria-label="ניווט">
@@ -604,7 +605,7 @@ function paintKids(){
     const c=document.createElement('small');
     if(f){c.textContent=d+' מתוך '+f;if(d===f)c.className='all';}
     hd.append(nm,c);k.append(hd);
-    if(!f){const n=document.createElement('div');n.className='none';n.textContent='עוד לא הוזנו משימות';k.append(n);}
+    if(!f){const n=document.createElement('div');n.className='none';n.textContent='עוד לא הוזנו משימות אישיות';k.append(n);}
     else{
       const ul=document.createElement('ul');
       st.tasks.forEach((t,i)=>{
@@ -615,6 +616,18 @@ function paintKids(){
         li.append(ic,tx);ul.append(li);
       });
       k.append(ul);
+    }
+    const pj=jobs.filter(j=>resp(j)===p.id&&(!j.done||(j.doneAt&&Date.now()-j.doneAt<864e5)));
+    if(pj.length){
+      const t=document.createElement('div');t.className='none';t.textContent='משימות מההורים';t.style.marginTop='6px';k.append(t);
+      const ul2=document.createElement('ul');
+      pj.slice().sort(jobSort).forEach(j=>{
+        const li=document.createElement('li');if(j.done)li.className='ok';
+        const ic=document.createElement('i');ic.textContent=j.done?'✓':'○';
+        const tx=document.createElement('span');tx.textContent=j.text+(j.done&&waiting(j)?' (ממתין לאישור)':'');
+        li.append(ic,tx);ul2.append(li);
+      });
+      k.append(ul2);
     }
     box.append(k);
   });
@@ -1172,17 +1185,31 @@ function unlockAudio(){
 }
 document.addEventListener('pointerdown',unlockAudio,{passive:true});
 document.addEventListener('touchend',unlockAudio,{passive:true});
+/* iPhone: בלי זה צליל מהאתר מושתק כשהמתג בצד הטלפון על שקט */
+try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
+let comp=null;
 function chime(){
   unlockAudio();
-  try{navigator.vibrate&&navigator.vibrate([200,100,200]);}catch(e){}
+  try{navigator.vibrate&&navigator.vibrate([400,150,400,150,400]);}catch(e){}
   if(!actx)return;
-  const t=actx.currentTime+.03;
-  [[880,0],[1175,.2],[1568,.4]].forEach(([f,o])=>{
-    const g=actx.createGain(),os=actx.createOscillator();
-    os.type='sine';os.frequency.value=f;
-    g.gain.setValueAtTime(.0001,t+o);g.gain.exponentialRampToValueAtTime(.4,t+o+.02);g.gain.exponentialRampToValueAtTime(.0001,t+o+.6);
-    os.connect(g);g.connect(actx.destination);os.start(t+o);os.stop(t+o+.65);
-  });
+  if(!comp){
+    comp=actx.createDynamicsCompressor();
+    comp.threshold.value=-18;comp.knee.value=6;comp.ratio.value=8;comp.attack.value=.003;comp.release.value=.15;
+    const mg=actx.createGain();mg.gain.value=1.6;comp.connect(mg);mg.connect(actx.destination);
+  }
+  const t0=actx.currentTime+.03;
+  /* שלוש חזרות של צלצול בן שלושה צלילים, כ-4 שניות, בצליל חד שנשמע טוב גם ברמקול קטן */
+  for(let rep=0;rep<3;rep++){
+    const t=t0+rep*1.35;
+    [[988,0],[1319,.18],[1760,.36]].forEach(([f,o])=>{
+      [['triangle',1,.9],['square',2,.18]].forEach(([type,mul,vol])=>{
+        const g=actx.createGain(),os=actx.createOscillator();
+        os.type=type;os.frequency.value=f*mul;
+        g.gain.setValueAtTime(.0001,t+o);g.gain.exponentialRampToValueAtTime(vol,t+o+.015);g.gain.exponentialRampToValueAtTime(.0001,t+o+.7);
+        os.connect(g);g.connect(comp);os.start(t+o);os.stop(t+o+.75);
+      });
+    });
+  }
 }
 function remind(lines,goTab){
   const pop=$('pop'),ul=$('popList');
@@ -1224,7 +1251,11 @@ let adv={},advUnsub=null;
 const advDoc=()=>doc(db,'families',code,'prefs','advice');
 /* החלטות שאבא קיבל בשיחה (8/11/2026). החלטה שנשמרת באפליקציה גוברת עליהן */
 const ADV0={r_dogring:'yes',r_pre10:'yes',r_limit2:'no',r_release:'no',r_approve:'yes',r_fair:'yes',r_cheer:'yes',r_push:'yes',r_week:'yes'};
-function decision(id){return adv[id]||(ADV0[id]?{s:ADV0[id],by:'dad'}:null);}
+const ADV0_AT=new Date(2026,10,8,11,0).getTime();
+function decision(id){return adv[id]||(ADV0[id]?{s:ADV0[id],by:'dad',at:ADV0_AT}:null);}
+/* המלצה שהוחלט עליה נעלמת מהמסך יום אחרי ההחלטה */
+const ADV_KEEP=864e5;let advOld=false;
+function advHidden(r){const st=decision(r.id);return !!st&&Date.now()-(st.at||0)>ADV_KEEP;}
 function on(id){return (decision(id)||{}).s==='yes';}
 function subAdv(){
   if(advUnsub)advUnsub();
@@ -1237,7 +1268,10 @@ function paintAdvice(){
   const pend=RECS.filter(r=>!decision(r.id)).length;
   $('advH').textContent='המלצות צוות היועצים'+(pend?' ('+pend+' מחכות להחלטה)':'');
   const yes=me==='mom'?'מקבלת':'מקבל',no=me==='mom'?'לא מקבלת':'לא מקבל';
-  RECS.forEach(r=>{
+  const vis=RECS.filter(r=>advOld||!advHidden(r)),old=RECS.filter(advHidden).length;
+  card.hidden=!vis.length&&!old;if(card.hidden)return;
+  if(!vis.length)box.append(h('p','date','אין המלצות חדשות.'));
+  vis.forEach(r=>{
     const m=TEAM[r.w],st=decision(r.id);
     const row=h('div','rec');
     const a=h('span','avl');a.style.cssText='width:44px;height:44px;font-size:1rem;background:'+m.c;a.textContent=m.n.replace('ד"ר ','').split(' ').map(x=>x[0]).join('');a.setAttribute('aria-hidden','true');
@@ -1261,6 +1295,10 @@ function paintAdvice(){
     });
     row.append(a,b,acts);box.append(row);
   });
+  if(old){
+    const t=h('button','btn quiet sm',advOld?'הסתרת החלטות קודמות':'החלטות קודמות ('+old+')');t.type='button';
+    t.onclick=()=>{advOld=!advOld;paintAdvice();};box.append(t);
+  }
 }
 
 /* ---------- משימות מההורים ---------- */
@@ -1277,7 +1315,7 @@ function subJobs(){
       jobs.filter(j=>j.done&&j.doneAt&&j.doneAt<old).forEach(j=>deleteDoc(jobRef(j.id)).catch(()=>{}));
     }
     paintJobs();checkRem();weekPop();
-    if(!$('tab-home').hidden)paintWeekSum();
+    if(!$('tab-home').hidden){paintWeekSum();paintKids();}
   },()=>{});
 }
 const resp=j=>j.to==='all'?(j.claim||null):j.to;
@@ -1411,11 +1449,24 @@ function paintJobs(){
     section(box,'האחיות לקחו',jobs.filter(j=>!j.done&&j.to==='all'&&j.claim&&j.claim!==me));
     section(box,'בוצעו לאחרונה',jobs.filter(j=>j.done&&recent(j)&&(resp(j)===me||j.doneBy===me||j.to==='all')));
   }
+  /* משימות מההורים גם במסך "היום שלי" של הבנות */
+  const tj=$('todayJobs');
+  if(tj){
+    tj.innerHTML='';
+    const adult=isAdult(me);
+    const mineNow=adult?[]:jobs.filter(j=>!j.done&&resp(j)===me);
+    const openNow=adult?[]:jobs.filter(j=>!j.done&&j.to==='all'&&!j.claim);
+    tj.hidden=adult||(!mineNow.length&&!openNow.length);
+    if(!tj.hidden){
+      if(mineNow.length)section(tj,'משימות מההורים',mineNow);
+      if(openNow.length)section(tj,'משימות פתוחות, אפשר לקחת',openNow);
+    }
+  }
   /* הערה במסך היום שלי */
   const n=$('jobNote');
   if(n){
     const cnt=badgeCount();
-    n.hidden=!cnt||isAdult(me)&&!on('r_approve');
+    n.hidden=!cnt||!isAdult(me)||!on('r_approve');
     if(!n.hidden){
       n.innerHTML='';
       n.append(h('div',null,isAdult(me)?cnt+' משימות של הבנות מחכות לאישור שלך.':(cnt===1?'יש משימה אחת מההורים.':'יש '+cnt+' משימות מההורים.')));
