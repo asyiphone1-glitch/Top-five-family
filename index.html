@@ -1856,7 +1856,7 @@ function avatar(id,sz){
     const im=new Image();im.alt='';im.decoding='async';
     im.onload=()=>{avOk[id]=true;w.textContent='';w.style.background='var(--soft)';if(tm)tm.remove();w.append(im);};
     im.onerror=()=>{avOk[id]=false;};
-    im.src=AVIMG[id]+'?v=1';
+    im.src=AVIMG[id]+'?v=2';
   }
   return w;
 }
@@ -1866,7 +1866,7 @@ function figure(id,hgt){
   const im=new Image();im.alt='';im.className='pfig';im.style.height=hgt+'px';im.style.width=Math.round(hgt*200/240)+'px';
   const tm=()=>{if(window.TM_HAS&&TM_HAS(id))im.src=TM_IMG(id,'full');else{im.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240"><circle cx="100" cy="110" r="70" fill="'+byId[id].l+'"/><text x="100" y="135" font-size="70" text-anchor="middle" fill="#fff" font-family="Arial">'+byId[id].name[0]+'</text></svg>');}};
   if(figOk[id]===false)tm();
-  else{im.onerror=()=>{figOk[id]=false;im.onerror=null;tm();};im.onload=()=>{if(figOk[id]==null)figOk[id]=true;};im.src='img/'+id+'-full.webp?v=1';}
+  else{im.onerror=()=>{figOk[id]=false;im.onerror=null;tm();};im.onload=()=>{if(figOk[id]==null)figOk[id]=true;};im.src='img/'+id+'-full.webp?v=2';}
   return im;
 }
 
