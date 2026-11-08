@@ -122,6 +122,22 @@ input{font:inherit;color:var(--ink)}
 .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
 .chip:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .qsel{font:inherit;color:var(--ink);background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:10px;min-width:5em}
+.sec{font:700 1.2rem var(--display);margin:22px 0 2px;color:var(--ink)}
+.sec+.date{margin:0}
+.task .by{flex:none;font-size:.78rem;color:var(--good);font-weight:700;max-width:4.5em;text-align:center;line-height:1.2}
+.kid{border-top:1px solid var(--line);padding:10px 0}
+.kid:first-of-type{border-top:0}
+.kid .kh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.kid .kh b{font-size:1.1rem;color:var(--kc)}
+@media (prefers-color-scheme:dark){.kid .kh b{color:var(--kc-d)}}
+.kid .kh small{color:var(--mute);font-weight:700}
+.kid .kh small.all{color:var(--good)}
+.kid ul{list-style:none;margin:4px 0 0;padding:0}
+.kid li{padding:3px 0;display:flex;gap:8px}
+.kid li i{font-style:normal;flex:none;width:1.3em;color:var(--mute)}
+.kid li.ok i{color:var(--good)}
+.kid li.ok span{text-decoration:line-through;color:var(--mute)}
+.kid .none{color:var(--mute);font-size:.92rem}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -158,8 +174,16 @@ input{font:inherit;color:var(--ink)}
   <div class="top"><div><div id="hello" class="hello"></div><div id="dateTxt" class="date"></div></div></div>
 
   <div id="tab-today">
+    <h2 id="mineH" class="sec" hidden>המשימות האישיות שלי</h2>
+    <p id="mineSub" class="date" hidden>רק את/ה רואה אותן</p>
     <p id="progress" class="progress"></p>
     <ul id="tasks" class="tasks"></ul>
+    <div id="famBox" hidden>
+      <h2 class="sec">משימות משפחתיות</h2>
+      <p class="date">משותפות לאבא ולאמא. כל אחד יכול להוסיף ולסמן.</p>
+      <p id="famProgress" class="progress"></p>
+      <ul id="famTasks" class="tasks"></ul>
+    </div>
   </div>
 
   <div id="tab-dog" hidden>
@@ -167,6 +191,7 @@ input{font:inherit;color:var(--ink)}
   </div>
 
   <div id="tab-home" hidden>
+    <div id="kidsCard" class="card" hidden><h3>המשימות של הבנות היום</h3><div id="kidsBox"></div></div>
     <div class="card"><h3>מי מחובר עכשיו</h3><div id="presence"></div></div>
     <div class="soon"><b>בשלב הבא:</b> היום שלי עם סדר עדיפויות ושעות, תזכורות וסיכום שבועי.</div>
   </div>
@@ -196,7 +221,7 @@ input{font:inherit;color:var(--ink)}
     </div>
     <button id="btnSwitch" class="btn quiet" type="button">החלפת פרופיל</button>
     <button id="btnForget" class="btn danger" type="button">ניתוק הטלפון הזה מהמשפחה</button>
-    <p class="hint">גרסה: שלב 1, בדיקת חיבור וסנכרון. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
+    <p class="hint">גרסה: שלב 2, כולל משימות משפחתיות ותצוגת הבנות לאבא. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
   </div>
 
   <nav class="nav" aria-label="ניווט">
@@ -260,6 +285,7 @@ async function hashPin(pid,pin){
 /* ---------- מצב ---------- */
 let code=LS.get('tff.code'), me=LS.get('tff.me');
 let app,auth,db,unsub=null,people={},work={tasks:['','','','',''],done:[false,false,false,false,false]};
+let fam={tasks:['','','','',''],done:[false,false,false,false,false],by:['','','','','']},famDirty=false,famT=null,famUnsub=null;
 let dirty=false,saveT=null,hb=null,homeT=null,netT=null,pinTarget=null;
 
 /* ---------- Firebase ---------- */
@@ -281,6 +307,7 @@ function authed(){
 }
 const pdoc=id=>doc(db,'families',code,'people',id);
 const metaDoc=()=>doc(db,'families',code,'prefs','meta');
+const famDoc=()=>doc(db,'families',code,'prefs','family');
 
 /* ---------- חיווי חיבור ---------- */
 const NETTXT={ok:'מחובר, נשמר בענן',cache:'אין חיבור לשרת. נשמר בטלפון ויסונכרן',connecting:'מתחבר...',err:'בעיית חיבור לשרת'};
@@ -363,21 +390,28 @@ function enter(pid){
 }
 
 /* ---------- היום שלי ---------- */
-function myState(){
-  const p=people[me]||{};
+function listState(p){
+  p=p||{};
   const t=(Array.isArray(p.tasks)&&p.tasks.length===5)?p.tasks.map(x=>String(x||'')):['','','','',''];
   const d=(p.day===today()&&Array.isArray(p.done)&&p.done.length===5)?p.done.map(Boolean):[false,false,false,false,false];
   return {tasks:t,done:d};
 }
-const CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
-function progress(){
-  let f=0,d=0;
-  work.tasks.forEach((t,i)=>{if(t.trim()){f++;if(work.done[i])d++;}});
-  const p=$('progress');p.className='progress';
-  if(!f)p.textContent='הוסיפו את המשימות החשובות להיום';
-  else if(d===f){p.textContent='כל הכבוד, הכול הושלם להיום';p.className='progress all';}
-  else p.textContent='הושלמו '+d+' מתוך '+f;
+function myState(){return listState(people[me]);}
+function famState(p){
+  const s=listState(p);
+  s.by=(p&&p.day===today()&&Array.isArray(p.by)&&p.by.length===5)?p.by.map(x=>String(x||'')):['','','','',''];
+  return s;
 }
+const CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+function countDone(st){let f=0,d=0;st.tasks.forEach((t,i)=>{if(t.trim()){f++;if(st.done[i])d++;}});return [d,f];}
+function paintProgress(el,st,empty){
+  const [d,f]=countDone(st);
+  el.className='progress';
+  if(!f)el.textContent=empty;
+  else if(d===f){el.textContent='כל הכבוד, הכול הושלם להיום';el.className='progress all';}
+  else el.textContent='הושלמו '+d+' מתוך '+f;
+}
+function progress(){paintProgress($('progress'),work,'הוסיפו את המשימות החשובות להיום');}
 function save(){
   dirty=true;clearTimeout(saveT);
   saveT=setTimeout(()=>{
@@ -385,34 +419,99 @@ function save(){
     setDoc(pdoc(me),{name:byId[me].name,tasks:work.tasks.slice(),done:work.done.slice(),day:today()},{merge:true}).catch(()=>setNet('err'));
   },600);
 }
-function renderTasks(){
-  const ul=$('tasks');ul.innerHTML='';
-  work.tasks.forEach((t,i)=>{
+function renderList(ul,st,onSave,onProg,label){
+  ul.innerHTML='';
+  st.tasks.forEach((t,i)=>{
     const li=document.createElement('li');li.className='task';
     const has=!!t.trim();
-    if(has&&work.done[i])li.classList.add('done');
+    if(has&&st.done[i])li.classList.add('done');
     const b=document.createElement('button');
     b.type='button';b.className='chk';b.disabled=!has;
-    b.setAttribute('aria-label',work.done[i]?'בטלו סימון משימה '+(i+1):'סמנו משימה '+(i+1)+' כבוצעה');
+    b.setAttribute('aria-label',st.done[i]?'בטלו סימון '+label+' '+(i+1):'סמנו '+label+' '+(i+1)+' כבוצעה');
     b.innerHTML='<span>'+(i+1)+'</span>'+CHECK;
-    b.onclick=()=>{work.done[i]=!work.done[i];save();renderTasks();};
     const inp=document.createElement('input');
-    inp.type='text';inp.value=t;inp.placeholder='משימה '+(i+1);inp.maxLength=80;
-    inp.setAttribute('aria-label','משימה '+(i+1));
+    inp.type='text';inp.value=t;inp.placeholder=label+' '+(i+1);inp.maxLength=80;
+    inp.setAttribute('aria-label',label+' '+(i+1));
+    let by=null;
+    if(st.by&&st.done[i]&&st.by[i]&&byId[st.by[i]]){by=document.createElement('span');by.className='by';by.textContent=byId[st.by[i]].name;}
+    b.onclick=()=>{
+      st.done[i]=!st.done[i];
+      if(st.by)st.by[i]=st.done[i]?me:'';
+      onSave();renderList(ul,st,onSave,onProg,label);
+    };
     inp.oninput=()=>{
-      work.tasks[i]=inp.value;
-      if(!inp.value.trim())work.done[i]=false;
+      st.tasks[i]=inp.value;
+      if(!inp.value.trim()){st.done[i]=false;if(st.by)st.by[i]='';}
       b.disabled=!inp.value.trim();
       if(b.disabled)li.classList.remove('done');
-      save();progress();
+      onSave();onProg();
     };
-    li.append(b,inp);ul.append(li);
+    li.append(b,inp);if(by)li.append(by);ul.append(li);
   });
-  progress();
+  onProg();
+}
+function renderTasks(){renderList($('tasks'),work,save,progress,'משימה');}
+
+/* ---------- משימות משפחתיות (אבא ואמא) ---------- */
+function famProgress(){paintProgress($('famProgress'),fam,'הוסיפו משימות של הבית, למשל קניות או תשלומים');}
+function renderFam(){renderList($('famTasks'),fam,saveFam,famProgress,'משימה משפחתית');}
+function saveFam(){
+  famDirty=true;clearTimeout(famT);
+  famT=setTimeout(()=>{
+    famDirty=false;
+    setDoc(famDoc(),{tasks:fam.tasks.slice(),done:fam.done.slice(),by:fam.by.slice(),day:today()},{merge:true}).catch(()=>setNet('err'));
+  },600);
+}
+function subFam(){
+  if(famUnsub){famUnsub();famUnsub=null;}
+  const adult=me==='dad'||me==='mom';
+  $('famBox').hidden=!adult;$('mineH').hidden=!adult;$('mineSub').hidden=!adult;
+  if(!adult)return;
+  fam=famState(null);renderFam();
+  famUnsub=onSnapshot(famDoc(),snap=>{
+    if(snap.metadata.hasPendingWrites||famDirty)return;
+    const a=document.activeElement;
+    if(a&&a.tagName==='INPUT'&&$('famTasks').contains(a))return;
+    const nx=famState(snap.exists()?snap.data():null);
+    if(JSON.stringify(nx)!==JSON.stringify(fam)){fam=nx;renderFam();}
+  },()=>{});
+}
+
+/* ---------- אבא: המשימות של הבנות ---------- */
+function paintKids(){
+  const card=$('kidsCard');if(!card)return;
+  card.hidden=me!=='dad';
+  if(me!=='dad')return;
+  const box=$('kidsBox');box.innerHTML='';
+  PEOPLE.filter(p=>p.id!=='dad'&&p.id!=='mom').forEach(p=>{
+    const st=listState(people[p.id]);
+    const [d,f]=countDone(st);
+    const k=document.createElement('div');k.className='kid';
+    k.style.setProperty('--kc',p.l);k.style.setProperty('--kc-d',p.d);
+    const hd=document.createElement('div');hd.className='kh';
+    const nm=document.createElement('b');nm.textContent=p.name;
+    const c=document.createElement('small');
+    if(f){c.textContent=d+' מתוך '+f;if(d===f)c.className='all';}
+    hd.append(nm,c);k.append(hd);
+    if(!f){const n=document.createElement('div');n.className='none';n.textContent='עוד לא הוזנו משימות';k.append(n);}
+    else{
+      const ul=document.createElement('ul');
+      st.tasks.forEach((t,i)=>{
+        if(!t.trim())return;
+        const li=document.createElement('li');if(st.done[i])li.className='ok';
+        const ic=document.createElement('i');ic.textContent=st.done[i]?'✓':'○';
+        const tx=document.createElement('span');tx.textContent=t;
+        li.append(ic,tx);ul.append(li);
+      });
+      k.append(ul);
+    }
+    box.append(k);
+  });
 }
 
 /* ---------- הבית: מי מחובר ---------- */
 function paintHome(){
+  paintKids();
   const box=$('presence');if(!box)return;
   box.innerHTML='';
   const now=Date.now();
@@ -457,7 +556,7 @@ function openMain(){
   $('hello').textContent='היי '+p.name;
   $('dateTxt').textContent=new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
   show('s-main');tab('today');renderTasks();startBeat();
-  weekStart=sunday(new Date());subWeek();subSwaps();
+  weekStart=sunday(new Date());subWeek();subSwaps();subFam();
   clearInterval(homeT);homeT=setInterval(()=>{if(!$('tab-home').hidden)paintHome();},30000);
 }
 function onPeople(snap){
