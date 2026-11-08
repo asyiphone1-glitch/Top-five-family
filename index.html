@@ -67,7 +67,7 @@ input{font:inherit;color:var(--ink)}
 .date{color:var(--mute)}
 .progress{font-weight:700;color:var(--accent);margin:14px 0 14px;min-height:1.6em}
 .progress.all{color:var(--good)}
-.tasks{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.tasks{list-style:none;margin:0;padding:0;display:grid;gap:12px;width:100%}
 .task{display:flex;align-items:center;gap:14px;background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:12px 14px}
 .task.done{border-color:var(--good)}
 .chk{flex:none;width:56px;height:56px;border-radius:50%;border:3px solid var(--accent);background:transparent;color:var(--accent);font:800 1.4rem var(--display);cursor:pointer;display:grid;place-items:center}
@@ -124,6 +124,16 @@ input{font:inherit;color:var(--ink)}
 .qsel{font:inherit;color:var(--ink);background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:10px;min-width:5em}
 .sec{font:700 1.2rem var(--display);margin:22px 0 2px;color:var(--ink)}
 .sec+.date{margin:0}
+.task.sub{margin-inline-start:34px;padding:6px 12px;border-width:1px;border-radius:14px;gap:10px}
+.task.sub .chk{width:40px;height:40px;border-width:2px}
+.task.sub .chk svg{width:22px;height:22px}
+.task.sub input{font-size:1.15rem;padding:4px 0}
+.task.head{border-color:var(--accent)}
+.task.addrow{border-style:dashed;background:transparent}
+.task.addrow input{font-size:1.15rem}
+.tsub,.tdel{flex:none;min-width:40px;min-height:40px;border:0;background:transparent;color:var(--mute);font:700 1.3rem var(--body);cursor:pointer;border-radius:10px}
+.tsub{color:var(--accent);font-size:1.5rem}
+.tdel.arm{color:var(--bad);font-size:.85rem;white-space:nowrap}
 .task .by{flex:none;font-size:.78rem;color:var(--good);font-weight:700;max-width:4.5em;text-align:center;line-height:1.2}
 .kid{border-top:1px solid var(--line);padding:10px 0}
 .kid:first-of-type{border-top:0}
@@ -204,6 +214,27 @@ input{font:inherit;color:var(--ink)}
 .sitem .by3{font-size:.8rem;color:var(--mute)}
 .sitem .mv{flex:none;min-height:40px;min-width:40px;border:0;background:transparent;color:var(--mute);font:700 1.2rem var(--body);cursor:pointer;border-radius:10px}
 .sitem select{font:inherit;color:var(--ink);background:var(--surface);border:2px solid var(--accent);border-radius:10px;padding:8px;margin-top:6px;width:100%}
+.tdays{display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;margin:0 -2px;scrollbar-width:none}
+.tdays::-webkit-scrollbar{display:none}
+.tday{flex:none;min-width:62px;min-height:56px;border:2px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);font:600 .85rem/1.2 var(--body);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 8px;position:relative}
+.tday b{font:700 1rem var(--display)}
+.tday[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.tday i{position:absolute;top:4px;inset-inline-end:6px;width:7px;height:7px;border-radius:50%;background:var(--warn);font-style:normal}
+.tsec{margin-top:16px}
+.tsec h3{margin:0 0 6px;font:700 1.1rem var(--display)}
+.tride{display:flex;align-items:center;gap:12px;padding:10px 12px;border-top:1px solid var(--line)}
+.tride:first-child{border-top:0}
+.tride .tm{flex:none;font:700 1.35rem var(--display);min-width:58px;text-align:center;direction:ltr}
+.tride .st2{flex:1;min-width:0}
+.tride .tx{font:700 1.1rem/1.3 var(--body);word-break:break-word}
+.tride .pl{font-size:1rem;margin-top:2px;word-break:break-word}
+.tride .by3{font-size:.8rem;color:var(--mute);margin-top:2px}
+.tride .chk{width:46px;height:46px}
+.tride.got .chk{background:var(--good);border-color:var(--good);color:#fff}
+.tride.got .chk svg{display:block}
+.tride.got .tx,.tride.got .pl,.tride.got .tm{color:var(--mute);text-decoration:line-through}
+.tride .mv{flex:none;min-height:40px;min-width:40px;border:0;background:transparent;color:var(--mute);font:700 1.2rem var(--body);cursor:pointer;border-radius:10px}
+.tempty{color:var(--mute);padding:10px 12px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -289,6 +320,32 @@ input{font:inherit;color:var(--ink)}
     <button id="shopClear" class="btn quiet" type="button" hidden></button>
   </div>
 
+  <div id="tab-taxi" hidden>
+    <h2 class="sec">מונית</h2>
+    <p class="date">מי צריך הסעה, מתי ולאן. בוחרים יום, ורואים את כל הנסיעות שלו לפי השעה.</p>
+    <div id="taxiDays" class="tdays" role="group" aria-label="בחירת יום"></div>
+    <p id="taxiProg" class="progress"></p>
+    <div id="taxiBox"></div>
+    <div class="card jform" id="taxiForm">
+      <h3 id="taxiFormH">נסיעה חדשה</h3>
+      <div class="chips" role="group" aria-label="סוג הנסיעה">
+        <button type="button" class="chip" id="tkGo" aria-pressed="true">🚗 לקחת</button>
+        <button type="button" class="chip" id="tkBack" aria-pressed="false">🏠 להחזיר</button>
+      </div>
+      <label>את מי</label>
+      <div class="chips" id="taxiWho" role="group" aria-label="את מי"></div>
+      <input id="taxiOther" class="field" maxlength="40" autocomplete="off" placeholder="או שם אחר, למשל חברה של רוני" aria-label="שם אחר">
+      <div class="row2" style="margin-top:10px">
+        <div><label for="taxiTime">שעה</label><input id="taxiTime" type="time"></div>
+        <div><label for="taxiPlace" id="taxiPlaceL">לאן</label><input id="taxiPlace" maxlength="80" autocomplete="off" placeholder="למשל: חוג ג׳ודו"></div>
+      </div>
+      <label style="margin-top:10px;display:block">מי נוהג (לא חובה)</label>
+      <div class="chips" id="taxiDrv" role="group" aria-label="מי נוהג"></div>
+      <button id="taxiAdd" class="btn pri" type="button">הוספת הנסיעה</button>
+      <p id="taxiMsg" class="msg" role="status"></p>
+    </div>
+  </div>
+
   <div id="tab-dog" hidden>
     <div id="dogBox"></div>
   </div>
@@ -332,13 +389,14 @@ input{font:inherit;color:var(--ink)}
     </div>
     <button id="btnSwitch" class="btn quiet" type="button">החלפת פרופיל</button>
     <button id="btnForget" class="btn danger" type="button">ניתוק הטלפון הזה מהמשפחה</button>
-    <p class="hint">גרסה: שלב 3.4, כולל התראות כשהאפליקציה סגורה, רשימת קניות, משימות מההורים עם צלצול, משימות פתוחות, שיבוץ כלבה עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
+    <p class="hint">גרסה: שלב 3.4, כולל התראות כשהאפליקציה סגורה, רשימת קניות, מונית, משימות ותתי־משימות בלי הגבלה, משימות מההורים עם צלצול, משימות פתוחות, שיבוץ כלבה עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
   </div>
 
   <nav class="nav" aria-label="ניווט">
     <button id="nv-today" type="button"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>היום שלי</button>
     <button id="nv-jobs" type="button"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>משימות<span id="jobBadge" class="nb" hidden></span></button>
     <button id="nv-shop" type="button" hidden><svg viewBox="0 0 24 24"><path d="M3 4h2l2.4 11h11l2-8H6.2"/><circle cx="9" cy="19.5" r="1.5"/><circle cx="17" cy="19.5" r="1.5"/></svg>קניות</button>
+    <button id="nv-taxi" type="button"><svg viewBox="0 0 24 24"><path d="M5 17h14v-5l-2-5H7l-2 5z"/><path d="M5 12h14M9 4h6"/><circle cx="8" cy="17.5" r="1.5"/><circle cx="16" cy="17.5" r="1.5"/></svg>מונית<span id="taxiBadge" class="nb" hidden></span></button>
     <button id="nv-dog" type="button"><svg viewBox="0 0 24 24"><path d="M4 9l2-4 3 2h6l3-2 2 4v4a8 8 0 0 1-16 0z"/><path d="M9.5 12.5h.01M14.5 12.5h.01M10.5 16c1 .8 2 .8 3 0"/></svg>הכלבה</button>
     <button id="nv-home" type="button"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>הבית</button>
     <button id="nv-set" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>הגדרות</button>
@@ -405,8 +463,8 @@ async function hashPin(pid,pin){
 
 /* ---------- מצב ---------- */
 let code=LS.get('tff.code'), me=LS.get('tff.me');
-let app,auth,db,unsub=null,people={},work={tasks:['','','','',''],done:[false,false,false,false,false]};
-let fam={tasks:['','','','',''],done:[false,false,false,false,false],by:['','','','','']},famDirty=false,famT=null,famUnsub=null;
+let app,auth,db,unsub=null,people={},work={tasks:[],done:[],lv:[]};
+let fam={tasks:[],done:[],lv:[],by:[]},famDirty=false,famT=null,famUnsub=null;
 let dirty=false,saveT=null,hb=null,homeT=null,netT=null,pinTarget=null;
 
 /* ---------- Firebase ---------- */
@@ -511,20 +569,35 @@ function enter(pid){
 }
 
 /* ---------- היום שלי ---------- */
+const MAXT=100;
 function listState(p){
   p=p||{};
-  const t=(Array.isArray(p.tasks)&&p.tasks.length===5)?p.tasks.map(x=>String(x||'')):['','','','',''];
-  const d=(p.day===today()&&Array.isArray(p.done)&&p.done.length===5)?p.done.map(Boolean):[false,false,false,false,false];
-  return {tasks:t,done:d};
+  const t=Array.isArray(p.tasks)?p.tasks.slice(0,MAXT).map(x=>String(x||'')):[];
+  const n=t.length;
+  const d=(p.day===today()&&Array.isArray(p.done))?t.map((x,i)=>!!p.done[i]):t.map(()=>false);
+  const lv=Array.isArray(p.lv)?t.map((x,i)=>p.lv[i]?1:0):t.map(()=>0);
+  if(n)lv[0]=0;
+  /* ניקוי שורות ריקות שנשארו מהגרסה הקודמת (5 שורות קבועות) */
+  const st={tasks:[],done:[],lv:[]};
+  t.forEach((x,i)=>{if(x.trim()){st.tasks.push(x);st.done.push(d[i]);st.lv.push(lv[i]);}});
+  if(st.lv.length)st.lv[0]=0;
+  return st;
 }
 function myState(){return listState(people[me]);}
 function famState(p){
+  p=p||{};
+  const keep=Array.isArray(p.tasks)?p.tasks.slice(0,MAXT).map((x,i)=>String(x||'').trim()?i:-1).filter(i=>i>=0):[];
   const s=listState(p);
-  s.by=(p&&p.day===today()&&Array.isArray(p.by)&&p.by.length===5)?p.by.map(x=>String(x||'')):['','','','',''];
+  s.by=keep.map(i=>(p.day===today()&&Array.isArray(p.by))?String(p.by[i]||''):'');
   return s;
 }
 const CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
-function countDone(st){let f=0,d=0;st.tasks.forEach((t,i)=>{if(t.trim()){f++;if(st.done[i])d++;}});return [d,f];}
+function realSubs(st,i){if(st.lv[i])return false;for(let k=i+1;k<st.tasks.length&&st.lv[k];k++)if(st.tasks[k].trim())return true;return false;}
+function countDone(st){let f=0,d=0;st.tasks.forEach((t,i)=>{if(t.trim()&&!realSubs(st,i)){f++;if(st.done[i])d++;}});return [d,f];}
+function packList(st){const o={tasks:[],done:[],lv:[]};if(st.by)o.by=[];st.tasks.forEach((t,i)=>{if(!t.trim())return;o.tasks.push(t);o.done.push(!!st.done[i]);o.lv.push(o.tasks.length===1?0:(st.lv[i]?1:0));if(st.by)o.by.push(st.by[i]||'');});return o;}
+function hasSubs(st,i){return !st.lv[i]&&st.lv[i+1]===1;}
+function mainOf(st,i){while(i>0&&st.lv[i])i--;return i;}
+function blockEnd(st,m){let e=m+1;while(e<st.tasks.length&&st.lv[e])e++;return e;}
 function paintProgress(el,st,empty){
   const [d,f]=countDone(st);
   el.className='progress';
@@ -537,38 +610,95 @@ function save(){
   dirty=true;clearTimeout(saveT);
   saveT=setTimeout(()=>{
     dirty=false;
-    setDoc(pdoc(me),{name:byId[me].name,tasks:work.tasks.slice(),done:work.done.slice(),day:today()},{merge:true}).catch(()=>setNet('err'));
+    setDoc(pdoc(me),{name:byId[me].name,...packList(work),day:today()},{merge:true}).catch(()=>setNet('err'));
   },600);
 }
-function renderList(ul,st,onSave,onProg,label){
+function renderList(ul,st,onSave,onProg,label,focusAt){
   ul.innerHTML='';
+  const rer=f=>renderList(ul,st,onSave,onProg,label,f);
+  const splice=(at,del,items)=>{
+    const a=items||[];
+    st.tasks.splice(at,del,...a.map(x=>x.t));st.done.splice(at,del,...a.map(()=>false));st.lv.splice(at,del,...a.map(x=>x.lv));
+    if(st.by)st.by.splice(at,del,...a.map(()=>''));
+  };
+  const setDone=(i,v)=>{st.done[i]=v;if(st.by)st.by[i]=v?me:'';};
+  const syncMain=m=>{if(!hasSubs(st,m))return;const e=blockEnd(st,m);let all=true,any=false;for(let k=m+1;k<e;k++)if(st.tasks[k].trim()){any=true;if(!st.done[k])all=false;}if(!any)return;if(st.done[m]!==all)setDone(m,all);};
+  let num=0,lastMain=-1;
   st.tasks.forEach((t,i)=>{
-    const li=document.createElement('li');li.className='task';
-    const has=!!t.trim();
-    if(has&&st.done[i])li.classList.add('done');
+    const sub=!!st.lv[i];
+    if(!sub){num++;lastMain=i;}
+    const li=document.createElement('li');li.className='task'+(sub?' sub':'')+(hasSubs(st,i)?' head':'');
+    if(st.done[i])li.classList.add('done');
     const b=document.createElement('button');
-    b.type='button';b.className='chk';b.disabled=!has;
-    b.setAttribute('aria-label',st.done[i]?'בטלו סימון '+label+' '+(i+1):'סמנו '+label+' '+(i+1)+' כבוצעה');
-    b.innerHTML='<span>'+(i+1)+'</span>'+CHECK;
+    b.type='button';b.className='chk';b.disabled=!t.trim();
+    const nm=sub?'תת־משימה':label+' '+num;
+    b.setAttribute('aria-label',(st.done[i]?'ביטול סימון ':'סימון כבוצעה: ')+nm);
+    b.innerHTML=(sub?'<span></span>':'<span>'+num+'</span>')+CHECK;
     const inp=document.createElement('input');
-    inp.type='text';inp.value=t;inp.placeholder=label+' '+(i+1);inp.maxLength=80;
-    inp.setAttribute('aria-label',label+' '+(i+1));
+    inp.type='text';inp.value=t;inp.placeholder=sub?'תת־משימה':label;inp.maxLength=80;
+    inp.setAttribute('aria-label',nm);
     let by=null;
-    if(st.by&&st.done[i]&&st.by[i]&&byId[st.by[i]]){by=document.createElement('span');by.className='by';by.textContent=byId[st.by[i]].name;}
+    if(st.by&&st.done[i]&&st.by[i]&&byId[st.by[i]]&&!hasSubs(st,i)){by=document.createElement('span');by.className='by';by.textContent=byId[st.by[i]].name;}
     b.onclick=()=>{
-      st.done[i]=!st.done[i];
-      if(st.by)st.by[i]=st.done[i]?me:'';
-      onSave();renderList(ul,st,onSave,onProg,label);
+      const v=!st.done[i];
+      if(hasSubs(st,i)){const e=blockEnd(st,i);for(let k=i;k<e;k++)if(st.tasks[k].trim())setDone(k,v);}
+      else{setDone(i,v);if(sub)syncMain(mainOf(st,i));}
+      onSave();rer();
     };
     inp.oninput=()=>{
       st.tasks[i]=inp.value;
-      if(!inp.value.trim()){st.done[i]=false;if(st.by)st.by[i]='';}
+      if(!inp.value.trim())setDone(i,false);
       b.disabled=!inp.value.trim();
       if(b.disabled)li.classList.remove('done');
       onSave();onProg();
     };
-    li.append(b,inp);if(by)li.append(by);ul.append(li);
+    inp.onblur=()=>{
+      setTimeout(()=>{
+        if(!inp.isConnected)return;
+        if(ul.contains(document.activeElement)&&document.activeElement.dataset.keep)return;
+        if(st.tasks[i]===inp.value&&!inp.value.trim()&&!hasSubs(st,i)){const m=sub?mainOf(st,i):-1;splice(i,1);if(m>=0)syncMain(m);onSave();rer();}
+      },150);
+    };
+    inp.addEventListener('keydown',e=>{
+      if(e.key!=='Enter')return;e.preventDefault();
+      if(!inp.value.trim())return;
+      const m=sub?mainOf(st,i):i,at=sub?i+1:blockEnd(st,m);
+      if(sub){splice(at,0,[{t:'',lv:1}]);syncMain(m);}
+      else splice(at,0,[{t:'',lv:0}]);
+      onSave();rer(at);
+    });
+    const del=document.createElement('button');del.type='button';del.className='tdel';del.textContent='×';del.dataset.keep='1';
+    del.setAttribute('aria-label','מחיקה: '+(t||nm));
+    del.onclick=()=>{
+      if(hasSubs(st,i)&&del.dataset.arm!=='1'){del.dataset.arm='1';del.textContent='למחוק הכול?';del.classList.add('arm');return;}
+      const m=sub?mainOf(st,i):-1;
+      splice(i,sub?1:blockEnd(st,i)-i);if(m>=0)syncMain(m);onSave();rer();
+    };
+    li.append(b,inp);if(by)li.append(by);
+    if(!sub&&t.trim()){
+      const add=document.createElement('button');add.type='button';add.className='tsub';add.dataset.keep='1';
+      add.textContent='+';add.title='הוספת תת־משימה';add.setAttribute('aria-label','הוספת תת־משימה ל'+nm);
+      add.onclick=()=>{const at=blockEnd(st,i);splice(at,0,[{t:'',lv:1}]);syncMain(i);onSave();rer(at);};
+      li.append(add);
+    }
+    li.append(del);
+    ul.append(li);
   });
+  /* שורה להוספת משימה ראשית חדשה */
+  if(st.tasks.length<MAXT){
+    const li=document.createElement('li');li.className='task addrow';
+    const inp=document.createElement('input');inp.type='text';inp.maxLength=80;
+    inp.placeholder='+ '+label+' חדשה';inp.setAttribute('aria-label','הוספת '+label+' חדשה');
+    const go=()=>{if(!inp.isConnected)return;const v=inp.value.trim();if(!v)return;inp.value='';splice(st.tasks.length,0,[{t:v,lv:0}]);onSave();rer(-1);};
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});
+    inp.onblur=go;
+    li.append(inp);ul.append(li);
+  }
+  if(focusAt!=null){
+    const rows=ul.querySelectorAll('li');
+    const r=focusAt===-1?rows[rows.length-1]:rows[focusAt];
+    const f=r&&r.querySelector('input');if(f)setTimeout(()=>f.focus(),0);
+  }
   onProg();
 }
 function renderTasks(){renderList($('tasks'),work,save,progress,'משימה');}
@@ -580,7 +710,7 @@ function saveFam(){
   famDirty=true;clearTimeout(famT);
   famT=setTimeout(()=>{
     famDirty=false;
-    setDoc(famDoc(),{tasks:fam.tasks.slice(),done:fam.done.slice(),by:fam.by.slice(),day:today()},{merge:true}).catch(()=>setNet('err'));
+    setDoc(famDoc(),{...packList(fam),day:today()},{merge:true}).catch(()=>setNet('err'));
   },600);
 }
 function subFam(){
@@ -623,6 +753,8 @@ function paintKids(){
         const li=document.createElement('li');if(st.done[i])li.className='ok';
         const ic=document.createElement('i');ic.textContent=st.done[i]?'✓':'○';
         const tx=document.createElement('span');tx.textContent=t;
+        if(st.lv[i])li.style.marginInlineStart='22px';
+        if(hasSubs(st,i))tx.style.fontWeight='700';
         li.append(ic,tx);ul.append(li);
       });
       k.append(ul);
@@ -695,7 +827,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden){beat();pa
 
 /* ---------- מסך ראשי ---------- */
 function tab(n){
-  ['today','jobs','shop','dog','home','set'].forEach(k=>{
+  ['today','jobs','shop','taxi','dog','home','set'].forEach(k=>{
     $('tab-'+k).hidden=(k!==n);
     $('nv-'+k).classList.toggle('on',k===n);
   });
@@ -704,6 +836,7 @@ function tab(n){
   if(n==='dog')paintDog();
   if(n==='jobs'||n==='today')paintJobs();
   if(n==='shop')paintShop();
+  if(n==='taxi')paintTaxi();
 }
 function paintSettings(){
   $('pinState').textContent=(people[me]||{}).pin?'לפרופיל שלך מוגדר קוד אישי.':'אין קוד אישי לפרופיל שלך.';
@@ -718,7 +851,7 @@ function openMain(){
   $('hello').textContent='היי '+p.name;
   $('dateTxt').textContent=new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
   show('s-main');tab('today');renderTasks();startBeat();
-  weekStart=sunday(new Date());subWeek();subSwaps();subFam();subJobs();subAdv();subCurWk();paintJobForm();subShop();
+  weekStart=sunday(new Date());subWeek();subSwaps();subFam();subJobs();subAdv();subCurWk();paintJobForm();subShop();subTaxi();
   clearInterval(homeT);homeT=setInterval(()=>{if(!$('tab-home').hidden)paintHome();},30000);
   syncPush();
   const qt=new URLSearchParams(location.search).get('tab');
@@ -1754,6 +1887,108 @@ function paintShop(){
   cb.textContent=clearArm?'ללחוץ שוב כדי להסיר '+got+' מוצרים שנקנו':'הסרת מה שנקנה ('+got+')';
 }
 
+/* ---------- מונית ---------- */
+let rides=[],taxiUnsub=null,taxiDay=today(),tkKind='go',tkWho=new Set(),tkDrv='',taxiCleaned=false;
+const taxiCol=()=>collection(db,'families',code,'taxi');
+const taxiRef=id=>doc(db,'families',code,'taxi',id);
+const KIDS_T=()=>PEOPLE.filter(p=>!isAdult(p.id));
+function dkey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function subTaxi(){
+  if(taxiUnsub){taxiUnsub();taxiUnsub=null;}
+  taxiDay=today();
+  taxiUnsub=onSnapshot(taxiCol(),snap=>{
+    rides=snap.docs.map(d=>Object.assign({id:d.id},d.data()));
+    if(!taxiCleaned&&isAdult(me)){
+      taxiCleaned=true;
+      const old=new Date();old.setDate(old.getDate()-14);const ok=dkey(old);
+      rides.filter(r=>r.day&&r.day<ok).forEach(r=>deleteDoc(taxiRef(r.id)).catch(()=>{}));
+    }
+    paintTaxiBadge();paintTaxi();
+  },()=>{});
+  paintTaxiForm();
+}
+function paintTaxiBadge(){
+  const n=rides.filter(r=>r.day===today()&&!r.done).length;
+  const b=$('taxiBadge');b.hidden=!n;b.textContent=String(n);
+}
+function rideNames(r){
+  const n=(r.who||[]).filter(id=>byId[id]).map(id=>byId[id].name);
+  if(r.other)n.push(r.other);
+  return n.join(', ')||'בלי שם';
+}
+function chip(txt,on,fn){const b=h('button','chip',txt);b.type='button';b.setAttribute('aria-pressed',on?'true':'false');b.onclick=fn;return b;}
+function paintTaxiForm(){
+  $('tkGo').setAttribute('aria-pressed',tkKind==='go'?'true':'false');
+  $('tkBack').setAttribute('aria-pressed',tkKind==='back'?'true':'false');
+  $('taxiPlaceL').textContent=tkKind==='go'?'לאן':'מאיפה';
+  $('taxiPlace').placeholder=tkKind==='go'?'למשל: חוג ג׳ודו':'למשל: בית הספר';
+  const w=$('taxiWho');w.innerHTML='';
+  KIDS_T().forEach(p=>w.append(chip(p.name,tkWho.has(p.id),()=>{tkWho.has(p.id)?tkWho.delete(p.id):tkWho.add(p.id);paintTaxiForm();})));
+  const dv=$('taxiDrv');dv.innerHTML='';
+  PEOPLE.filter(p=>isAdult(p.id)).forEach(p=>dv.append(chip(p.name,tkDrv===p.id,()=>{tkDrv=tkDrv===p.id?'':p.id;paintTaxiForm();})));
+  const d=new Date(taxiDay+'T12:00');
+  $('taxiFormH').textContent='נסיעה חדשה ל'+(taxiDay===today()?'היום':d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'}));
+}
+$('tkGo').onclick=()=>{tkKind='go';paintTaxiForm();};
+$('tkBack').onclick=()=>{tkKind='back';paintTaxiForm();};
+$('taxiAdd').onclick=async()=>{
+  const other=$('taxiOther').value.trim(),time=$('taxiTime').value,place=$('taxiPlace').value.trim();
+  const m=$('taxiMsg');
+  if(!tkWho.size&&!other){say(m,'בחרו את מי צריך '+(tkKind==='go'?'לקחת':'להחזיר')+'.');return;}
+  if(!time){say(m,'חסרה שעה.');return;}
+  if(!place){say(m,tkKind==='go'?'חסר לאן.':'חסר מאיפה.');return;}
+  try{
+    await setDoc(doc(taxiCol()),{day:taxiDay,kind:tkKind,who:[...tkWho],other:other.slice(0,40),time:time,place:place.slice(0,80),driver:tkDrv||null,by:me,at:Date.now(),done:false});
+    tkWho=new Set();tkDrv='';$('taxiOther').value='';$('taxiTime').value='';$('taxiPlace').value='';
+    say(m,'הנסיעה נוספה.',true);setTimeout(()=>say(m,''),2500);paintTaxiForm();
+  }catch(e){say(m,'השמירה נכשלה. בדקו חיבור.');}
+};
+function paintTaxi(){
+  const box=$('taxiBox');if(!box||!me||$('tab-taxi').hidden)return;
+  const days=$('taxiDays');days.innerHTML='';
+  const base=new Date();
+  for(let i=0;i<8;i++){
+    const d=new Date(base);d.setDate(base.getDate()+i);const k=dkey(d);
+    const b=h('button','tday');b.type='button';
+    b.append(h('span',null,i===0?'היום':i===1?'מחר':d.toLocaleDateString('he-IL',{weekday:'short'})));
+    b.append(h('b',null,d.getDate()+'.'+(d.getMonth()+1)));
+    if(rides.some(r=>r.day===k&&!r.done)){const dot=h('i');dot.setAttribute('aria-hidden','true');b.append(dot);}
+    b.setAttribute('aria-pressed',k===taxiDay?'true':'false');
+    b.onclick=()=>{taxiDay=k;paintTaxi();paintTaxiForm();};
+    days.append(b);
+  }
+  if(taxiDay<today())taxiDay=today();
+  box.innerHTML='';
+  const list=rides.filter(r=>r.day===taxiDay);
+  const left=list.filter(r=>!r.done).length;
+  const pr=$('taxiProg');pr.className='progress';
+  if(!list.length)pr.textContent='אין נסיעות ביום הזה.';
+  else if(!left){pr.textContent='כל הנסיעות בוצעו';pr.className='progress all';}
+  else pr.textContent=left+(left===1?' נסיעה שנשארה':' נסיעות שנשארו');
+  [['go','🚗 לקחת','לאן: '],['back','🏠 להחזיר','מאיפה: ']].forEach(([k,t,pl])=>{
+    const items=list.filter(r=>r.kind===k).sort((a,b)=>(a.time||'').localeCompare(b.time||'')||(a.at-b.at));
+    const sec=h('section','tsec');sec.append(h('h3',null,t));
+    const ul=h('ul','sitems');
+    if(!items.length)ul.append(h('li','tempty',k==='go'?'אין את מי לקחת.':'אין את מי להחזיר.'));
+    items.forEach(r=>{
+      const li=h('li','tride'+(r.done?' got':''));
+      const c=h('button','chk');c.type='button';c.innerHTML=CHECK;
+      c.setAttribute('aria-label',(r.done?'ביטול סימון: ':'סימון שבוצע: ')+rideNames(r));
+      c.onclick=()=>setDoc(taxiRef(r.id),{done:!r.done},{merge:true}).catch(()=>toast('הפעולה נכשלה.'));
+      const st=h('div','st2');
+      st.append(h('div','tx',rideNames(r)),h('div','pl',pl+r.place));
+      const meta=[];
+      if(r.driver&&byId[r.driver])meta.push(byId[r.driver].name+(byId[r.driver].g==='m'?' נוהג':' נוהגת'));
+      if(byId[r.by])meta.push('נרשם ע״י '+byId[r.by].name);
+      if(meta.length)st.append(h('div','by3',meta.join(' · ')));
+      const del=h('button','mv','×');del.type='button';del.setAttribute('aria-label','מחיקת הנסיעה: '+rideNames(r));
+      del.onclick=()=>deleteDoc(taxiRef(r.id)).catch(()=>{});
+      li.append(h('span','tm',r.time||''),st,c,del);ul.append(li);
+    });
+    sec.append(ul);box.append(sec);
+  });
+}
+
 /* ---------- אירועים ---------- */
 $('btnJoin').onclick=()=>enterCode(false);
 $('btnCreate').onclick=()=>enterCode(true);
@@ -1766,7 +2001,7 @@ async function tryPin(){
 }
 $('pinOk').onclick=tryPin;
 $('pinIn').addEventListener('keydown',e=>{if(e.key==='Enter')tryPin();});
-['today','jobs','shop','dog','home','set'].forEach(k=>{$('nv-'+k).onclick=()=>tab(k);});
+['today','jobs','shop','taxi','dog','home','set'].forEach(k=>{$('nv-'+k).onclick=()=>tab(k);});
 $('btnSwitch').onclick=()=>showWho();
 $('codeShow').onclick=()=>{const o=$('codeOut');o.textContent=code;o.hidden=!o.hidden;$('codeShow').textContent=o.hidden?'הצגת הקוד':'הסתרת הקוד';};
 $('pinSave').onclick=async()=>{
