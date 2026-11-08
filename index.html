@@ -150,6 +150,9 @@ input{font:inherit;color:var(--ink)}
 .job .jm{color:var(--mute);font-size:.9rem;margin-top:2px}
 .job .jm.late{color:var(--bad);font-weight:700}
 .job .jm.ok{color:var(--good);font-weight:700}
+.grpkids{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.grpkid{display:flex;align-items:center;gap:6px;border:2px solid var(--line);border-radius:999px;padding:3px 10px 3px 3px;font-size:.9rem}
+.grpkid.ok{border-color:var(--good);color:var(--good);font-weight:700}
 .job .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .openav{flex:none;border-radius:50%;border:2px dashed var(--line);display:grid;place-items:center;color:var(--mute);font:700 1.3rem var(--display)}
 .jform textarea,.jform select,.jform input{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:12px;font-size:1.05rem}
@@ -1339,6 +1342,7 @@ function paintJobForm(){
   const f=$('jobForm');f.hidden=!isAdult(me);if(f.hidden)return;
   const sel=$('jTo');if(!sel.options.length){
     const o=h('option',null,'כל הבנות: מי שלוקחת ראשונה');o.value='all';sel.append(o);
+    const e=h('option',null,'כל הבנות: כל אחת עושה בעצמה');e.value='each';sel.append(e);
     KIDS.forEach(k=>{const x=h('option',null,byId[k].name);x.value=k;sel.append(x);});
   }
   if(!$('jDate').value)$('jDate').value=today();
@@ -1358,9 +1362,16 @@ $('jAdd').onclick=async()=>{
   }
   const to=$('jTo').value;
   try{
-    await Promise.all(lines.map((t,i)=>setDoc(doc(jobsCol()),{text:t.slice(0,120),to:to,due:due,hasT:hasT,by:me,at:Date.now()+i,claim:null,done:false,ok:false})));
+    const base=(t,i)=>({text:t.slice(0,120),due:due,hasT:hasT,by:me,at:Date.now()+i,claim:null,done:false,ok:false});
+    const w=[];
+    lines.forEach((t,i)=>{
+      if(to==='each'){const grp='g'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+        KIDS.forEach(k=>w.push(setDoc(doc(jobsCol()),Object.assign(base(t,i),{to:k,grp:grp}))));}
+      else w.push(setDoc(doc(jobsCol()),Object.assign(base(t,i),{to:to})));
+    });
+    await Promise.all(w);
     $('jText').value='';$('jTime').value='';
-    say(m,(lines.length>1?'נוספו '+lines.length+' משימות':'המשימה נוספה')+(to==='all'?' לכל הבנות.':' ל'+byId[to].name+'.'),true);
+    say(m,(lines.length>1?'נוספו '+lines.length+' משימות':'המשימה נוספה')+(to==='all'?' לכל הבנות, מי שלוקחת ראשונה.':to==='each'?' לכל אחת מהבנות.':' ל'+byId[to].name+'.'),true);
   }catch(e){say(m,'השמירה נכשלה. בדקו חיבור.');}
 };
 const CHEER=['יופי, סגרת את זה','כל הכבוד','אלופה','עוד אחת מאחורייך','מעולה, תודה'];
@@ -1426,6 +1437,40 @@ function jobItem(j){
   li.append(b);
   return li;
 }
+/* משימה לכל הבנות: כרטיס אחד להורים עם מצב של כל ילדה */
+function grpItem(list){
+  const li=h('li','job'),j=list[0],gid=j.grp;
+  const allDone=list.every(x=>x.done);if(allDone)li.classList.add('done');
+  const o=h('span','openav','👭');o.style.width=o.style.height='48px';o.setAttribute('aria-hidden','true');li.append(o);
+  const b=h('div','jb');b.append(h('div','jt',j.text));
+  const n=list.filter(x=>x.done).length;
+  b.append(h('div','jm','לכל הבנות, כל אחת בעצמה'+(byId[j.by]?' · מ'+byId[j.by].name:'')));
+  const dt=dueText(j);
+  if(dt){const late=list.some(isLate);b.append(h('div','jm'+(late?' late':''),(late?'באיחור · ':'')+dt));}
+  b.append(h('div','jm'+(allDone?' ok':''),(allDone?'✓ ':'')+n+' מתוך '+list.length+' סיימו'));
+  const row=h('div','grpkids');
+  list.slice().sort((a,c)=>KIDS.indexOf(a.to)-KIDS.indexOf(c.to)).forEach(x=>{
+    const c=h('span','grpkid'+(x.done?' ok':''));c.append(avatar(x.to,28));
+    c.append(h('span',null,byId[x.to].name+(x.done?(waiting(x)?' ✓ ממתין לאישור':' ✓'):'')));row.append(c);
+  });
+  b.append(row);
+  const acts=h('div','acts');
+  const x=h('button','btn sm danger',delArm===gid?'ללחוץ שוב למחיקה לכולן':'מחיקה לכולן');x.type='button';
+  x.onclick=()=>{
+    if(delArm!==gid){delArm=gid;paintJobs();return;}
+    delArm=null;Promise.all(jobs.filter(y=>y.grp===gid).map(y=>deleteDoc(jobRef(y.id)))).catch(()=>toast('המחיקה נכשלה.'));
+  };
+  acts.append(x);b.append(acts);
+  li.append(b);return li;
+}
+function sectionGrp(box,title,list,empty){
+  box.append(h('h2','sec',title));
+  const singles=list.filter(j=>!j.grp),gids=[...new Set(list.filter(j=>j.grp).map(j=>j.grp))];
+  if(!singles.length&&!gids.length){if(empty)box.append(h('p','date',empty));return;}
+  const items=singles.map(j=>({k:j,el:()=>jobItem(j)}));
+  gids.forEach(g=>{const all=jobs.filter(j=>j.grp===g);items.push({k:all[0],el:()=>grpItem(all)});});
+  const ul=h('ul','jobs');items.sort((a,c)=>jobSort(a.k,c.k)).forEach(i=>ul.append(i.el()));box.append(ul);
+}
 function section(box,title,list,empty){
   box.append(h('h2','sec',title));
   if(!list.length){if(empty)box.append(h('p','date',empty));return;}
@@ -1440,8 +1485,9 @@ function paintJobs(){
   if(isAdult(me)){
     if(on('r_approve'))section(box,'ממתינות לאישור שלך',jobs.filter(waiting));
     section(box,'פתוחות, עוד לא נלקחו',jobs.filter(j=>!j.done&&j.to==='all'&&!j.claim),'אין משימות פתוחות.');
-    section(box,'בביצוע',jobs.filter(j=>!j.done&&resp(j)),'אין משימות בביצוע.');
-    section(box,'בוצעו לאחרונה',jobs.filter(j=>j.done&&!waiting(j)&&recent(j)));
+    const grpOpen=g=>jobs.some(x=>x.grp===g&&!x.done);
+    sectionGrp(box,'בביצוע',jobs.filter(j=>j.grp?grpOpen(j.grp):(!j.done&&resp(j))),'אין משימות בביצוע.');
+    sectionGrp(box,'בוצעו לאחרונה',jobs.filter(j=>j.done&&!waiting(j)&&recent(j)&&!(j.grp&&grpOpen(j.grp))));
   }else{
     const mine=jobs.filter(j=>!j.done&&resp(j)===me);
     section(box,'מחכות לך',mine,'אין משימות שמחכות לך כרגע.');
