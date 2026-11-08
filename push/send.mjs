@@ -152,6 +152,24 @@ async function main() {
     }
   }
 
+  // יום חמישי 18:00: תזכורת למי שעוד לא מילא אילוצים לשבוע הבא (המועד בסוף היום)
+  {
+    const p = parts(now);
+    if (p.wd === 4) {
+      const t = localToUtc(p.y, p.m, p.d, 18, 0);
+      if (t <= now && now - t <= WINDOW) {
+        const nx = new Date(Date.UTC(p.y, p.m - 1, p.d) + 3 * 864e5);
+        const nk = ymd(nx.getUTCFullYear(), nx.getUTCMonth() + 1, nx.getUTCDate());
+        const w = await getDoc(`${F}/weeks/${nk}`);
+        const cons = (w && w.cons) || {};
+        if (!(w && w.gen)) {
+          const who = [...KIDS, 'mom'].filter(id => !cons[id]);
+          if (who.length) out.push({ key: `c_${nk}`, who, tab: 'dog', body: 'עד הלילה ממלאים אילוצים לשבוע הבא בלשונית הכלבה. מחר האפליקציה משבצת לבד.' });
+        }
+      }
+    }
+  }
+
   for (const n of out) {
     if (sent.has(n.key)) continue;
     const targets = subs.filter(s => n.who.includes(s.who));

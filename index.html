@@ -12,6 +12,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-180.png">
+<script src="tm.js?v=1"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Rubik:wght@500;700&display=swap">
@@ -253,6 +254,88 @@ input{font:inherit;color:var(--ink)}
 .tride.got .tx,.tride.got .pl,.tride.got .tm{color:var(--mute);text-decoration:line-through}
 .tride .mv{flex:none;min-height:40px;min-width:40px;border:0;background:transparent;color:var(--mute);font:700 1.2rem var(--body);cursor:pointer;border-radius:10px}
 .tempty{color:var(--mute);padding:10px 12px}
+
+/* מסך הבנות */
+.kc{background:var(--surface);border:1px solid var(--line);border-inline-start:6px solid var(--kc);border-radius:16px;padding:12px 14px;margin-top:12px}
+@media (prefers-color-scheme:dark){.kc{border-inline-start-color:var(--kc-d)}}
+.kc .kh2{display:flex;align-items:center;gap:12px}
+.kc .kh2 b{font:800 1.3rem var(--display);color:var(--kc)}
+@media (prefers-color-scheme:dark){.kc .kh2 b{color:var(--kc-d)}}
+.kc .kh2 small{margin-inline-start:auto;font-weight:700;color:var(--mute);white-space:nowrap}
+.kc .kh2 small.all{color:var(--good)}
+.kbar{height:6px;border-radius:99px;background:var(--soft);margin:8px 0 4px;overflow:hidden}
+.kbar i{display:block;height:100%;background:var(--good);border-radius:99px}
+.kg{font-size:.8rem;font-weight:700;color:var(--mute);margin:10px 0 2px}
+.kr{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
+.kg+.kr{border-top:0}
+.kr span{flex:1;min-width:0;word-break:break-word;font-size:1.02rem}
+.kr.sub{padding-inline-start:22px}
+.kr.sub span{font-size:.95rem}
+.kr.head span{font-weight:800}
+.kr.ok span{text-decoration:line-through;text-decoration-thickness:1px;text-decoration-color:var(--mute);color:var(--mute)}
+.kr .km{flex:none;width:26px;height:26px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center}
+.kr.ok .km{background:var(--good);border-color:var(--good);color:#fff}
+.kr .km svg{width:16px;height:16px;display:none}
+.kr.ok .km svg{display:block}
+.kr .kt{flex:none;font-size:.75rem;color:var(--warn);font-weight:700}
+.kr.ok span.kt{text-decoration:none;color:var(--good)}
+.kc .none{color:var(--mute);font-size:.92rem;padding:4px 0}
+.nav.many{overflow-x:auto;scrollbar-width:none}
+.nav.many::-webkit-scrollbar{display:none}
+.nav.many button{min-width:40px}
+/* אילוצים */
+.cnt.ok{border-color:var(--good);color:var(--good);font-weight:700}
+.chip.fixed{opacity:.55;cursor:default}
+/* דו"ח */
+.rbar{display:grid;grid-template-columns:auto 4.2em 1fr 2.2em;align-items:center;gap:8px;padding:4px 0}
+.rbar .bt{height:14px;border-radius:7px;background:var(--soft);overflow:hidden;position:relative}
+.rbar .bt i{position:absolute;inset:0 auto 0 0;inset-inline-start:0;border-radius:7px}
+.rbar .bt i.h{opacity:.35}
+.rbar b{text-align:start;font-variant-numeric:tabular-nums}
+.heat{width:100%;border-collapse:separate;border-spacing:3px;font-size:.88rem;margin-top:6px}
+.heat th{font-weight:700;color:var(--mute);font-size:.75rem}
+.heat td{text-align:center;border-radius:8px;padding:6px 0;font-weight:700;font-variant-numeric:tabular-nums}
+.heat td.nm{text-align:start;padding-inline-start:4px;font-weight:700}
+.legend{display:flex;gap:14px;font-size:.8rem;color:var(--mute);margin:4px 0}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-inline-end:4px}
+.bonus{font-size:.82rem;font-weight:700;color:var(--warn)}
+/* פודיום */
+.pod{overflow:hidden}
+.podhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.podhead h3{margin:0}
+.podhead .chips{margin:0}
+.podhead .chip{min-height:36px;padding:2px 12px;font-size:.85rem}
+.stage{position:relative;height:262px;margin-top:6px;display:flex;align-items:flex-end;justify-content:center;gap:6px;
+  background:linear-gradient(to top,color-mix(in srgb,var(--good) 18%,var(--surface)) 0 14px,transparent 14px)}
+.pcol{flex:1;max-width:150px;display:flex;flex-direction:column;align-items:center;position:relative}
+.pfig{display:block;object-fit:contain;transform-origin:50% 100%}
+.pname{font:700 .95rem var(--display);margin-top:2px}
+.pstep{width:100%;border-radius:12px 12px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:4px;color:#fff;font:800 1.4rem var(--display)}
+.pstep small{font:700 .78rem var(--body);opacity:.95}
+.pstep.r1{height:88px;background:linear-gradient(#F6C445,#D99A0B)}
+.pstep.r2{height:68px;background:linear-gradient(#C9D2DE,#8E9BAE)}
+.pstep.r3{height:54px;background:linear-gradient(#E3A776,#B8703A)}
+.crown{position:absolute;top:-22px;font-size:1.5rem}
+.poodle{position:absolute;left:0;bottom:2px;width:64px;height:54px;z-index:3;pointer-events:none}
+.poodle .pd{width:100%;height:100%;transform-origin:50% 50%}
+.poodle.flip .pd{transform:scaleX(-1)}
+.poodle .lg{transform-box:fill-box;transform-origin:50% 0}
+.poodle.run .lg.a{animation:lega .28s linear infinite}
+.poodle.run .lg.b{animation:lega .28s linear infinite reverse}
+@keyframes lega{0%{transform:rotate(-24deg)}50%{transform:rotate(24deg)}100%{transform:rotate(-24deg)}}
+.poodle .tng{opacity:0;transition:opacity .1s}
+.poodle.lick .tng{opacity:1}
+.poodle .tl{transform-box:fill-box;transform-origin:100% 100%}
+.poodle.happy .tl{animation:wag .18s ease-in-out infinite alternate}
+@keyframes wag{from{transform:rotate(-25deg)}to{transform:rotate(25deg)}}
+.heart{position:absolute;z-index:4;font-size:1.3rem;pointer-events:none}
+.lickbub{position:absolute;z-index:5;background:var(--surface);border:2px solid var(--good);border-radius:14px;padding:2px 10px;font-weight:800;color:var(--good);white-space:nowrap;pointer-events:none}
+.podlist{list-style:none;margin:10px 0 0;padding:0}
+.podlist li{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
+.podlist li:first-child{border-top:0}
+.podlist .rk{flex:none;width:1.6em;text-align:center;font:800 1.1rem var(--display);color:var(--mute)}
+.podlist .pt{margin-inline-start:auto;font:800 1.1rem var(--display);color:var(--accent);white-space:nowrap}
+.podlist small{display:block;color:var(--mute);font-size:.8rem;line-height:1.3}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -317,7 +400,7 @@ input{font:inherit;color:var(--ink)}
     <div id="jobsBox"></div>
     <div class="card">
       <h3>צלצול תזכורת</h3>
-      <p class="date">כשמגיעה שעת משימה, הטלפון מצלצל כמה שניות ומציג הודעה. זה עובד כשהאפליקציה פתוחה, ובכניסה הבאה מופיעות תזכורות שהוחמצו. עוצמת הצלצול נקבעת לפי עוצמת המדיה בטלפון (הכפתורים בצד כשמתנגן משהו), ולא לפי עוצמת הצלצול של שיחות.</p>
+      <p class="date">כשמגיעה שעת משימה והאפליקציה פתוחה, הטלפון מצלצל כמה שניות ומציג הודעה. עוצמת הצלצול נקבעת לפי עוצמת המדיה בטלפון (הכפתורים בצד כשמתנגן משהו). כשהאפליקציה סגורה מגיעה התראה רגילה של הטלפון, עם הצליל שלו.</p>
       <button id="ringTest" class="btn quiet" type="button">בדיקת צלצול</button>
     </div>
   </div>
@@ -362,13 +445,18 @@ input{font:inherit;color:var(--ink)}
   </div>
 
   <div id="tab-dog" hidden>
+    <div id="podBox"></div>
     <div id="dogBox"></div>
+  </div>
+
+  <div id="tab-kids" hidden>
+    <h2 class="ttl">הבנות היום</h2>
+    <div id="kidsAll"></div>
   </div>
 
   <div id="tab-home" hidden>
     <div id="advCard" class="card" hidden><h3 id="advH">המלצות צוות היועצים</h3><p class="date">כל המלצה נכנסת לאפליקציה רק אם תלחצו "מקבל". יום אחרי ההחלטה ההמלצה יורדת מהמסך, ואפשר לראות ולשנות אותה ב"החלטות קודמות".</p><div id="advBox"></div></div>
     <div id="weekCard" class="card rep" hidden></div>
-    <div id="kidsCard" class="card" hidden><h3>המשימות של הבנות היום</h3><div id="kidsBox"></div></div>
     <div class="card"><h3>מי מחובר עכשיו</h3><div id="presence"></div></div>
   </div>
 
@@ -404,12 +492,13 @@ input{font:inherit;color:var(--ink)}
     </div>
     <button id="btnSwitch" class="btn quiet" type="button">החלפת פרופיל</button>
     <button id="btnForget" class="btn danger" type="button">ניתוק הטלפון הזה מהמשפחה</button>
-    <p class="hint">גרסה: שלב 3.5, כולל פעמון תזכורת לכל משימה ותת־משימה, צבע לכל קטגוריה, כיווץ תתי־משימות, מסך נפרד למשימות משפחתיות, התראות כשהאפליקציה סגורה, רשימת קניות, מונית, משימות ותתי־משימות בלי הגבלה, משימות מההורים עם צלצול, משימות פתוחות, שיבוץ כלבה עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
+    <p class="hint">גרסה: שלב 4, כולל מסך הבנות, אילוצים שבועיים עד יום חמישי ושיבוץ אוטומטי, דו״ח הוגנות, ניקוד בונוס ופודיום עם הכלבה, צלצול משופר,  פעמון תזכורת לכל משימה ותת־משימה, צבע לכל קטגוריה, כיווץ תתי־משימות, מסך נפרד למשימות משפחתיות, התראות כשהאפליקציה סגורה, רשימת קניות, מונית, משימות ותתי־משימות בלי הגבלה, משימות מההורים עם צלצול, משימות פתוחות, שיבוץ כלבה עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
   </div>
 
   <nav class="nav" aria-label="ניווט">
     <button id="nv-today" type="button"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>היום שלי</button>
     <button id="nv-fam" type="button" hidden><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M14 19a3.8 3.8 0 0 1 7 0"/></svg>משפחה</button>
+    <button id="nv-kids" type="button" hidden><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.2"/><circle cx="16" cy="8" r="3.2"/><path d="M2.5 20c.6-3.5 2.8-5.5 5.5-5.5s4.9 2 5.5 5.5M10.5 20c.6-3.5 2.8-5.5 5.5-5.5s4.9 2 5.5 5.5"/></svg>הבנות</button>
     <button id="nv-jobs" type="button"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>משימות<span id="jobBadge" class="nb" hidden></span></button>
     <button id="nv-shop" type="button" hidden><svg viewBox="0 0 24 24"><path d="M3 4h2l2.4 11h11l2-8H6.2"/><circle cx="9" cy="19.5" r="1.5"/><circle cx="17" cy="19.5" r="1.5"/></svg>קניות</button>
     <button id="nv-taxi" type="button"><svg viewBox="0 0 24 24"><path d="M5 17h14v-5l-2-5H7l-2 5z"/><path d="M5 12h14M9 4h6"/><circle cx="8" cy="17.5" r="1.5"/><circle cx="16" cy="17.5" r="1.5"/></svg>מונית<span id="taxiBadge" class="nb" hidden></span></button>
@@ -807,7 +896,7 @@ function saveFam(){
 function subFam(){
   if(famUnsub){famUnsub();famUnsub=null;}
   const adult=me==='dad'||me==='mom';
-  $('nv-fam').hidden=!adult;document.querySelector('.nav').classList.toggle('many',adult);
+  $('nv-fam').hidden=!adult;$('nv-kids').hidden=!adult;document.querySelector('.nav').classList.toggle('many',adult);
   if(!adult)return;
   fam=famState(null);renderFam();
   famUnsub=onSnapshot(famDoc(),snap=>{
@@ -866,6 +955,48 @@ function paintKids(){
   });
 }
 
+
+/* ---------- מסך הבנות: כל ילדה, המשימות שלה והאם סיימה ---------- */
+function paintKidsTab(){
+  const box=$('kidsAll');if(!box||!me||!isAdult(me)||$('tab-kids').hidden)return;
+  box.innerHTML='';
+  const now=new Date(),dw=now.getDay(),sod=startOfDay(now);
+  KIDS.forEach(id=>{
+    const p=byId[id],groups=[];
+    const st=listState(people[id]);
+    const own=[];
+    st.tasks.forEach((t,i)=>{if(t.trim())own.push({t:t,ok:!!st.done[i],sub:!!st.lv[i],head:hasSubs(st,i)});});
+    if(own.length)groups.push(['משימות אישיות',own]);
+    const pj=jobs.filter(j=>resp(j)===id&&(!j.done||(j.doneAt&&j.doneAt>=sod))).sort(jobSort)
+      .map(j=>({t:j.text+(j.hasT&&j.due?' · '+hhmm(new Date(j.due)):''),ok:!!j.done,tag:j.done&&waiting(j)?'ממתין לאישור':(isLate(j)?'באיחור':'')}));
+    if(pj.length)groups.push(['משימות מההורים',pj]);
+    const dogs=[];
+    SLOTS.forEach(sl=>{
+      if(!hasSlot(dw,sl.k))return;
+      const key=dw+'_'+sl.k,a=curWk.slots[key],dn=curWk.done[key];
+      if(a===id)dogs.push({t:'להוציא את הכלבה, '+sl.n,ok:!!dn,tag:dn&&dn.by!==id&&byId[dn.by]?'הוציא/ה '+byId[dn.by].name:''});
+      else if(dn&&dn.by===id)dogs.push({t:'הוציאה את הכלבה, '+sl.n+(a&&byId[a]?' (במקום '+byId[a].name+')':''),ok:true});
+    });
+    if(dogs.length)groups.push(['הכלבה היום',dogs]);
+    let tot=0,dn=0;groups.forEach(g=>g[1].forEach(r=>{if(r.head)return;tot++;if(r.ok)dn++;}));
+    const c=h('section','kc');c.style.setProperty('--kc',p.l);c.style.setProperty('--kc-d',p.d);
+    const hd=h('div','kh2');hd.append(avatar(id,52),h('b',null,p.name));
+    const cn=h('small',tot&&dn===tot?'all':'',tot?(dn===tot?'סיימה הכול 🎉':dn+' מתוך '+tot):'');hd.append(cn);c.append(hd);
+    if(tot){const bar=h('div','kbar'),f=h('i');f.style.width=Math.round(100*dn/tot)+'%';bar.append(f);c.append(bar);}
+    if(!groups.length)c.append(h('div','none','אין משימות להיום'));
+    groups.forEach(([title,rows])=>{
+      c.append(h('div','kg',title));
+      rows.forEach(r=>{
+        const row=h('div','kr'+(r.ok?' ok':'')+(r.sub?' sub':'')+(r.head?' head':''));
+        row.append(h('span',null,r.t));
+        if(r.tag)row.append(h('span','kt',r.tag));
+        const m=h('i','km');m.innerHTML=CHECK;m.setAttribute('aria-label',r.ok?'בוצע':'עוד לא');m.setAttribute('role','img');
+        row.append(m);c.append(row);
+      });
+    });
+    box.append(c);
+  });
+}
 /* ---------- הבית: מי מחובר ---------- */
 function paintWeekSum(){
   const c=$('weekCard');if(!c)return;
@@ -894,7 +1025,7 @@ function weekPop(){
   toast('סיכום השבוע מחכה בלשונית "הבית"');
 }
 function paintHome(){
-  paintKids();paintAdvice();paintWeekSum();
+  paintAdvice();paintWeekSum();
   const box=$('presence');if(!box)return;
   box.innerHTML='';
   const now=Date.now();
@@ -918,14 +1049,15 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden){beat();pa
 
 /* ---------- מסך ראשי ---------- */
 function tab(n){
-  $('topBar').hidden=(n==='today'||n==='fam');
-  ['today','fam','jobs','shop','taxi','dog','home','set'].forEach(k=>{
+  $('topBar').hidden=(n==='today'||n==='fam'||n==='kids');
+  ['today','fam','kids','jobs','shop','taxi','dog','home','set'].forEach(k=>{
     $('tab-'+k).hidden=(k!==n);
     $('nv-'+k).classList.toggle('on',k===n);
   });
   if(n==='home')paintHome();
   if(n==='set'){paintSettings();paintPush();}
-  if(n==='dog')paintDog();
+  if(n==='dog'){paintDog();paintPodium(true);}
+  if(n==='kids')paintKidsTab();
   if(n==='jobs'||n==='today')paintJobs();
   if(n==='shop')paintShop();
   if(n==='taxi')paintTaxi();
@@ -944,7 +1076,7 @@ function openMain(){
   $('mineH').textContent='המשימות של '+p.name;
   $('dateTxt').textContent=new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
   show('s-main');tab('today');renderTasks();startBeat();
-  weekStart=sunday(new Date());subWeek();subSwaps();subFam();subJobs();subAdv();subCurWk();paintJobForm();subShop();subTaxi();
+  weekStart=sunday(new Date());subWeek();subSwaps();subFam();subJobs();subAdv();subCurWk();subNextWk();paintJobForm();subShop();subTaxi();
   clearInterval(homeT);homeT=setInterval(()=>{if(!$('tab-home').hidden)paintHome();},30000);
   syncPush();
   const qt=new URLSearchParams(location.search).get('tab');
@@ -953,7 +1085,7 @@ function openMain(){
 function onPeople(snap){
   if(!$('s-who').hidden)paintWho();
   if(!me||$('s-main').hidden)return;
-  paintHome();
+  paintHome();paintKidsTab();
   if(!$('tab-dog').hidden)paintDog();
   const mine=snap.docs.find(d=>d.id===me);
   if(!mine||mine.metadata.hasPendingWrites||dirty)return;
@@ -992,7 +1124,7 @@ function subWeek(){
   wk={slots:{},done:{}};
   wkUnsub=onSnapshot(wkRef(fmt(weekStart)),s=>{
     const d=s.exists()?s.data():{};
-    wk={slots:d.slots||{},done:d.done||{},report:d.report||null,empty:d.empty||[]};
+    wk={slots:d.slots||{},done:d.done||{},report:d.report||null,empty:d.empty||[],cons:d.cons||{},orig:d.orig||null,gen:d.gen||0,auto:!!d.auto,by:d.by||''};
     paintDog();
   },()=>{});
   paintDog();
@@ -1010,7 +1142,7 @@ function normPrefs(r,id){
   r=r||{};
   return {hard:(r.hard||[]).slice(),like:(r.like||[]).slice(),avoid:(r.avoid||[]).slice(),
           block:(r.block||[]).slice(),once:(r.once||[]).map(o=>({d:o.d,s:(o.s||[]).slice()})),
-          max:r.max||(id==='dad'?10:id==='mom'?2:5)};
+          max:r.max||(id==='dad'?10:id==='mom'?2:5),wb:[]};
 }
 function loadPrefs(){return normPrefs((people[me]||{}).prefs,me);}
 const SHORT={m:'בוקר',s:'אחרי ביה"ס',a:'17:30',b:'20:00',n:'22:00'};
@@ -1118,22 +1250,28 @@ $('quizSave').onclick=()=>{
 
 /* אלגוריתם השיבוץ: אילוצים קשיחים לא נשברים, והשאר במיטוב */
 function rngOf(seed){let a=(seed>>>0)||1;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
-function planWeek(ws,P,hurt){
-  hurt=hurt||{};
+function planWeek(ws,P,hurt,HI){
+  hurt=hurt||{};HI=HI||{n:{},s:{}};
   const ids=PEOPLE.map(p=>p.id),kids=ids.filter(i=>!isAdult(i));
   const slots=[];
   for(let d=0;d<7;d++)SLOTS.forEach(x=>{if(hasSlot(d,x.k))slots.push({d:d,k:x.k,key:d+'_'+x.k,date:fmt(addDays(ws,d))});});
   const idx={};slots.forEach((x,i)=>idx[x.key]=i);
   const prevI=slots.map(x=>idx[(x.d-1)+'_'+x.k]);
-  const blocked=(id,x)=>{const r=P[id];return r.block.includes(x.key)||r.once.some(o=>o.d===x.date&&o.s.includes(x.k));};
+  const blocked=(id,x)=>{const r=P[id];return r.block.includes(x.key)||(r.wb||[]).includes(x.key)||r.once.some(o=>o.d===x.date&&o.s.includes(x.k));};
+  /* הוגנות לאורך זמן: מי שקיבלה יותר בשלושת השבועות הקודמים מקבלת קצת פחות עכשיו, גם בסך הכול וגם לפי שעות היום */
+  const SK=SLOTS.map(x=>x.k);
+  const hm=kids.reduce((a,k)=>a+(HI.n[k]||0),0)/kids.length;
+  const off={},offS={};
+  kids.forEach(k=>{off[k]=Math.max(-4,Math.min(4,.4*((HI.n[k]||0)-hm)));offS[k]={};});
+  SK.forEach(q=>{const mq=kids.reduce((a,k)=>a+((HI.s[k]||{})[q]||0),0)/kids.length;kids.forEach(k=>offS[k][q]=Math.max(-2,Math.min(2,.4*(((HI.s[k]||{})[q]||0)-mq))));});
   const elig=slots.map(x=>ids.filter(id=>!blocked(id,x)));
   const W={};ids.forEach(id=>W[id]=hurt[id]?1.6:1);
   function cost(a){
-    let c=0;const load={},dc={};ids.forEach(i=>load[i]=0);
+    let c=0;const load={},dc={},sc={};ids.forEach(i=>{load[i]=0;sc[i]={m:0,s:0,a:0,b:0,n:0};});
     for(let i=0;i<a.length;i++){
       const id=a[i];if(!id)continue;
       const x=slots[i],r=P[id],w=W[id];
-      load[id]++;const dk=id+x.d;dc[dk]=(dc[dk]||0)+1;
+      load[id]++;sc[id][x.k]++;const dk=id+x.d;dc[dk]=(dc[dk]||0)+1;
       if(id==='dad'){if(x.k!=='m'&&x.k!=='n')c+=40;}
       else{if(x.k==='m'||x.k==='n')c+=6;}
       if(r.hard.includes(x.d))c+=30*w;
@@ -1145,7 +1283,8 @@ function planWeek(ws,P,hurt){
     const mt=P.mom.max;c+=150*(load.mom-mt)*(load.mom-mt);
     ids.forEach(id=>{if(id!=='mom'&&load[id]>P[id].max)c+=80*(load[id]-P[id].max);});
     let m=0;kids.forEach(k=>m+=load[k]);m/=kids.length;
-    kids.forEach(k=>c+=8*(load[k]-m)*(load[k]-m));
+    kids.forEach(k=>{const v=load[k]+off[k]-m;c+=8*v*v;});
+    SK.forEach(q=>{let mq=0;kids.forEach(k=>mq+=sc[k][q]+offS[k][q]);mq/=kids.length;kids.forEach(k=>{const v=sc[k][q]+offS[k][q]-mq;c+=3*v*v;});});
     return c;
   }
   const rnd=rngOf(weekNo(ws)*7919+13);
@@ -1173,7 +1312,7 @@ function planWeek(ws,P,hurt){
     }
   }
   const asg={},report={},empty=[];
-  ids.forEach(id=>report[id]={n:0,like:0,avoid:0,busy:0});
+  ids.forEach(id=>report[id]={n:0,like:0,avoid:0,busy:0,wb:(P[id].wb||[]).length});
   slots.forEach((x,i)=>{
     const id=best[i];
     if(!id){empty.push(x.key);return;}
@@ -1185,24 +1324,121 @@ function planWeek(ws,P,hurt){
   return {asg:asg,report:report,empty:empty};
 }
 function weekNo(d){return Math.floor((d.getTime()+43200000)/604800000);}
-async function runPlan(wkey){
-  dogMsg='מחשב שיבוץ...';paintDog();
-  const P={};PEOPLE.forEach(p=>P[p.id]=normPrefs((people[p.id]||{}).prefs,p.id));
-  let hurt={};
-  if(on('r_fair')){
-    try{
-      const pv=await getDoc(wkRef(fmt(addDays(parseKey(wkey),-7))));
-      const rp=(pv.exists()&&pv.data().report)||{};
-      for(const id in rp)if((rp[id].avoid||0)+(rp[id].busy||0)>0)hurt[id]=true;
-    }catch(e){}
-  }
-  await new Promise(r=>setTimeout(r,30));
-  const res=planWeek(parseKey(wkey),P,hurt);
-  setDoc(wkRef(wkey),{slots:res.asg,done:{},report:res.report,empty:res.empty,gen:Date.now(),by:me})
-    .then(()=>{dogMsg='';paintDog();})
-    .catch(()=>{dogMsg='השיבוץ לא נשמר. בדקו חיבור.';paintDog();});
+async function runPlan(wkey,auto){
+  if(!auto){dogMsg='מחשב שיבוץ...';paintDog();}
+  try{
+    const P={};PEOPLE.forEach(p=>P[p.id]=normPrefs((people[p.id]||{}).prefs,p.id));
+    const cur=await getDoc(wkRef(wkey));const cd=cur.exists()?cur.data():{};
+    if(auto&&(cd.gen||Object.keys(cd.slots||{}).length))return;
+    const cons=cd.cons||{};PEOPLE.forEach(p=>P[p.id].wb=((cons[p.id]||{}).b||[]).slice());
+    const HI={n:{},s:{}};let hurt={};
+    for(let i=1;i<=3;i++){
+      try{
+        const pv=await getDoc(wkRef(fmt(addDays(parseKey(wkey),-7*i))));if(!pv.exists())continue;
+        const d=pv.data(),sl=d.slots||{};
+        for(const k in sl){const id=sl[k],q=k.split('_')[1];HI.n[id]=(HI.n[id]||0)+1;HI.s[id]=HI.s[id]||{};HI.s[id][q]=(HI.s[id][q]||0)+1;}
+        if(i===1&&on('r_fair')){const rp=d.report||{};for(const id in rp)if((rp[id].avoid||0)+(rp[id].busy||0)>0)hurt[id]=true;}
+      }catch(e){}
+    }
+    await new Promise(r=>setTimeout(r,30));
+    const res=planWeek(parseKey(wkey),P,hurt,HI);
+    let wrote=false;
+    await runTransaction(db,async tx=>{
+      const sn=await tx.get(wkRef(wkey));const d=sn.exists()?sn.data():{};
+      if(auto&&(d.gen||Object.keys(d.slots||{}).length))return;
+      tx.set(wkRef(wkey),{slots:res.asg,orig:res.asg,done:{},report:res.report,empty:res.empty,cons:d.cons||{},gen:Date.now(),by:me,auto:!!auto});
+      wrote=true;
+    });
+    dogMsg=wrote&&auto?'השיבוץ לשבוע הבא מוכן. אפשר לראות אותו ב"שבוע הבא".':'';
+  }catch(e){dogMsg='השיבוץ לא נשמר. בדקו חיבור.';}
+  paintDog();
 }
-
+/* מועד אחרון לאילוצים: יום חמישי שלפני השבוע, בסוף היום */
+function deadline(wkey){const d=addDays(parseKey(wkey),-3);return new Date(d.getFullYear(),d.getMonth(),d.getDate(),23,59,59).getTime();}
+function dlText(wkey){const d=new Date(deadline(wkey));return 'יום חמישי '+d.getDate()+'/'+(d.getMonth()+1);}
+let nxWk=null,nxUnsub=null,autoBusy=false;
+function nextKey(){return fmt(addDays(sunday(new Date()),7));}
+function subNextWk(){
+  if(nxUnsub)nxUnsub();
+  const k=nextKey();nxWk=null;
+  nxUnsub=onSnapshot(wkRef(k),sn=>{nxWk=Object.assign({key:k},sn.exists()?sn.data():{});autoPlan();if(!$('tab-dog').hidden)paintDog();},()=>{});
+}
+/* אחרי המועד, הטלפון הראשון שפותח את האפליקציה משבץ את השבוע הבא (פעם אחת בלבד) */
+async function autoPlan(){
+  if(!db||!code||!me||autoBusy)return;
+  if(nxWk&&nxWk.key!==nextKey()){subNextWk();return;}
+  if(!nxWk||Date.now()<=deadline(nxWk.key))return;
+  if(nxWk.gen||Object.keys(nxWk.slots||{}).length)return;
+  autoBusy=true;
+  try{await runPlan(nxWk.key,true);}finally{autoBusy=false;}
+}
+setInterval(autoPlan,60000);
+let consDraft=null,consKey='',consMsg='';
+function fixedBlock(id,wkey,key){
+  const r=normPrefs((people[id]||{}).prefs,id),a=key.split('_');
+  const date=fmt(addDays(parseKey(wkey),+a[0]));
+  return r.block.includes(key)||r.once.some(o=>o.d===date&&o.s.includes(a[1]));
+}
+function consCard(wkey){
+  const c=h('div','card');
+  const cons=wk.cons||{},mine=cons[me],late=Date.now()>deadline(wkey);
+  c.append(h('h3',null,'אילוצים לשבוע הזה'));
+  c.append(h('p','date',late?'המועד להגשת אילוצים עבר. השיבוץ נעשה אוטומטית בכניסה הבאה לאפליקציה.':
+    'עד '+dlText(wkey)+' בלילה כל אחד מסמן מתי הוא לא יכול. אחר כך האפליקציה משבצת לבד, הכי הוגן שאפשר, ואבא מקבל דו״ח.'));
+  const sts=h('div','cnts');
+  PEOPLE.forEach(p=>{const ok=!!cons[p.id];sts.append(h('span','cnt'+(ok?' ok':''),(ok?'✓ ':'○ ')+p.name));});
+  c.append(sts);
+  if(late&&!isAdult(me)){
+    c.append(h('p','date',mine?'האילוצים שלך נשמרו ('+((mine.b||[]).length?mine.b.length+' משבצות':'בלי אילוצים')+').':'לא נשלחו אילוצים. השיבוץ ישתמש בשאלון הקבוע שלך.'));
+    return c;
+  }
+  if(consKey!==wkey){consKey=wkey;consDraft=new Set(mine?mine.b||[]:[]);consMsg='';}
+  c.append(h('label',null,G('מתי אני לא יכול בשבוע הזה?','מתי אני לא יכולה בשבוע הזה?')));
+  c.append(h('div','hint','לוחצים על המשבצות שבהן אין אפשרות. משבצות באדום חיוור כבר חסומות מהשאלון הקבוע.'));
+  for(let d=0;d<7;d++){
+    const date=addDays(parseKey(wkey),d);
+    const row=h('div','brow');row.append(h('b',null,'יום '+DAYN[d]+' '+date.getDate()+'/'+(date.getMonth()+1)));
+    const chips=h('div','chips');chips.setAttribute('role','group');chips.setAttribute('aria-label','אילוצים ביום '+DAYN[d]);
+    SLOTS.forEach(sl=>{
+      if(!hasSlot(d,sl.k))return;
+      const key=d+'_'+sl.k,fx=fixedBlock(me,wkey,key);
+      const b=h('button','chip blk'+(fx?' fixed':''),SHORT[sl.k]);b.type='button';
+      b.setAttribute('aria-pressed',fx||consDraft.has(key)?'true':'false');
+      if(fx){b.title='חסום קבוע מהשאלון';b.setAttribute('aria-disabled','true');}
+      else b.onclick=()=>{if(consDraft.has(key))consDraft.delete(key);else consDraft.add(key);b.setAttribute('aria-pressed',consDraft.has(key)?'true':'false');};
+      chips.append(b);
+    });
+    row.append(chips);c.append(row);
+  }
+  const btn=h('button','btn pri',mine?'עדכון האילוצים שלי':(G('שליחת האילוצים שלי','שליחת האילוצים שלי')));btn.type='button';
+  btn.onclick=()=>{
+    const b=[...consDraft].sort();
+    setDoc(wkRef(wkey),{cons:{[me]:{b:b,at:Date.now()}}},{merge:true})
+      .then(()=>{consMsg=b.length?'נשמר. '+b.length+' משבצות חסומות.':'נשמר: אין אילוצים השבוע.';paintDog();})
+      .catch(()=>{consMsg='השמירה נכשלה. בדקו חיבור.';paintDog();});
+  };
+  c.append(btn,h('p','hint','אם אין אילוצים, פשוט לוחצים שליחה, כדי שידעו שמילאת.'));
+  if(consMsg){const m=h('p','msg ok',consMsg);m.setAttribute('role','status');c.append(m);}
+  return c;
+}
+/* ניקוד: הוצאה 10, לקחת משמרת של מישהו אחר 5 בונוס, הוצאה שלא תוכננה לאף אחד 5 בונוס */
+const PTS={walk:10,cover:5,extra:5};
+function bonusOf(d,key){
+  const dn=(d.done||{})[key];if(!dn||!d.orig)return '';
+  const o=d.orig[key];
+  if(!o)return 'extra';
+  return o!==dn.by?'cover':'';
+}
+function weekPoints(d,acc){
+  acc=acc||{};KIDS.forEach(k=>acc[k]=acc[k]||{w:0,cover:0,extra:0,pts:0});
+  const done=(d&&d.done)||{};
+  for(const key in done){
+    const dn=done[key];if(!dn||!acc[dn.by])continue;
+    const q=acc[dn.by];q.w++;q.pts+=PTS.walk;
+    const b=bonusOf(d,key);if(b){q[b]++;q.pts+=PTS[b];}
+  }
+  return acc;
+}
 /* תצוגה */
 function h(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;}
 function genderTake(){return me==='dad'?'אני לוקח':'אני לוקחת';}
@@ -1259,6 +1495,16 @@ function paintDog(){
 
   const has=Object.keys(wk.slots).length>0;
 
+  /* תזכורת לאילוצים של השבוע הבא */
+  if(wkey===cur&&nxWk&&!nxWk.gen&&!Object.keys(nxWk.slots||{}).length&&Date.now()<=deadline(nxWk.key)&&!(nxWk.cons||{})[me]){
+    const n=h('div','note');
+    n.append(h('div',null,'עד '+dlText(nxWk.key)+' בלילה ממלאים אילוצים לשבוע הבא. אחר כך האפליקציה משבצת לבד.'));
+    const b=h('button','btn pri sm','למילוי האילוצים');b.type='button';b.style.marginTop='8px';
+    b.onclick=()=>{weekStart=addDays(weekStart,7);draft=null;confirmGen=false;subWeek();};
+    n.append(b);box.append(n);
+  }
+  if(!has&&wkey>cur)box.append(consCard(wkey));
+
   /* מונים */
   if(has){
     const c=h('div','cnts');
@@ -1290,28 +1536,7 @@ function paintDog(){
     box.append(h('p','lead','עוד לא נעשה שיבוץ לשבוע הזה. אבא או אמא יכולים להפעיל אותו מכאן.'));
   }
 
-  if(has&&wk.report&&isAdult(me)){
-    const c=h('div','card rep');c.append(h('h3',null,'איך יצא השיבוץ'));
-    PEOPLE.forEach(p=>{
-      const q=wk.report[p.id];if(!q)return;
-      const bad=(q.avoid||0)+(q.busy||0);
-      const d=h('div');
-      let t=p.name+': '+q.n+' תורנויות';
-      if(!q.n)t=p.name+': לא שובץ/ה השבוע';
-      else if(!bad)t+=', כל הבקשות כובדו';
-      d.append(t);
-      if(bad){
-        const parts=[];
-        if(q.avoid)parts.push(q.avoid+' בשעה שביקש/ה להימנע');
-        if(q.busy)parts.push(q.busy+' ביום עמוס');
-        d.append(h('span','bad',', '+parts.join(', ')));
-      }
-      c.append(d);
-    });
-    if(wk.empty&&wk.empty.length)c.append(h('div','bad','אין מי שיכול/ה ב: '+wk.empty.map(k=>slotText(wkey,k)).join(' · ')+'. כולם חסומים שם. אפשר לקחת ידנית.'));
-    c.append(h('p','hint','אילוצים קבועים וחד-פעמיים אף פעם לא נשברים. העדפות נשמרות כמה שאפשר.'));
-    box.append(c);
-  }
+  if(has&&isAdult(me))box.append(reportCard(wkey));
 
   /* ימים */
   const todayK=fmt(new Date());
@@ -1330,7 +1555,11 @@ function paintDog(){
       if(a){who.style.cssText='display:flex;align-items:center;gap:8px';who.prepend(avatar(a,30));}
       mid.append(who);
       const pend=swaps.find(s=>s.week===wkey&&s.slot===key&&s.status==='pending');
-      if(dn){mid.append(h('div','st ok','✓ הוצא/ה על ידי '+(byId[dn.by]?byId[dn.by].name:'?')));}
+      if(dn){
+        mid.append(h('div','st ok','✓ הוצא/ה על ידי '+(byId[dn.by]?byId[dn.by].name:'?')));
+        const bo=bonusOf(wk,key);
+        if(bo&&KIDS.includes(dn.by))mid.append(h('div','bonus',bo==='cover'?'🤝 בונוס: לקחה משמרת של '+(byId[wk.orig[key]]?byId[wk.orig[key]].name:'מישהו אחר')+' (+'+PTS.cover+')':'⭐ בונוס: מעבר למתוכנן (+'+PTS.extra+')'));
+      }
       else if(pend){mid.append(h('div','st','ממתין לאישור של '+byId[pend.to].name));}
       row.append(tm,mid);
       const acts=h('div','acts');
@@ -1340,10 +1569,10 @@ function paintDog(){
       }else if(!a){
         mk(genderTake()+' את התורנות','pri',()=>setDoc(wkRef(wkey),{slots:{[key]:me}},{merge:true}).catch(()=>{}));
       }else if(a===me){
-        mk('הוצאתי','pri',()=>setDoc(wkRef(wkey),{done:{[key]:{by:me,at:Date.now()}}},{merge:true}).catch(()=>{dogMsg='הפעולה נכשלה. בדקו חיבור.';paintDog();}));
+        mk('הוצאתי','pri',()=>walked(wkey,key));
         if(!pend)mk('החלפה או העברה','quiet',()=>{draft=(draft===key?null:key);paintDog();});
       }else{
-        mk('הוצאתי במקומו/ה','quiet',()=>setDoc(wkRef(wkey),{done:{[key]:{by:me,at:Date.now()}}},{merge:true}).catch(()=>{dogMsg='הפעולה נכשלה. בדקו חיבור.';paintDog();}));
+        mk('הוצאתי במקומו/ה','quiet',()=>walked(wkey,key));
       }
       if(acts.childNodes.length)row.append(acts);
       if(draft===key&&a===me&&!dn)row.append(swapForm(wkey,key));
@@ -1351,6 +1580,220 @@ function paintDog(){
     });
     box.append(card);
   }
+}
+
+function walked(wkey,key){
+  setDoc(wkRef(wkey),{done:{[key]:{by:me,at:Date.now()}}},{merge:true})
+    .then(()=>{
+      if(!KIDS.includes(me))return;
+      const o=wk.orig?wk.orig[key]:undefined;
+      if(wk.orig&&!o)toast('⭐ הוצאה מעבר למתוכנן: '+(PTS.walk+PTS.extra)+' נקודות!');
+      else if(wk.orig&&o!==me)toast('🤝 לקחת משמרת של '+byId[o].name+': '+(PTS.walk+PTS.cover)+' נקודות!');
+      else toast('🐾 כל הכבוד! +'+PTS.walk+' נקודות');
+    })
+    .catch(()=>{dogMsg='הפעולה נכשלה. בדקו חיבור.';paintDog();});
+}
+/* דו"ח הוגנות להורים: כמה כל אחד קיבל, לפי שעות היום, וב-4 שבועות */
+const repHist={};
+function loadHist(wkey){
+  if(repHist[wkey])return repHist[wkey];
+  repHist[wkey]={busy:true};
+  Promise.all([1,2,3].map(i=>getDoc(wkRef(fmt(addDays(parseKey(wkey),-7*i)))).catch(()=>null))).then(arr=>{
+    const H={n:{},s:{},w:0};
+    arr.forEach(sn=>{if(!sn||!sn.exists())return;const sl=sn.data().slots||{};if(Object.keys(sl).length)H.w++;
+      for(const k in sl){const id=sl[k],q=k.split('_')[1];H.n[id]=(H.n[id]||0)+1;H.s[id]=H.s[id]||{};H.s[id][q]=(H.s[id][q]||0)+1;}});
+    repHist[wkey]=H;if(!$('tab-dog').hidden)paintDog();
+  });
+  return repHist[wkey];
+}
+function reportCard(wkey){
+  const c=h('div','card rep');
+  c.append(h('h3',null,'דו״ח השיבוץ'));
+  const who=wk.auto?'שובץ אוטומטית אחרי המועד של יום חמישי':(byId[wk.by]?'שובץ על ידי '+byId[wk.by].name:'');
+  if(who)c.append(h('p','date',who+(wk.gen?', '+new Date(wk.gen).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'}):'')+'.'));
+  const cnt={},per={},walks={};
+  PEOPLE.forEach(p=>{cnt[p.id]=0;per[p.id]={m:0,s:0,a:0,b:0,n:0};walks[p.id]=0;});
+  for(const k in wk.slots){const id=wk.slots[k];if(!cnt.hasOwnProperty(id))continue;cnt[id]++;per[id][k.split('_')[1]]++;}
+  for(const k in wk.done){const d=wk.done[k];if(d&&walks.hasOwnProperty(d.by))walks[d.by]++;}
+  const kc=KIDS.map(k=>cnt[k]),mn=Math.min(...kc),mx=Math.max(...kc);
+  const H=loadHist(wkey),hasH=!H.busy&&H.w>0;
+  /* שורת סיכום */
+  const sum=h('div');
+  sum.append(h('div',null,'הבנות קיבלו בין '+mn+' ל-'+mx+' תורנויות'+(mx-mn<=1?' · חלוקה שווה ✓':' · פער של '+(mx-mn))));
+  const rp=wk.report||{};let wb=0,like=0,avoid=0,busy=0;
+  PEOPLE.forEach(p=>{const q=rp[p.id]||{};wb+=q.wb||0;like+=q.like||0;avoid+=q.avoid||0;busy+=q.busy||0;});
+  sum.append(h('div',null,'כל האילוצים כובדו: '+wb+' משבצות שסומנו לשבוע הזה, וכל החסימות הקבועות מהשאלון.'));
+  sum.append(h('div',null,like+' שיבוצים בשעה שמישהו ביקש'+(avoid+busy?'':' · אף אחד לא שובץ בשעה שביקש להימנע ממנה')));
+  if(avoid+busy){const b=h('div','bad');b.textContent=(avoid?avoid+' שיבוצים בשעה שביקשו להימנע ממנה':'')+(avoid&&busy?', ':'')+(busy?busy+' ביום עמוס':'')+'. לא היה פתרון טוב יותר בלי לשבור אילוץ.';sum.append(b);}
+  c.append(sum);
+  /* גרף עמודות */
+  c.append(h('h3',null,'כמה כל אחד קיבל'));c.lastChild.style.marginTop='12px';
+  const lg=h('div','legend');
+  const l1=h('span');const i1=h('i');i1.style.background='var(--ink)';l1.append(i1,'השבוע');lg.append(l1);
+  if(hasH){const l2=h('span');const i2=h('i');i2.style.background='var(--ink)';i2.style.opacity='.35';l2.append(i2,'4 שבועות כולל השבוע');lg.append(l2);}
+  c.append(lg);
+  const tot={};PEOPLE.forEach(p=>tot[p.id]=cnt[p.id]+(hasH?(H.n[p.id]||0):0));
+  const scale=Math.max(1,...PEOPLE.map(p=>hasH?tot[p.id]:cnt[p.id]));
+  PEOPLE.forEach(p=>{
+    const r=h('div','rbar');r.append(avatar(p.id,26),h('span',null,p.name));
+    const bt=h('div','bt');
+    if(hasH){const hb2=h('i','h');hb2.style.width=(100*tot[p.id]/scale)+'%';hb2.style.background=p.l;bt.append(hb2);}
+    const b=h('i');b.style.width=(100*cnt[p.id]/scale)+'%';b.style.background=p.l;bt.append(b);
+    bt.setAttribute('role','img');bt.setAttribute('aria-label',p.name+': '+cnt[p.id]+' השבוע'+(hasH?', '+tot[p.id]+' ב-4 שבועות':''));
+    r.append(bt,h('b',null,cnt[p.id]+(hasH?' / '+tot[p.id]:'')));
+    r.title='הוצאו בפועל: '+walks[p.id];
+    c.append(r);
+  });
+  /* טבלת שעות היום */
+  c.append(h('h3',null,'לפי שעות היום'+(hasH?' (4 שבועות)':'')));c.lastChild.style.marginTop='12px';
+  const t=h('table','heat'),hr=h('tr');hr.append(h('th'));
+  SLOTS.forEach(sl=>hr.append(h('th',null,SHORT[sl.k])));t.append(hr);
+  const val=(id,q)=>per[id][q]+(hasH?((H.s[id]||{})[q]||0):0);
+  let vmax=1;PEOPLE.forEach(p=>SLOTS.forEach(sl=>vmax=Math.max(vmax,val(p.id,sl.k))));
+  PEOPLE.forEach(p=>{
+    const tr=h('tr');tr.append(h('td','nm',p.name));
+    SLOTS.forEach(sl=>{const v=val(p.id,sl.k),td=h('td',null,v?String(v):'·');
+      td.style.background='color-mix(in srgb,'+p.l+' '+Math.round(8+70*v/vmax)+'%,var(--surface))';
+      if(v/vmax>.55)td.style.color='#fff';tr.append(td);});
+    t.append(tr);
+  });
+  c.append(t);
+  /* פירוט בקשות */
+  const det=h('div');det.style.marginTop='10px';
+  PEOPLE.forEach(p=>{
+    const q=rp[p.id];if(!q)return;
+    const bad=(q.avoid||0)+(q.busy||0),d=h('div');
+    let tx=p.name+': '+q.n+' תורנויות, הוצאו '+walks[p.id];
+    if(q.n&&!bad)tx+=', כל הבקשות כובדו';
+    d.append(tx);
+    if(bad){const parts=[];if(q.avoid)parts.push(q.avoid+' בשעה שביקש/ה להימנע');if(q.busy)parts.push(q.busy+' ביום עמוס');d.append(h('span','bad',', '+parts.join(', ')));}
+    det.append(d);
+  });
+  c.append(det);
+  if(wk.empty&&wk.empty.length)c.append(h('div','bad','אין מי שיכול/ה ב: '+wk.empty.map(k=>slotText(wkey,k)).join(' · ')+'. כולם חסומים שם. אפשר לקחת ידנית.'));
+  c.append(h('p','hint','השיבוץ לא שובר אף פעם אילוץ. הוא מחלק שווה בין הבנות גם בסך הכול וגם לפי שעות היום, ומתחשב במה שכל אחת קיבלה בשלושת השבועות הקודמים.'));
+  return c;
+}
+
+/* ---------- פודיום עם הכלבה ---------- */
+const POODLE='<svg class="pd" viewBox="0 0 120 100" aria-hidden="true"><g stroke="#C9AE88" stroke-width="1.5">'+
+ '<g class="tl"><path d="M28 52 L16 40" stroke="#E9D6BA" stroke-width="5" stroke-linecap="round"/><circle cx="14" cy="37" r="9" fill="#F3E4CC"/></g>'+
+ '<g class="lg a"><rect x="30" y="62" width="7" height="24" rx="3" fill="#EBD8BC"/><ellipse cx="33.5" cy="88" rx="7" ry="5" fill="#F3E4CC"/></g>'+
+ '<g class="lg b"><rect x="70" y="62" width="7" height="24" rx="3" fill="#EBD8BC"/><ellipse cx="73.5" cy="88" rx="7" ry="5" fill="#F3E4CC"/></g>'+
+ '<ellipse cx="54" cy="58" rx="28" ry="15" fill="#F1E1C7"/><circle cx="34" cy="56" r="14" fill="#F3E4CC"/><circle cx="76" cy="54" r="15" fill="#F3E4CC"/>'+
+ '<g class="lg b"><rect x="40" y="62" width="7" height="24" rx="3" fill="#F1E1C7"/><ellipse cx="43.5" cy="88" rx="7" ry="5" fill="#F7EBD7"/></g>'+
+ '<g class="lg a"><rect x="80" y="62" width="7" height="24" rx="3" fill="#F1E1C7"/><ellipse cx="83.5" cy="88" rx="7" ry="5" fill="#F7EBD7"/></g>'+
+ '<path d="M74 48 L82 30 L92 34 L86 52Z" fill="#F1E1C7" stroke="none"/>'+
+ '<circle cx="90" cy="30" r="13" fill="#F3E4CC"/><circle cx="85" cy="16" r="9" fill="#F7EBD7"/><circle cx="94" cy="14" r="8" fill="#F7EBD7"/>'+
+ '<ellipse cx="102" cy="35" rx="10" ry="6.5" fill="#F3E4CC"/><ellipse cx="80" cy="37" rx="7" ry="12" fill="#E9D3B2"/></g>'+
+ '<path class="tng" d="M103 40 q2 9 6 4 q1-3 -1-5z" fill="#F07C93"/>'+
+ '<circle cx="111" cy="33" r="3" fill="#3A2A22"/><circle cx="94" cy="27" r="2.4" fill="#3A2A22"/><circle cx="94.8" cy="26.2" r=".8" fill="#fff"/>'+
+ '<path d="M80 45 q6 4 13 1" stroke="#E0475E" stroke-width="3" fill="none" stroke-linecap="round"/></svg>';
+let podMode='w',podData=null,podSig='',podRun=0,podHist=null,podHistAt=0;
+function podScores(){
+  const acc=weekPoints(curWk);
+  if(podMode==='m'){
+    const ck=fmt(sunday(new Date()));
+    if(!podHist||podHist.k!==ck||Date.now()-podHistAt>300000){
+      podHistAt=Date.now();
+      Promise.all([1,2,3].map(i=>getDoc(wkRef(fmt(addDays(sunday(new Date()),-7*i)))).catch(()=>null))).then(arr=>{
+        podHist={k:ck,docs:arr.filter(x=>x&&x.exists()).map(x=>x.data())};paintPodium(true);
+      });
+    }
+    if(podHist)podHist.docs.forEach(d=>weekPoints(d,acc));
+  }
+  return KIDS.map(k=>Object.assign({id:k},acc[k])).sort((a,b)=>b.pts-a.pts||b.w-a.w||b.cover-a.cover||KIDS.indexOf(a.id)-KIDS.indexOf(b.id));
+}
+function paintPodium(animate){
+  const box=$('podBox');if(!box||!me||$('tab-dog').hidden)return;
+  const rows=podScores();
+  const sig=podMode+JSON.stringify(rows);
+  if(!animate&&sig===podSig)return;
+  podSig=sig;
+  box.innerHTML='';
+  const c=h('section','card pod');
+  const hd=h('div','podhead');hd.append(h('h3',null,'🏆 מי הוציאה הכי הרבה'));
+  const ch=h('div','chips');ch.setAttribute('role','group');ch.setAttribute('aria-label','תקופה');
+  [['w','השבוע'],['m','4 שבועות']].forEach(([k,t])=>ch.append(chip(t,podMode===k,()=>{podMode=k;paintPodium(true);})));
+  hd.append(ch);c.append(hd);
+  const stage=h('div','stage');
+  const any=rows[0].pts>0;
+  const cols=[];
+  [1,0,2].forEach(i=>{
+    const r=rows[i],col=h('div','pcol');col.dataset.rank=i+1;
+    if(any&&i===0)col.append(h('div','crown','👑'));
+    col.append(figure(r.id,i===0?104:88),h('div','pname',byId[r.id].name));
+    const st=h('div','pstep r'+(i+1));st.append(h('span',null,String(i+1)),h('small',null,r.pts+' נק׳'));
+    col.append(st);stage.append(col);cols[i]=col;
+  });
+  const dog=h('div','poodle');dog.innerHTML=POODLE;stage.append(dog);
+  c.append(stage);
+  if(!any)c.append(h('p','date','עוד אין הוצאות בתקופה הזאת. מי תהיה הראשונה?'));
+  const ol=h('ol','podlist');
+  rows.forEach((r,i)=>{
+    const li=h('li');li.append(h('span','rk',String(i+1)),avatar(r.id,36));
+    const nm=h('div');nm.append(h('b',null,byId[r.id].name));
+    const parts=[r.w+' הוצאות'];if(r.cover)parts.push('🤝 '+r.cover+' לקחה מאחרים');if(r.extra)parts.push('⭐ '+r.extra+' מעבר למתוכנן');
+    nm.append(h('small',null,parts.join(' · ')));li.append(nm,h('span','pt',r.pts+' נק׳'));ol.append(li);
+  });
+  c.append(ol);
+  const again=h('button','btn quiet sm','🐩 עוד פעם');again.type='button';again.style.marginTop='8px';
+  again.onclick=()=>runPoodle(stage,dog,cols,any);
+  c.append(again);
+  c.append(h('p','hint','הוצאה = '+PTS.walk+' נק׳ · לקחת משמרת של מישהו אחר = '+PTS.cover+' בונוס · הוצאה שלא תוכננה לאף אחד = '+PTS.extra+' בונוס'));
+  box.append(c);
+  requestAnimationFrame(()=>runPoodle(stage,dog,cols,any));
+}
+async function runPoodle(stage,dog,cols,any){
+  const run=++podRun;
+  const alive=()=>run===podRun&&stage.isConnected;
+  const sr=stage.getBoundingClientRect();
+  const cx=i=>{const r=cols[i].getBoundingClientRect();return r.left-sr.left+r.width/2-32;};
+  const stepH=i=>cols[i].querySelector('.pstep').offsetHeight;
+  let x=-70,y=0;
+  const place=()=>{dog.style.transform='translate('+x+'px,'+(-y)+'px)';};
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches||!dog.animate){
+    x=any?cx(0)+36:cx(0);y=any?stepH(0):0;place();return;
+  }
+  const go=async(nx,ny,ms,hop)=>{
+    if(!alive())return;
+    dog.classList.toggle('flip',nx<x);
+    const fr=[{transform:'translate('+x+'px,'+(-y)+'px)'}];
+    if(hop)fr.push({transform:'translate('+((x+nx)/2)+'px,'+(-(Math.max(y,ny)+hop))+'px)'});
+    fr.push({transform:'translate('+nx+'px,'+(-ny)+'px)'});
+    x=nx;y=ny;
+    const a=dog.animate(fr,{duration:ms,easing:hop?'ease-in-out':'linear',fill:'forwards'});
+    try{await a.finished;}catch(e){}
+    place();a.cancel();
+  };
+  const wait=ms=>new Promise(r=>setTimeout(r,ms));
+  dog.classList.remove('lick','happy');place();
+  dog.classList.add('run');
+  const W=sr.width;
+  /* רצה בין כולן: משמאל לימין, קפיצה קטנה ליד כל אחת */
+  for(const i of [2,0,1]){await go(cx(i),0,650);if(!alive())return;await go(cx(i),0,260,18);}
+  await go(W-66,0,450);
+  if(!any){await go(cx(0),0,700);dog.classList.remove('run');dog.classList.add('happy');return;}
+  await go(cx(0)+40,0,650);
+  dog.classList.remove('run');
+  if(!alive())return;
+  /* קופצת על המקום הראשון ומלקקת */
+  const fig=cols[0].querySelector('.pfig');
+  const top=stepH(0)+Math.round(fig.offsetHeight*.42);
+  await go(cx(0)+22,top,520,40);
+  dog.classList.add('lick','happy');
+  const bub=h('div','lickbub','ליק ליק! 💕');bub.style.left=(cx(0)+50)+'px';bub.style.bottom=(top+60)+'px';stage.append(bub);
+  fig.animate([{transform:'rotate(0)'},{transform:'rotate(-5deg)'},{transform:'rotate(4deg)'},{transform:'rotate(-3deg)'},{transform:'rotate(0)'}],{duration:900,iterations:2});
+  for(let k=0;k<7;k++){
+    const ht=h('span','heart',['💗','💖','💛','🐾'][k%4]);ht.style.left=(cx(0)+10+Math.random()*60)+'px';ht.style.bottom=(top+20)+'px';stage.append(ht);
+    ht.animate([{transform:'translateY(0) scale(.6)',opacity:1},{transform:'translateY(-'+(70+Math.random()*50)+'px) scale(1.2)',opacity:0}],{duration:1400+Math.random()*600,delay:k*160,fill:'forwards'});
+  }
+  for(let k=0;k<3;k++){await go(x,y,330,22);if(!alive())return;}
+  await wait(500);
+  dog.classList.remove('lick');
+  /* יורדת ויושבת שמחה ליד המנצחת */
+  await go(cx(0)+36,stepH(0),420,20);
+  setTimeout(()=>bub.remove(),1200);
 }
 function swapForm(wkey,key){
   const f=h('div','swform');
@@ -1389,7 +1832,9 @@ async function respondSwap(s,yes){
       const sl=d.slots||{},dn=d.done||{};
       if(sl[s.slot]!==s.from||dn[s.slot]||(s.take&&(sl[s.take]!==s.to||dn[s.take]))){stale=true;return;}
       const upd={};upd[s.slot]=s.to;if(s.take)upd[s.take]=s.from;
-      tx.set(ref,{slots:upd},{merge:true});
+      const w={slots:upd};
+      if(s.take&&d.orig){w.orig={};w.orig[s.slot]=s.to;w.orig[s.take]=s.from;}
+      tx.set(ref,w,{merge:true});
     });
     await setDoc(sref,{status:stale?'void':'approved'},{merge:true});
     dogMsg=stale?'ההעברה לא בוצעה כי השיבוץ השתנה בינתיים.':'ההעברה אושרה ועודכנה בלוח.';
@@ -1405,21 +1850,60 @@ function avatar(id,sz){
   const w=document.createElement('span');w.className='avl';
   w.style.width=w.style.height=sz+'px';w.style.fontSize=Math.round(sz*.42)+'px';w.style.background=p.l;
   w.textContent=p.name[0];w.setAttribute('aria-hidden','true');
+  let tm=null;
+  if(window.TM_HAS&&TM_HAS(id)){tm=new Image();tm.alt='';tm.src=TM_IMG(id,'av');w.textContent='';w.style.background='var(--soft)';w.append(tm);}
   if(AVIMG[id]&&avOk[id]!==false){
     const im=new Image();im.alt='';im.decoding='async';
-    im.onload=()=>{avOk[id]=true;w.textContent='';w.style.background='var(--soft)';w.append(im);};
+    im.onload=()=>{avOk[id]=true;w.textContent='';w.style.background='var(--soft)';if(tm)tm.remove();w.append(im);};
     im.onerror=()=>{avOk[id]=false;};
     im.src=AVIMG[id]+'?v=1';
   }
   return w;
 }
+/* דמות שלמה לפודיום: ציור מהתיקייה img אם הועלה, אחרת הדמות של teach-me */
+const figOk={};
+function figure(id,hgt){
+  const im=new Image();im.alt='';im.className='pfig';im.style.height=hgt+'px';im.style.width=Math.round(hgt*200/240)+'px';
+  const tm=()=>{if(window.TM_HAS&&TM_HAS(id))im.src=TM_IMG(id,'full');else{im.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240"><circle cx="100" cy="110" r="70" fill="'+byId[id].l+'"/><text x="100" y="135" font-size="70" text-anchor="middle" fill="#fff" font-family="Arial">'+byId[id].name[0]+'</text></svg>');}};
+  if(figOk[id]===false)tm();
+  else{im.onerror=()=>{figOk[id]=false;im.onerror=null;tm();};im.onload=()=>{if(figOk[id]==null)figOk[id]=true;};im.src='img/'+id+'-full.webp?v=1';}
+  return im;
+}
 
 /* ---------- צלצול, פופ-אפ והודעה קצרה ---------- */
 let actx=null;
+/* הצלצול מתנגן כקובץ קול רגיל (audio) ולא דרך Web Audio:
+   באייפון Web Audio מושתק כשהמתג בצד על שקט ונעצר אחרי שהאפליקציה הייתה ברקע. */
+let ringEl=null,ringReady=false,ringWant=false;
+function ringWav(){
+  const sr=22050,n=Math.floor(sr*4.45),buf=new ArrayBuffer(44+n*2),v=new DataView(buf);
+  const ws=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i));};
+  ws(0,'RIFF');v.setUint32(4,36+n*2,true);ws(8,'WAVE');ws(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);ws(36,'data');v.setUint32(40,n*2,true);
+  const notes=[];for(let r=0;r<3;r++)[[988,0],[1319,.18],[1760,.36]].forEach(([f,o])=>notes.push([f,.15+r*1.35+o]));
+  for(let i=0;i<n;i++){
+    const t=i/sr;let x=0;
+    for(const [f,st] of notes){const d=t-st;if(d<0||d>.8)continue;
+      const env=d<.012?d/.012:Math.exp(-(d-.012)*5.5);
+      const ph=(f*d)%1;x+=env*(.6*(4*Math.abs(ph-.5)-1)+.25*Math.sin(6.2832*2*f*d));}
+    x=Math.max(-1,Math.min(1,x*1.05));v.setInt16(44+i*2,Math.round(x*32767),true);
+  }
+  return URL.createObjectURL(new Blob([buf],{type:'audio/wav'}));
+}
+function ringPrime(){
+  if(ringReady)return;
+  try{
+    if(!ringEl){ringEl=new Audio(ringWav());ringEl.preload='auto';ringEl.setAttribute('playsinline','');ringEl.onended=()=>{ringWant=false;};}
+    /* מנגנים את הקובץ בלחיצה הראשונה ועוצרים מיד (בתחילתו יש שקט), כדי שהטלפון יאפשר לצלצל אחר כך גם בלי לחיצה */
+    const pr=ringEl.play();
+    if(pr&&pr.then)pr.then(()=>{ringReady=true;if(!ringWant){ringEl.pause();ringEl.currentTime=0;}}).catch(()=>{});
+  }catch(e){}
+}
 function unlockAudio(){
+  ringPrime();
   try{
     if(!actx){const C=window.AudioContext||window.webkitAudioContext;if(!C)return;actx=new C();}
-    if(actx.state==='suspended')actx.resume();
+    if(actx.state==='suspended'||actx.state==='interrupted')actx.resume();
   }catch(e){}
 }
 document.addEventListener('pointerdown',unlockAudio,{passive:true});
@@ -1428,8 +1912,19 @@ document.addEventListener('touchend',unlockAudio,{passive:true});
 try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
 let comp=null;
 function chime(){
-  unlockAudio();
   try{navigator.vibrate&&navigator.vibrate([400,150,400,150,400]);}catch(e){}
+  if(ringEl){
+    try{
+      ringWant=true;ringEl.currentTime=0;
+      const pr=ringEl.play();
+      if(pr&&pr.catch)pr.catch(()=>chimeWA());
+      return;
+    }catch(e){}
+  }
+  chimeWA();
+}
+function chimeWA(){
+  unlockAudio();
   if(!actx)return;
   if(!comp){
     comp=actx.createDynamicsCompressor();
@@ -1462,7 +1957,7 @@ function remind(lines,goTab){
 $('popOk').onclick=()=>{$('pop').hidden=true;};
 let toastT=null;
 function toast(t){const el=$('toast');el.textContent=t;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>el.hidden=true,2600);}
-$('ringTest').onclick=()=>{unlockAudio();setTimeout(chime,60);toast('ככה נשמע הצלצול');};
+$('ringTest').onclick=()=>{ringPrime();setTimeout(chime,150);toast('ככה נשמע הצלצול');};
 
 /* ---------- המלצות צוות היועצים ---------- */
 const TEAM={
@@ -1554,7 +2049,8 @@ function subJobs(){
       jobs.filter(j=>j.done&&j.doneAt&&j.doneAt<old).forEach(j=>deleteDoc(jobRef(j.id)).catch(()=>{}));
     }
     paintJobs();checkRem();weekPop();
-    if(!$('tab-home').hidden){paintWeekSum();paintKids();}
+    if(!$('tab-home').hidden)paintWeekSum();
+    paintKidsTab();
   },()=>{});
 }
 const resp=j=>j.to==='all'?(j.claim||null):j.to;
@@ -1771,7 +2267,7 @@ function paintBadge(){
 let curWk={slots:{},done:{}},curUnsub=null;
 function subCurWk(){
   if(curUnsub)curUnsub();
-  curUnsub=onSnapshot(wkRef(fmt(sunday(new Date()))),s=>{const d=s.exists()?s.data():{};curWk={slots:d.slots||{},done:d.done||{}};checkRem();},()=>{});
+  curUnsub=onSnapshot(wkRef(fmt(sunday(new Date()))),s=>{const d=s.exists()?s.data():{};curWk={slots:d.slots||{},done:d.done||{},orig:d.orig||null};checkRem();paintPodium(false);paintKidsTab();},()=>{});
 }
 const DOGT={a:[17,30],b:[20,0],n:[22,0]};
 function remTargets(j){if(j.done)return [];if(j.to!=='all')return [j.to];if(j.claim)return [j.claim];return KIDS;}
@@ -2107,7 +2603,7 @@ async function tryPin(){
 }
 $('pinOk').onclick=tryPin;
 $('pinIn').addEventListener('keydown',e=>{if(e.key==='Enter')tryPin();});
-['today','fam','jobs','shop','taxi','dog','home','set'].forEach(k=>{$('nv-'+k).onclick=()=>tab(k);});
+['today','fam','kids','jobs','shop','taxi','dog','home','set'].forEach(k=>{$('nv-'+k).onclick=()=>tab(k);});
 $('btnSwitch').onclick=()=>showWho();
 $('codeShow').onclick=()=>{const o=$('codeOut');o.textContent=code;o.hidden=!o.hidden;$('codeShow').textContent=o.hidden?'הצגת הקוד':'הסתרת הקוד';};
 $('pinSave').onclick=async()=>{
