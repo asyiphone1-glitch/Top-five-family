@@ -118,6 +118,26 @@ async function main() {
     }
   }
 
+  // תזכורות מהפעמון: משימות אישיות (רק לבעלים) ומשימות משפחתיות (לאבא ולאמא)
+  {
+    const [ppl, famd] = await Promise.all([list(F + '/people'), getDoc(F + '/prefs/family')]);
+    const tp = parts(now), td = ymd(tp.y, tp.m, tp.d);
+    const hsh = t => { let x = 0; for (const c of t) x = (x * 31 + c.codePointAt(0)) | 0; return (x >>> 0).toString(36); };
+    const scan = (d, owner, who, tab) => {
+      if (!d || !Array.isArray(d.tasks) || !Array.isArray(d.rm)) return;
+      d.tasks.forEach((t, i) => {
+        const r = Number(d.rm[i]) || 0;
+        t = String(t || '').trim();
+        if (!r || !t || r > now || now - r > WINDOW) return;
+        if (d.day === td && Array.isArray(d.done) && d.done[i]) return;
+        let m = -1; if (Array.isArray(d.lv) && d.lv[i]) { m = i; while (m > 0 && d.lv[m]) m--; }
+        out.push({ key: `t_${owner}_${r}_${hsh(t)}`, who, tab, body: 'תזכורת: ' + (m >= 0 ? String(d.tasks[m]) + ' ‹ ' : '') + t });
+      });
+    };
+    for (const p of ppl) scan(p, p.id, [p.id], 'today');
+    scan(famd, 'fam', ['dad', 'mom'], 'fam');
+  }
+
   if (on('r_dogring')) {
     const p = parts(now);
     const sunMs = Date.UTC(p.y, p.m - 1, p.d) - p.wd * 864e5, s = new Date(sunMs);

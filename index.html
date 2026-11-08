@@ -67,7 +67,7 @@ input{font:inherit;color:var(--ink)}
 .date{color:var(--mute)}
 .progress{font-weight:700;color:var(--accent);margin:14px 0 14px;min-height:1.6em}
 .progress.all{color:var(--good)}
-.tasks{list-style:none;margin:0;padding:0;display:grid;gap:8px;width:100%}
+.tasks{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:8px;width:100%}
 .task{display:flex;align-items:center;gap:10px;background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:8px 12px}
 .task.done{border-color:var(--good)}
 .chk{flex:none;width:44px;height:44px;border-radius:50%;border:3px solid var(--accent);background:transparent;color:var(--accent);font:800 1.1rem var(--display);cursor:pointer;display:grid;place-items:center}
@@ -134,6 +134,22 @@ input{font:inherit;color:var(--ink)}
 .tsub,.tdel{flex:none;min-width:40px;min-height:40px;border:0;background:transparent;color:var(--mute);font:700 1.3rem var(--body);cursor:pointer;border-radius:10px}
 .tsub{color:var(--accent);font-size:1.3rem}
 .tdel.arm{color:var(--bad);font-size:.85rem;white-space:nowrap}
+.ttl{font:800 1.7rem var(--display);color:var(--accent);margin:0 0 14px}
+.task.cat{--cc:var(--cl);--accent:var(--cc);border-color:var(--cc);background:color-mix(in srgb,var(--cc) 13%,var(--surface))}
+@media (prefers-color-scheme:dark){.task.cat{--cc:var(--cd)}}
+.task.cat:not(.sub) input{color:var(--cc);font-weight:800}
+.task.cat.sub{border-color:color-mix(in srgb,var(--cc) 35%,var(--line));background:color-mix(in srgb,var(--cc) 4%,var(--surface))}
+.task.cat.done:not(.sub) input{color:var(--mute)}
+.ttog,.tbell{flex:none;width:34px;height:40px;border:0;background:transparent;color:var(--cc,var(--accent));cursor:pointer;border-radius:10px;display:grid;place-items:center;padding:0}
+.ttog svg{width:22px;height:22px;transition:transform .15s}
+.ttog.shut svg{transform:rotate(90deg)}
+.tbell{color:var(--mute);opacity:.55}
+.tbell svg{width:21px;height:21px}
+.tbell.on{color:var(--cc,var(--accent));opacity:1}
+.tbell.on svg{fill:currentColor}
+.ttog:focus-visible,.tbell:focus-visible,.tsub:focus-visible,.tdel:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
+.task .tsub,.task .tdel{min-width:34px}
+.remtask{font-weight:700;font-size:1.1rem;margin:0 0 4px}
 .task .by{flex:none;font-size:.78rem;color:var(--good);font-weight:700;max-width:4.5em;text-align:center;line-height:1.2}
 .kid{border-top:1px solid var(--line);padding:10px 0}
 .kid:first-of-type{border-top:0}
@@ -169,6 +185,8 @@ input{font:inherit;color:var(--ink)}
 .jform textarea{resize:vertical;min-height:84px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .nav button{position:relative;white-space:nowrap;font-size:.74rem;min-width:0;padding:0 2px}
+.nav.many button{font-size:.66rem;letter-spacing:-.2px}
+.nav.many button svg{width:22px;height:22px}
 .nb{position:absolute;top:4px;inset-inline-end:calc(50% - 22px);background:var(--bad);color:#fff;border-radius:999px;font-size:.72rem;min-width:18px;line-height:18px;padding:0 5px;text-align:center}
 .pop{position:fixed;inset:0;background:rgba(8,16,34,.5);display:grid;place-items:center;z-index:60;padding:20px}
 .pop .box{background:var(--surface);color:var(--ink);border-radius:20px;padding:20px;max-width:420px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.25)}
@@ -268,21 +286,18 @@ input{font:inherit;color:var(--ink)}
 </section>
 
 <section id="s-main" class="screen" hidden>
-  <div class="top"><div><div id="hello" class="hello"></div><div id="dateTxt" class="date"></div></div></div>
+  <div id="topBar" class="top"><div><div id="hello" class="hello"></div><div id="dateTxt" class="date"></div></div></div>
 
   <div id="tab-today">
-    <h2 id="mineH" class="sec" hidden>המשימות האישיות שלי</h2>
-    <p id="mineSub" class="date" hidden>רק את/ה רואה אותן</p>
-    <div id="jobNote" class="note" hidden></div>
-    <p id="progress" class="progress"></p>
+    <h2 id="mineH" class="ttl">המשימות שלי</h2>
+    <p id="progress" class="progress" hidden></p>
     <ul id="tasks" class="tasks"></ul>
-    <div id="todayJobs" hidden></div>
-    <div id="famBox" hidden>
-      <h2 class="sec">משימות משפחתיות</h2>
-      <p class="date">משותפות לאבא ולאמא. כל אחד יכול להוסיף ולסמן.</p>
-      <p id="famProgress" class="progress"></p>
-      <ul id="famTasks" class="tasks"></ul>
-    </div>
+  </div>
+
+  <div id="tab-fam" hidden>
+    <h2 class="ttl">משימות משפחתיות</h2>
+    <p id="famProgress" class="progress" hidden></p>
+    <ul id="famTasks" class="tasks"></ul>
   </div>
 
   <div id="tab-jobs" hidden>
@@ -389,11 +404,12 @@ input{font:inherit;color:var(--ink)}
     </div>
     <button id="btnSwitch" class="btn quiet" type="button">החלפת פרופיל</button>
     <button id="btnForget" class="btn danger" type="button">ניתוק הטלפון הזה מהמשפחה</button>
-    <p class="hint">גרסה: שלב 3.4, כולל התראות כשהאפליקציה סגורה, רשימת קניות, מונית, משימות ותתי־משימות בלי הגבלה, משימות מההורים עם צלצול, משימות פתוחות, שיבוץ כלבה עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
+    <p class="hint">גרסה: שלב 3.5, כולל פעמון תזכורת לכל משימה ותת־משימה, צבע לכל קטגוריה, כיווץ תתי־משימות, מסך נפרד למשימות משפחתיות, התראות כשהאפליקציה סגורה, רשימת קניות, מונית, משימות ותתי־משימות בלי הגבלה, משימות מההורים עם צלצול, משימות פתוחות, שיבוץ כלבה עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
   </div>
 
   <nav class="nav" aria-label="ניווט">
     <button id="nv-today" type="button"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>היום שלי</button>
+    <button id="nv-fam" type="button" hidden><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M14 19a3.8 3.8 0 0 1 7 0"/></svg>משפחה</button>
     <button id="nv-jobs" type="button"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>משימות<span id="jobBadge" class="nb" hidden></span></button>
     <button id="nv-shop" type="button" hidden><svg viewBox="0 0 24 24"><path d="M3 4h2l2.4 11h11l2-8H6.2"/><circle cx="9" cy="19.5" r="1.5"/><circle cx="17" cy="19.5" r="1.5"/></svg>קניות</button>
     <button id="nv-taxi" type="button"><svg viewBox="0 0 24 24"><path d="M5 17h14v-5l-2-5H7l-2 5z"/><path d="M5 12h14M9 4h6"/><circle cx="8" cy="17.5" r="1.5"/><circle cx="16" cy="17.5" r="1.5"/></svg>מונית<span id="taxiBadge" class="nb" hidden></span></button>
@@ -407,6 +423,17 @@ input{font:inherit;color:var(--ink)}
   <div class="box"><h3 id="popH">תזכורת</h3><ul id="popList"></ul>
     <button id="popGo" class="btn pri" type="button">למשימות</button>
     <button id="popOk" class="btn quiet" type="button">הבנתי</button>
+  </div>
+</div>
+<div id="remPop" class="pop" hidden role="dialog" aria-modal="true" aria-labelledby="remH">
+  <div class="box"><h3 id="remH">🔔 תזכורת</h3>
+    <p id="remTask" class="remtask"></p>
+    <label for="remAt">מתי להזכיר?</label>
+    <input id="remAt" class="field" type="datetime-local">
+    <p id="remMsg" class="msg" role="status"></p>
+    <button id="remSave" class="btn pri" type="button">שמירה</button>
+    <button id="remDel" class="btn danger" type="button" hidden>הסרת התזכורת</button>
+    <button id="remCancel" class="btn quiet" type="button">ביטול</button>
   </div>
 </div>
 <div id="toast" class="toast" hidden role="status"></div>
@@ -463,8 +490,8 @@ async function hashPin(pid,pin){
 
 /* ---------- מצב ---------- */
 let code=LS.get('tff.code'), me=LS.get('tff.me');
-let app,auth,db,unsub=null,people={},work={tasks:[],done:[],lv:[]};
-let fam={tasks:[],done:[],lv:[],by:[]},famDirty=false,famT=null,famUnsub=null;
+let app,auth,db,unsub=null,people={},work={tasks:[],done:[],lv:[],rm:[]};
+let fam={tasks:[],done:[],lv:[],rm:[],by:[]},famDirty=false,famT=null,famUnsub=null;
 let dirty=false,saveT=null,hb=null,homeT=null,netT=null,pinTarget=null;
 
 /* ---------- Firebase ---------- */
@@ -576,10 +603,13 @@ function listState(p){
   const n=t.length;
   const d=(p.day===today()&&Array.isArray(p.done))?t.map((x,i)=>!!p.done[i]):t.map(()=>false);
   const lv=Array.isArray(p.lv)?t.map((x,i)=>p.lv[i]?1:0):t.map(()=>0);
+  /* תזכורת לכל שורה: זמן במילישניות, 0 = אין. תזכורות שעבר עליהן יותר מיום נמחקות */
+  const old=Date.now()-864e5;
+  const rm=Array.isArray(p.rm)?t.map((x,i)=>{const v=Number(p.rm[i])||0;return v>old?v:0;}):t.map(()=>0);
   if(n)lv[0]=0;
   /* ניקוי שורות ריקות שנשארו מהגרסה הקודמת (5 שורות קבועות) */
-  const st={tasks:[],done:[],lv:[]};
-  t.forEach((x,i)=>{if(x.trim()){st.tasks.push(x);st.done.push(d[i]);st.lv.push(lv[i]);}});
+  const st={tasks:[],done:[],lv:[],rm:[]};
+  t.forEach((x,i)=>{if(x.trim()){st.tasks.push(x);st.done.push(d[i]);st.lv.push(lv[i]);st.rm.push(rm[i]);}});
   if(st.lv.length)st.lv[0]=0;
   return st;
 }
@@ -594,7 +624,7 @@ function famState(p){
 const CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
 function realSubs(st,i){if(st.lv[i])return false;for(let k=i+1;k<st.tasks.length&&st.lv[k];k++)if(st.tasks[k].trim())return true;return false;}
 function countDone(st){let f=0,d=0;st.tasks.forEach((t,i)=>{if(t.trim()&&!realSubs(st,i)){f++;if(st.done[i])d++;}});return [d,f];}
-function packList(st){const o={tasks:[],done:[],lv:[]};if(st.by)o.by=[];st.tasks.forEach((t,i)=>{if(!t.trim())return;o.tasks.push(t);o.done.push(!!st.done[i]);o.lv.push(o.tasks.length===1?0:(st.lv[i]?1:0));if(st.by)o.by.push(st.by[i]||'');});return o;}
+function packList(st){const o={tasks:[],done:[],lv:[],rm:[]};if(st.by)o.by=[];st.tasks.forEach((t,i)=>{if(!t.trim())return;o.tasks.push(t);o.done.push(!!st.done[i]);o.lv.push(o.tasks.length===1?0:(st.lv[i]?1:0));o.rm.push(Number((st.rm||[])[i])||0);if(st.by)o.by.push(st.by[i]||'');});return o;}
 function hasSubs(st,i){return !st.lv[i]&&st.lv[i+1]===1;}
 function mainOf(st,i){while(i>0&&st.lv[i])i--;return i;}
 function blockEnd(st,m){let e=m+1;while(e<st.tasks.length&&st.lv[e])e++;return e;}
@@ -613,21 +643,64 @@ function save(){
     setDoc(pdoc(me),{name:byId[me].name,...packList(work),day:today()},{merge:true}).catch(()=>setNet('err'));
   },600);
 }
+/* צבע לכל קטגוריה ראשית (בהיר/כהה) */
+const CATC=[['#2F6FE0','#86A9FF'],['#C8336B','#FF8FB5'],['#D06A0A','#FFB066'],['#7A4FD0','#B9A0FF'],['#0E8C93','#5ED6CF'],['#9A7400','#E8C547'],['#B5432E','#FF9C85'],['#3949AB','#A5AEFF']];
+const BELL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9"/><path d="M10.3 20a2 2 0 0 0 3.4 0"/></svg>';
+const CHEV='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+function colKey(ul){return 'yaya.col.'+me+'.'+ul.id;}
+function getCol(ul){try{return new Set(JSON.parse(LS.get(colKey(ul))||'[]'));}catch(e){return new Set();}}
+function setCol(ul,set){LS.set(colKey(ul),JSON.stringify([...set]));}
+function remTxt(t){const d=new Date(t),n=new Date();const hm=d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});return d.toDateString()===n.toDateString()?'היום '+hm:d.toLocaleDateString('he-IL',{weekday:'short',day:'numeric',month:'numeric'})+' '+hm;}
+function dtLocal(t){const d=new Date(t),z=x=>String(x).padStart(2,'0');return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'T'+z(d.getHours())+':'+z(d.getMinutes());}
+let remCtx=null;
+function openRem(st,i,onSave,rer){
+  remCtx={st,i,onSave,rer,text:st.tasks[i]};
+  const cur=Number(st.rm&&st.rm[i])||0;
+  let def=cur;
+  if(!def){const d=new Date(Date.now()+3600e3);d.setMinutes(d.getMinutes()<30?30:60,0,0);def=d.getTime();}
+  $('remTask').textContent=st.tasks[i];
+  $('remAt').value=dtLocal(def);
+  $('remDel').hidden=!cur;
+  say($('remMsg'),cur?'יש תזכורת: '+remTxt(cur):'');
+  $('remPop').hidden=false;setTimeout(()=>$('remAt').focus(),50);
+}
+function closeRem(){$('remPop').hidden=true;remCtx=null;}
+function remSet(v){
+  const c=remCtx;if(!c)return;
+  let i=c.i;if(c.st.tasks[i]!==c.text){i=c.st.tasks.indexOf(c.text);if(i<0){closeRem();return;}}
+  if(!c.st.rm)c.st.rm=c.st.tasks.map(()=>0);
+  c.st.rm[i]=v;c.onSave();c.rer();closeRem();
+}
+$('remSave').onclick=()=>{
+  const v=$('remAt').value;const t=v?new Date(v).getTime():NaN;
+  if(!v||isNaN(t)){say($('remMsg'),'בחרו יום ושעה.');return;}
+  if(t<Date.now()-60000){say($('remMsg'),'השעה שבחרתם כבר עברה.');return;}
+  unlockAudio();remSet(t);toast('התזכורת נקבעה: '+remTxt(t));
+};
+$('remDel').onclick=()=>{remSet(0);toast('התזכורת הוסרה');};
+$('remCancel').onclick=closeRem;
+
 function renderList(ul,st,onSave,onProg,label,focusAt){
   ul.innerHTML='';
+  if(!st.rm)st.rm=st.tasks.map(()=>0);
+  const col=getCol(ul);
   const rer=f=>renderList(ul,st,onSave,onProg,label,f);
   const splice=(at,del,items)=>{
     const a=items||[];
-    st.tasks.splice(at,del,...a.map(x=>x.t));st.done.splice(at,del,...a.map(()=>false));st.lv.splice(at,del,...a.map(x=>x.lv));
+    if(!st.rm)st.rm=st.tasks.map(()=>0);
+    st.tasks.splice(at,del,...a.map(x=>x.t));st.done.splice(at,del,...a.map(()=>false));st.lv.splice(at,del,...a.map(x=>x.lv));st.rm.splice(at,del,...a.map(()=>0));
     if(st.by)st.by.splice(at,del,...a.map(()=>''));
   };
   const setDone=(i,v)=>{st.done[i]=v;if(st.by)st.by[i]=v?me:'';};
   const syncMain=m=>{if(!hasSubs(st,m))return;const e=blockEnd(st,m);let all=true,any=false;for(let k=m+1;k<e;k++)if(st.tasks[k].trim()){any=true;if(!st.done[k])all=false;}if(!any)return;if(st.done[m]!==all)setDone(m,all);};
-  let num=0,lastMain=-1;
+  let num=0,lastMain=-1,hideSubs=false;
   st.tasks.forEach((t,i)=>{
     const sub=!!st.lv[i];
-    if(!sub){num++;lastMain=i;}
-    const li=document.createElement('li');li.className='task'+(sub?' sub':'')+(hasSubs(st,i)?' head':'');
+    if(!sub){num++;lastMain=i;hideSubs=hasSubs(st,i)&&col.has(t);}
+    if(sub&&hideSubs)return;
+    const li=document.createElement('li');li.className='task cat'+(sub?' sub':'')+(hasSubs(st,i)?' head':'');li.dataset.i=i;
+    const cc=CATC[(num-1+CATC.length)%CATC.length];
+    li.style.setProperty('--cl',cc[0]);li.style.setProperty('--cd',cc[1]);
     if(st.done[i])li.classList.add('done');
     const b=document.createElement('button');
     b.type='button';b.className='chk';b.disabled=!t.trim();
@@ -674,11 +747,29 @@ function renderList(ul,st,onSave,onProg,label,focusAt){
       const m=sub?mainOf(st,i):-1;
       splice(i,sub?1:blockEnd(st,i)-i);if(m>=0)syncMain(m);onSave();rer();
     };
+    if(!sub&&hasSubs(st,i)){
+      const shut=col.has(t);
+      const tg=document.createElement('button');tg.type='button';tg.className='ttog'+(shut?' shut':'');tg.dataset.keep='1';
+      tg.innerHTML=CHEV;
+      tg.setAttribute('aria-expanded',shut?'false':'true');
+      tg.setAttribute('aria-label',(shut?'פתיחת תתי־המשימות של ':'כיווץ תתי־המשימות של ')+(t||nm));
+      tg.onclick=()=>{const c=getCol(ul);if(c.has(t))c.delete(t);else c.add(t);setCol(ul,c);rer();};
+      li.append(tg);
+    }
     li.append(b,inp);if(by)li.append(by);
+    if(t.trim()){
+      const rv=Number(st.rm[i])||0;
+      const bl=document.createElement('button');bl.type='button';bl.className='tbell'+(rv?' on':'');bl.dataset.keep='1';
+      bl.innerHTML=BELL;
+      bl.setAttribute('aria-label',rv?'תזכורת '+remTxt(rv)+', לשינוי':'הוספת תזכורת ל'+(t||nm));
+      bl.title=rv?'תזכורת: '+remTxt(rv):'הוספת תזכורת';
+      bl.onclick=()=>openRem(st,i,onSave,rer);
+      li.append(bl);
+    }
     if(!sub&&t.trim()){
       const add=document.createElement('button');add.type='button';add.className='tsub';add.dataset.keep='1';
       add.textContent='+';add.title='הוספת תת־משימה';add.setAttribute('aria-label','הוספת תת־משימה ל'+nm);
-      add.onclick=()=>{const at=blockEnd(st,i);splice(at,0,[{t:'',lv:1}]);syncMain(i);onSave();rer(at);};
+      add.onclick=()=>{const c=getCol(ul);if(c.delete(t))setCol(ul,c);const at=blockEnd(st,i);splice(at,0,[{t:'',lv:1}]);syncMain(i);onSave();rer(at);};
       li.append(add);
     }
     li.append(del);
@@ -696,7 +787,7 @@ function renderList(ul,st,onSave,onProg,label,focusAt){
   }
   if(focusAt!=null){
     const rows=ul.querySelectorAll('li');
-    const r=focusAt===-1?rows[rows.length-1]:rows[focusAt];
+    const r=focusAt===-1?rows[rows.length-1]:ul.querySelector('li[data-i="'+focusAt+'"]');
     const f=r&&r.querySelector('input');if(f)setTimeout(()=>f.focus(),0);
   }
   onProg();
@@ -716,7 +807,7 @@ function saveFam(){
 function subFam(){
   if(famUnsub){famUnsub();famUnsub=null;}
   const adult=me==='dad'||me==='mom';
-  $('famBox').hidden=!adult;$('mineH').hidden=!adult;$('mineSub').hidden=!adult;
+  $('nv-fam').hidden=!adult;document.querySelector('.nav').classList.toggle('many',adult);
   if(!adult)return;
   fam=famState(null);renderFam();
   famUnsub=onSnapshot(famDoc(),snap=>{
@@ -827,7 +918,8 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden){beat();pa
 
 /* ---------- מסך ראשי ---------- */
 function tab(n){
-  ['today','jobs','shop','taxi','dog','home','set'].forEach(k=>{
+  $('topBar').hidden=(n==='today'||n==='fam');
+  ['today','fam','jobs','shop','taxi','dog','home','set'].forEach(k=>{
     $('tab-'+k).hidden=(k!==n);
     $('nv-'+k).classList.toggle('on',k===n);
   });
@@ -849,6 +941,7 @@ function openMain(){
   document.body.style.setProperty('--pc-d',p.d);
   work=myState();
   $('hello').textContent='היי '+p.name;
+  $('mineH').textContent='המשימות של '+p.name;
   $('dateTxt').textContent=new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
   show('s-main');tab('today');renderTasks();startBeat();
   weekStart=sunday(new Date());subWeek();subSwaps();subFam();subJobs();subAdv();subCurWk();paintJobForm();subShop();subTaxi();
@@ -1361,7 +1454,7 @@ function remind(lines,goTab){
   const pop=$('pop'),ul=$('popList');
   if(pop.hidden)ul.innerHTML='';
   lines.forEach(t=>ul.append(h('li',null,t)));
-  $('popGo').textContent=goTab==='dog'?'ללוח הכלבה':'למשימות';
+  $('popGo').textContent=goTab==='dog'?'ללוח הכלבה':goTab==='today'?'למשימות שלי':goTab==='fam'?'למשימות המשפחתיות':'למשימות';
   $('popGo').onclick=()=>{pop.hidden=true;tab(goTab||'jobs');};
   pop.hidden=false;chime();
   setTimeout(()=>$('popOk').focus(),50);
@@ -1709,7 +1802,20 @@ function checkRem(){
       dogFire.push('תורך להוציא את הכלבה ('+SHORT[k]+')');
     }
   }
-  if(fire.length||dogFire.length)remind(fire.concat(dogFire),fire.length?'jobs':'dog');
+  /* תזכורות מהפעמון במשימות שלי ובמשימות המשפחתיות */
+  const tFire=[];let tTab='';
+  const lists=[[work,'today']];if(isAdult(me))lists.push([fam,'fam']);
+  lists.forEach(([st,tb])=>{
+    (st.rm||[]).forEach((t,i)=>{
+      t=Number(t)||0;
+      if(!t||t>now||now-t>win||st.done[i]||!String(st.tasks[i]||'').trim())return;
+      const key='yaya.trem.'+tb+'.'+t+'.'+st.tasks[i];
+      if(LS.get(key))return;LS.set(key,'1');
+      const m=st.lv[i]?mainOf(st,i):-1;
+      tFire.push('תזכורת: '+(m>=0?st.tasks[m]+' ‹ ':'')+st.tasks[i]);if(!tTab)tTab=tb;
+    });
+  });
+  if(fire.length||dogFire.length||tFire.length)remind(tFire.concat(fire,dogFire),tFire.length?tTab:fire.length?'jobs':'dog');
 }
 setInterval(checkRem,15000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkRem();});
@@ -2001,7 +2107,7 @@ async function tryPin(){
 }
 $('pinOk').onclick=tryPin;
 $('pinIn').addEventListener('keydown',e=>{if(e.key==='Enter')tryPin();});
-['today','jobs','shop','taxi','dog','home','set'].forEach(k=>{$('nv-'+k).onclick=()=>tab(k);});
+['today','fam','jobs','shop','taxi','dog','home','set'].forEach(k=>{$('nv-'+k).onclick=()=>tab(k);});
 $('btnSwitch').onclick=()=>showWho();
 $('codeShow').onclick=()=>{const o=$('codeOut');o.textContent=code;o.hidden=!o.hidden;$('codeShow').textContent=o.hidden?'הצגת הקוד':'הסתרת הקוד';};
 $('pinSave').onclick=async()=>{
