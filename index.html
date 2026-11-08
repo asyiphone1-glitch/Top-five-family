@@ -155,13 +155,13 @@ input{font:inherit;color:var(--ink)}
 .jform textarea,.jform select,.jform input{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:12px;font-size:1.05rem}
 .jform textarea{resize:vertical;min-height:84px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.nav button{position:relative}
+.nav button{position:relative;white-space:nowrap;font-size:.74rem;min-width:0;padding:0 2px}
 .nb{position:absolute;top:4px;inset-inline-end:calc(50% - 22px);background:var(--bad);color:#fff;border-radius:999px;font-size:.72rem;min-width:18px;line-height:18px;padding:0 5px;text-align:center}
 .pop{position:fixed;inset:0;background:rgba(8,16,34,.5);display:grid;place-items:center;z-index:60;padding:20px}
 .pop .box{background:var(--surface);color:var(--ink);border-radius:20px;padding:20px;max-width:420px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.25)}
 .pop h3{margin:0 0 8px;font:700 1.35rem var(--display);color:var(--accent)}
 .pop ul{margin:0;padding-inline-start:20px;font-size:1.1rem}
-.toast{position:fixed;bottom:calc(86px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;z-index:55;font-weight:700;max-width:calc(100vw - 32px);text-align:center}
+.toast{position:fixed;bottom:calc(86px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:16px;z-index:55;font-weight:700;max-width:calc(100vw - 32px);text-align:center}
 .chip.blk[aria-pressed="true"]{background:var(--bad);border-color:var(--bad);color:#fff}
 .brow{border-top:1px solid var(--line);padding:6px 0}
 .brow:first-child{border-top:0}
@@ -183,6 +183,24 @@ input{font:inherit;color:var(--ink)}
 .rec .acts{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
 .btn.sm[aria-pressed="true"]{background:var(--accent);color:#fff}
 .tag{display:inline-block;font-size:.75rem;font-weight:700;border-radius:999px;padding:1px 8px;background:var(--soft);color:var(--mute);margin-inline-start:6px}
+.shopadd{display:flex;gap:8px;align-items:stretch}
+.shopadd .field{flex:1;min-width:0}
+.shopadd .btn{width:auto;margin:0;padding:0 18px}
+.scat{margin-top:16px}
+.scat h3{margin:0 0 6px;font:700 1.05rem var(--display);display:flex;justify-content:space-between}
+.scat h3 small{color:var(--mute);font-weight:500}
+.sitems{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:16px}
+.sitem{display:flex;align-items:center;gap:12px;padding:8px 12px;border-top:1px solid var(--line)}
+.sitem:first-child{border-top:0}
+.sitem .chk{width:46px;height:46px}
+.sitem.got .chk{background:var(--good);border-color:var(--good);color:#fff}
+.sitem.got .chk svg{display:block}
+.sitem .st2{flex:1;min-width:0}
+.sitem .tx{font:600 1.15rem/1.3 var(--body);word-break:break-word}
+.sitem.got .tx{text-decoration:line-through;color:var(--mute)}
+.sitem .by3{font-size:.8rem;color:var(--mute)}
+.sitem .mv{flex:none;min-height:40px;min-width:40px;border:0;background:transparent;color:var(--mute);font:700 1.2rem var(--body);cursor:pointer;border-radius:10px}
+.sitem select{font:inherit;color:var(--ink);background:var(--surface);border:2px solid var(--accent);border-radius:10px;padding:8px;margin-top:6px;width:100%}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -254,6 +272,19 @@ input{font:inherit;color:var(--ink)}
     </div>
   </div>
 
+  <div id="tab-shop" hidden>
+    <h2 class="sec">רשימת קניות</h2>
+    <p class="date">משותפת לאבא ולאמא. כל מוצר נכנס לבד למחלקה שלו בסופר.</p>
+    <div class="shopadd">
+      <input id="shopIn" class="field" maxlength="200" autocomplete="off" placeholder="למשל: חלב, עגבניות, במבה" aria-label="מוצר להוספה">
+      <button id="shopAdd" class="btn pri" type="button">הוספה</button>
+    </div>
+    <p class="hint" style="margin-top:6px">אפשר לרשום כמה מוצרים בבת אחת, מופרדים בפסיק. אם מוצר נכנס למחלקה לא נכונה, לוחצים ⇄ ובוחרים מחלקה, והאפליקציה תזכור לפעם הבאה.</p>
+    <p id="shopProg" class="progress"></p>
+    <div id="shopBox"></div>
+    <button id="shopClear" class="btn quiet" type="button" hidden></button>
+  </div>
+
   <div id="tab-dog" hidden>
     <div id="dogBox"></div>
   </div>
@@ -290,12 +321,13 @@ input{font:inherit;color:var(--ink)}
     </div>
     <button id="btnSwitch" class="btn quiet" type="button">החלפת פרופיל</button>
     <button id="btnForget" class="btn danger" type="button">ניתוק הטלפון הזה מהמשפחה</button>
-    <p class="hint">גרסה: שלב 3.1, משימות מההורים עם צלצול, משימות פתוחות, שיבוץ כלבה עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
+    <p class="hint">גרסה: שלב 3.2, כולל רשימת קניות, משימות מההורים עם צלצול, משימות פתוחות, שיבוץ כלבה עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
   </div>
 
   <nav class="nav" aria-label="ניווט">
     <button id="nv-today" type="button"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>היום שלי</button>
     <button id="nv-jobs" type="button"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>משימות<span id="jobBadge" class="nb" hidden></span></button>
+    <button id="nv-shop" type="button" hidden><svg viewBox="0 0 24 24"><path d="M3 4h2l2.4 11h11l2-8H6.2"/><circle cx="9" cy="19.5" r="1.5"/><circle cx="17" cy="19.5" r="1.5"/></svg>קניות</button>
     <button id="nv-dog" type="button"><svg viewBox="0 0 24 24"><path d="M4 9l2-4 3 2h6l3-2 2 4v4a8 8 0 0 1-16 0z"/><path d="M9.5 12.5h.01M14.5 12.5h.01M10.5 16c1 .8 2 .8 3 0"/></svg>הכלבה</button>
     <button id="nv-home" type="button"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>הבית</button>
     <button id="nv-set" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>הגדרות</button>
@@ -640,7 +672,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden){beat();pa
 
 /* ---------- מסך ראשי ---------- */
 function tab(n){
-  ['today','jobs','dog','home','set'].forEach(k=>{
+  ['today','jobs','shop','dog','home','set'].forEach(k=>{
     $('tab-'+k).hidden=(k!==n);
     $('nv-'+k).classList.toggle('on',k===n);
   });
@@ -648,6 +680,7 @@ function tab(n){
   if(n==='set')paintSettings();
   if(n==='dog')paintDog();
   if(n==='jobs'||n==='today')paintJobs();
+  if(n==='shop')paintShop();
 }
 function paintSettings(){
   $('pinState').textContent=(people[me]||{}).pin?'לפרופיל שלך מוגדר קוד אישי.':'אין קוד אישי לפרופיל שלך.';
@@ -662,7 +695,7 @@ function openMain(){
   $('hello').textContent='היי '+p.name;
   $('dateTxt').textContent=new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
   show('s-main');tab('today');renderTasks();startBeat();
-  weekStart=sunday(new Date());subWeek();subSwaps();subFam();subJobs();subAdv();subCurWk();paintJobForm();
+  weekStart=sunday(new Date());subWeek();subSwaps();subFam();subJobs();subAdv();subCurWk();paintJobForm();subShop();
   clearInterval(homeT);homeT=setInterval(()=>{if(!$('tab-home').hidden)paintHome();},30000);
 }
 function onPeople(snap){
@@ -1441,6 +1474,179 @@ function checkRem(){
 setInterval(checkRem,15000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkRem();});
 
+/* ---------- רשימת קניות ---------- */
+const SHOPCATS=[
+ {k:'veg',n:'ירקות',i:'🥬'},
+ {k:'fruit',n:'פירות',i:'🍎'},
+ {k:'bread',n:'לחם ומאפים',i:'🍞'},
+ {k:'dairy',n:'מוצרי חלב וביצים',i:'🥛'},
+ {k:'meat',n:'בשר, עוף ודגים',i:'🍗'},
+ {k:'deli',n:'נקניקים ומעדנייה',i:'🧆'},
+ {k:'frozen',n:'קפואים',i:'🧊'},
+ {k:'dry',n:'פסטה, אורז וקטניות',i:'🍝'},
+ {k:'cans',n:'שימורים, רטבים וממרחים',i:'🥫'},
+ {k:'bake',n:'אפייה, תבלינים ושמנים',i:'🧂'},
+ {k:'break',n:'דגני בוקר, קפה ותה',i:'☕'},
+ {k:'snack',n:'חטיפים וממתקים',i:'🍫'},
+ {k:'drink',n:'משקאות',i:'🥤'},
+ {k:'clean',n:'ניקיון וכביסה',i:'🧽'},
+ {k:'hyg',n:'טואלטיקה והיגיינה',i:'🧴'},
+ {k:'paper',n:'נייר וחד-פעמי',i:'🧻'},
+ {k:'pet',n:'לכלבה',i:'🐶'},
+ {k:'other',n:'שונות',i:'🛒'}
+];
+const SHOPWORDS={
+ veg:'עגבניה עגבניות עגבנייה עגבניות שרי שרי מלפפון מלפפונים חסה חסות כרוב כרובית ברוקולי גזר גזרים בצל בצלים בצל ירוק שום פלפל פלפלים פלפל אדום פלפל צהוב גמבה תפוח אדמה תפוחי אדמה תפודים תפוד בטטה בטטות קישוא קישואים חציל חצילים דלעת דלורית סלק צנון צנונית קולרבי סלרי כרפס פטרוזיליה כוסברה שמיר נענע בזיליקום עירית פטריות פטריה פטריית שמפיניון תרד עלי תרד רוקט ארוגולה תירס תירסים אפונה שעועית ירוקה במיה לפת ג׳ינג׳ר גינגר זנגביל ירקות ירק נבטים אבוקדו לימון לימונים כרישה כרשה',
+ fruit:'תפוח תפוחים תפוחי עץ בננה בננות תפוז תפוזים קלמנטינה קלמנטינות מנדרינה אשכולית אשכוליות ענבים ענב אבטיח מלון אגס אגסים אפרסק אפרסקים נקטרינה נקטרינות שזיף שזיפים משמש משמשים דובדבן דובדבנים תות תותים תות שדה אוכמניות פטל קיווי מנגו מנגואים אננס רימון רימונים תאנה תאנים תמר תמרים פירות פרי פומלה פומלית אפרסמון ליצ׳י פסיפלורה',
+ bread:'לחם לחמים חלה חלות פיתה פיתות לחמניה לחמניות לחמנייה בגט באגט טורטיה טורטיות לאפה לאפות קרואסון קרואסונים מאפה מאפים עוגה עוגות עוגיות לחם קל לחם מלא לחם שיפון כעכים פריכיות קרקר קרקרים מצות מצה פרוסות',
+ dairy:'חלב חלב עמיד חלב סויה חלב שקדים חלב שיבולת שועל שוקו שמנת שמנת מתוקה שמנת חמוצה שמנת לבישול יוגורט יוגורטים מעדן מעדנים מילקי דני גבינה גבינות גבינת גבינה לבנה גבינה צהובה קוטג׳ קוטג קוטגי בולגרית פטה מוצרלה פרמזן צפתית לבנה לאבנה ריקוטה קממבר ברי חמאה מרגרינה ביצים ביצה תבנית ביצים אשל גיל לבן לבנים פודינג רוויון רויון פרו',
+ meat:'בשר בשר טחון טחון עוף חזה עוף חזה פרגית פרגיות שניצל שניצלים כרעיים שוקיים כנפיים כבד כבדים סטייק אנטריקוט צלי אסאדו קבב המבורגר המבורגרים הודו שווארמה דג דגים סלמון אמנון דניס לברק בורי מושט פילה קציצות',
+ deli:'נקניק נקניקים נקניקיות נקניקייה פסטרמה סלמי קבנוס חומוס מוכן סלט חומוס טחינה מוכנה סלטים סלט חצילים מטבוחה זיתים זית חמוצים מלפפון חמוץ מלפפונים חמוצים כבוש',
+ frozen:'קפוא קפואים קפואה גלידה גלידות ארטיק ארטיקים שלגון שלגונים בורקס בורקסים פיצה קפואה צ׳יפס ציפס צ׳יפס קפוא ירקות קפואים אפונה קפואה שעועית קפואה פתיתי בצק בצק עלים בצק פילו מלוואח ג׳חנון קובה מלאווח',
+ dry:'פסטה ספגטי פנה פוזילי מקרוני אטריות נודלס לזניה פתיתים אורז אורז בסמטי אורז מלא קוסקוס בורגול קינואה עדשים עדשים כתומות חומוס יבש שעועית יבשה גרגרי חומוס פירורי לחם פירורים',
+ cans:'שימורים שימור טונה טונה בשמן תירס בקופסה רסק רסק עגבניות רוטב רוטב עגבניות קטשופ קטשאפ מיונז חרדל טחינה טחינה גולמית חומוס בקופסה זיתים בקופסה ריבה ריבות דבש ממרח ממרח שוקולד נוטלה חמאת בוטנים סילאן חלבה רוטב סויה סויה צ׳ילי חריף סחוג קוביות מרק אבקת מרק מרק עוף אבקה פטריות בקופסה אננס בקופסה שימורי',
+ bake:'מלח פלפל שחור פפריקה כמון כורכום אורגנו קינמון זעתר תבלין תבלינים בהרט ציפורן אגוז מוסקט סוכר סוכר חום סוכרזית ממתיק קמח קמח מלא קמח תופח שמרים אבקת אפייה סודה לשתייה וניל סוכר וניל קקאו שוקולד מריר שוקולד לבישול שמן שמן זית שמן קנולה שמן חמניות חומץ חומץ בלסמי מיץ לימון אגוזים שקדים צימוקים אגוזי מלך קשיו פקאן בוטנים גרעינים',
+ break:'קורנפלקס דגני בוקר כריות גרנולה שיבולת שועל קוואקר מוזלי קפה קפה נמס נס קפה קפה טורקי קפסולות נספרסו תה תה ירוק תיונים חליטה צוף',
+ snack:'במבה ביסלי תפוצ׳יפס צ׳יטוס דוריטוס חטיף חטיפים שוקולד שוקולדים ממתק ממתקים סוכריה סוכריות מסטיק עוגיות וופל ופלים קליק פסק זמן קיט קט כיף כף בייגלה פופקורן חטיפי אנרגיה מרשמלו גומי סוכריות גומי',
+ drink:'מים מים מינרלים בקבוקי מים שישיית מים סודה מים מוגזים קולה קוקה קולה ספרייט פאנטה זירו מיץ מיצים מיץ תפוזים פטל תרכיז נביעות בירה יין ענבים יין לבן יין אדום וודקה ערק משקה משקאות שתייה פריגת',
+ clean:'אבקת כביסה ג׳ל כביסה מרכך כביסה מרכך כביסה סבון כלים נוזל כלים אקונומיקה סנו נוזל רצפות ספוג ספוגים סקוץ׳ מטליות מטלית שקיות זבל שקית זבל מגבונים לניקוי ווינדקס מסיר שומנים טבליות למדיח מלח למדיח מדיח אנטי קאלק ניקוי מנקה מסיר אבנית',
+ hyg:'שמפו מרכך מרכך שיער סבון סבון גוף סבון ידיים ג׳ל רחצה משחת שיניים מברשת שיניים מברשות שיניים חוט דנטלי מי פה דאודורנט דיאודורנט קרם קרם ידיים קרם הגנה תחבושות טמפונים פדים צמר גפן מקלוני אוזניים סכיני גילוח קצף גילוח טיטולים חיתולים מגבונים לחים מגבונים פלסטרים אקמול נורופן',
+ paper:'נייר טואלט נייר טואלט נייר מגבת מגבות נייר מפיות טישו ממחטות צלחות חד פעמיות חד פעמי כוסות חד פעמיות סכו״ם חד פעמי נייר כסף נייר אפייה ניילון נצמד שקיות סנדוויץ׳ שקיות אוכל קופסאות אלומיניום תבניות',
+ pet:'אוכל לכלבה אוכל לכלבים אוכל כלבים מזון לכלבים חטיף לכלבה חטיפים לכלבה עצם לכלבה שקיות לקקי שקיות לכלבה צעצוע לכלבה רצועה קולר שמפו לכלבה'
+};
+/* מילים "מכריעות" שמנצחות גם בתוך צירוף (למשל "שמפו לכלבה" הולך לכלבה) */
+const SHOPHINT=[['לכלבה','pet'],['לכלבים','pet'],['לכלב','pet'],['קפוא','frozen'],['קפואים','frozen'],['קפואה','frozen'],['בקופסה','cans'],['חד פעמי','paper'],['חד פעמיות','paper']];
+const SHOPUNITS=new Set('ק״ג קג קילו קילוגרם גרם גר ליטר ליטרים מ״ל מל יח יחידות יחידה חבילה חבילות בקבוק בקבוקים שקית קופסה קופסת קופסאות מארז מארזים זוג זוגות שישייה שישיה רבע חצי גדול גדולה גדולים קטן קטנה קטנים של עם בלי x'.split(' '));
+let SHOPIDX=null;
+function shopNorm(t){
+  return String(t||'').replace(/["״]/g,'״').replace(/['׳`]/g,'׳').replace(/[0-9.,:;()\-+*/!?]/g,' ')
+    .split(/\s+/).filter(w=>w&&!SHOPUNITS.has(w)).join(' ').trim();
+}
+function shopIndex(){
+  if(SHOPIDX)return SHOPIDX;
+  const m=new Map();
+  for(const c in SHOPWORDS){
+    const toks=SHOPWORDS[c].split(' ');
+    /* מילים בודדות */
+    toks.forEach(w=>{if(w&&!m.has(w))m.set(w,c);});
+  }
+  /* צירופים בני שתי מילים ושלוש מילים מתוך הרשימה */
+  for(const c in SHOPWORDS){
+    const toks=SHOPWORDS[c].split(' ');
+    for(let i=0;i<toks.length-1;i++){
+      const two=toks[i]+' '+toks[i+1];if(!m.has(two))m.set(two,c);
+      if(i<toks.length-2){const three=two+' '+toks[i+2];if(!m.has(three))m.set(three,c);}
+    }
+  }
+  [['שוקולד','snack'],['טחינה','cans'],['פלפל','veg'],['בצל','veg'],['חומוס','deli'],['קמח','bake'],['מגבונים','hyg'],['עוגיות','snack']].forEach(([w,c])=>m.set(w,c));
+  SHOPIDX=m;return m;
+}
+function shopGuess(text,learn){
+  const n=shopNorm(text);if(!n)return 'other';
+  if(learn&&learn[n])return learn[n];
+  for(const [w,c] of SHOPHINT)if((' '+n+' ').includes(' '+w+' '))return c;
+  const idx=shopIndex();
+  const words=n.split(' ');
+  const vars=[words,words.map(w=>w.length>3&&/^[הו]/.test(w)?w.slice(1):w)];
+  for(const ws of vars){
+    for(let len=Math.min(3,ws.length);len>=1;len--){
+      for(let i=0;i+len<=ws.length;i++){
+        const k=ws.slice(i,i+len).join(' ');
+        if(idx.has(k))return idx.get(k);
+      }
+    }
+  }
+  /* התחלה של מילה: "עגבניות-שרי", "קוטג׳5%" */
+  for(const ws of vars)for(const w of ws){
+    if(w.length<3)continue;
+    for(const [k,c] of idx){if(!k.includes(' ')&&k.length>=3&&(w.startsWith(k)||k.startsWith(w)&&w.length>=4))return c;}
+  }
+  return 'other';
+}
+
+let shop=[],shopLearn={},shopUnsub=null,learnUnsub=null,openMv=null,clearArm=false;
+const shopCol=()=>collection(db,'families',code,'shop');
+const shopRef=id=>doc(db,'families',code,'shop',id);
+const learnDoc=()=>doc(db,'families',code,'prefs','shoplearn');
+function subShop(){
+  if(shopUnsub){shopUnsub();shopUnsub=null;}
+  if(learnUnsub){learnUnsub();learnUnsub=null;}
+  const adult=isAdult(me);
+  $('nv-shop').hidden=!adult;
+  if(!adult){shop=[];return;}
+  shopUnsub=onSnapshot(shopCol(),snap=>{shop=snap.docs.map(d=>Object.assign({id:d.id},d.data()));paintShop();},()=>{});
+  learnUnsub=onSnapshot(learnDoc(),snap=>{shopLearn=snap.exists()?snap.data():{};},()=>{});
+}
+async function shopAddNow(){
+  const inp=$('shopIn');
+  const parts=inp.value.split(/[,،\n]+/).map(x=>x.trim()).filter(Boolean).slice(0,30);
+  if(!parts.length)return;
+  const have=new Set(shop.filter(x=>!x.got).map(x=>shopNorm(x.t)));
+  const dup=[],adds=[];
+  parts.forEach(t=>{const n=shopNorm(t)||t;if(have.has(n)){dup.push(t);return;}have.add(n);adds.push(t);});
+  inp.value='';
+  try{
+    await Promise.all(adds.map((t,i)=>setDoc(doc(shopCol()),{t:t.slice(0,80),c:shopGuess(t,shopLearn),by:me,at:Date.now()+i,got:false})));
+    if(dup.length)toast('כבר ברשימה: '+dup.join(', '));
+  }catch(e){toast('השמירה נכשלה. בדקו חיבור.');}
+  inp.focus();
+}
+$('shopAdd').onclick=shopAddNow;
+$('shopIn').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();shopAddNow();}});
+$('shopClear').onclick=()=>{
+  const got=shop.filter(x=>x.got);
+  if(!got.length)return;
+  if(!clearArm){clearArm=true;paintShop();return;}
+  clearArm=false;
+  got.forEach(x=>deleteDoc(shopRef(x.id)).catch(()=>{}));
+};
+function paintShop(){
+  const box=$('shopBox');if(!box||!me||$('tab-shop').hidden)return;
+  box.innerHTML='';
+  const left=shop.filter(x=>!x.got).length,got=shop.length-left;
+  const pr=$('shopProg');pr.className='progress';
+  if(!shop.length)pr.textContent='הרשימה ריקה.';
+  else if(!left){pr.textContent='הכול נקנה';pr.className='progress all';}
+  else pr.textContent='נשארו '+left+' מוצרים'+(got?', '+got+' כבר בעגלה':'');
+  SHOPCATS.forEach(cat=>{
+    const items=shop.filter(x=>(SHOPCATS.some(c=>c.k===x.c)?x.c:'other')===cat.k);
+    if(!items.length)return;
+    items.sort((a,b)=>(a.got-b.got)||((a.at||0)-(b.at||0)));
+    const sec=h('section','scat');
+    const hd=h('h3',null,cat.i+' '+cat.n);
+    const nl=items.filter(x=>!x.got).length;
+    hd.append(h('small',null,nl?String(nl):'✓'));
+    const ul=h('ul','sitems');
+    items.forEach(x=>{
+      const li=h('li','sitem'+(x.got?' got':''));
+      const b=h('button','chk');b.type='button';b.innerHTML=CHECK;
+      b.setAttribute('aria-label',(x.got?'החזרה לרשימה: ':'סימון שנקנה: ')+x.t);
+      b.onclick=()=>setDoc(shopRef(x.id),{got:!x.got,gotBy:x.got?null:me},{merge:true}).catch(()=>toast('הפעולה נכשלה.'));
+      const st=h('div','st2');st.append(h('div','tx',x.t));
+      if(byId[x.by])st.append(h('div','by3',byId[x.by].name+' הוסיף'+(byId[x.by].g==='m'?'':'ה')));
+      if(openMv===x.id){
+        const sel=h('select');sel.setAttribute('aria-label','מחלקה עבור '+x.t);
+        SHOPCATS.forEach(c=>{const o=h('option',null,c.i+' '+c.n);o.value=c.k;if(c.k===cat.k)o.selected=true;sel.append(o);});
+        sel.onchange=()=>{
+          const n=shopNorm(x.t);openMv=null;
+          setDoc(shopRef(x.id),{c:sel.value},{merge:true}).catch(()=>{});
+          if(n)setDoc(learnDoc(),{[n]:sel.value},{merge:true}).catch(()=>{});
+          toast('הועבר ל'+SHOPCATS.find(c=>c.k===sel.value).n+'. בפעם הבאה זה ייכנס לשם לבד.');
+        };
+        st.append(sel);
+      }
+      const mv=h('button','mv','⇄');mv.type='button';mv.setAttribute('aria-label','העברה למחלקה אחרת: '+x.t);
+      mv.onclick=()=>{openMv=openMv===x.id?null:x.id;paintShop();};
+      const del=h('button','mv','×');del.type='button';del.setAttribute('aria-label','מחיקה: '+x.t);
+      del.onclick=()=>deleteDoc(shopRef(x.id)).catch(()=>{});
+      li.append(b,st,mv,del);ul.append(li);
+    });
+    sec.append(hd,ul);box.append(sec);
+  });
+  const cb=$('shopClear');cb.hidden=!got;
+  cb.textContent=clearArm?'ללחוץ שוב כדי להסיר '+got+' מוצרים שנקנו':'הסרת מה שנקנה ('+got+')';
+}
+
 /* ---------- אירועים ---------- */
 $('btnJoin').onclick=()=>enterCode(false);
 $('btnCreate').onclick=()=>enterCode(true);
@@ -1453,7 +1659,7 @@ async function tryPin(){
 }
 $('pinOk').onclick=tryPin;
 $('pinIn').addEventListener('keydown',e=>{if(e.key==='Enter')tryPin();});
-['today','jobs','dog','home','set'].forEach(k=>{$('nv-'+k).onclick=()=>tab(k);});
+['today','jobs','shop','dog','home','set'].forEach(k=>{$('nv-'+k).onclick=()=>tab(k);});
 $('btnSwitch').onclick=()=>showWho();
 $('codeShow').onclick=()=>{const o=$('codeOut');o.textContent=code;o.hidden=!o.hidden;$('codeShow').textContent=o.hidden?'הצגת הקוד':'הסתרת הקוד';};
 $('pinSave').onclick=async()=>{
