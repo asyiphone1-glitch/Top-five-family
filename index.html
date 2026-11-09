@@ -3429,6 +3429,27 @@ $('btnForget').onclick=()=>{
   location.reload();
 };
 
+/* ---------- עדכון אוטומטי: כשחוזרים לאפליקציה ויש גרסה חדשה באתר, היא נטענת לבד ---------- */
+let updAt=0;
+const partOf=(txt,open)=>{const i=txt.indexOf(open);if(i<0)return null;const j=txt.indexOf(open.startsWith('<st')?'</'+'style>':'</'+'script>',i);return j<0?null:txt.slice(i+open.length,j);};
+async function checkUpdate(){
+  if(document.hidden||Date.now()-updAt<60e3)return;updAt=Date.now();
+  try{
+    const r=await fetch('./?v='+Date.now(),{cache:'no-store'});if(!r.ok)return;
+    const t=await r.text();
+    const js=partOf(t,'<'+'script type="module">'),css=partOf(t,'<'+'style>');
+    const curJs=document.querySelector('script[type="module"]').textContent,curCss=document.querySelector('style').textContent;
+    if(js===null||css===null||(js===curJs&&css===curCss))return;
+    const a=document.activeElement,busy=a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA')&&a.value;
+    const openPop=[...document.querySelectorAll('.pop')].some(p=>!p.hidden);
+    if(busy||openPop){updAt=0;return;}
+    location.reload();
+  }catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(checkUpdate,800);});
+setInterval(checkUpdate,20*60e3);
+setTimeout(checkUpdate,5000);
+
 /* ---------- התראות כשהאפליקציה סגורה ---------- */
 const VAPID_PUB='BP2DfRuPoADshH2Pa1jkpdeTA0id0OvlMayYX1E7G5oDirf1hOK9jccPk7ttX0cQeiXWhYyNQU1ZcKcFlSo1hig';
 const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
