@@ -108,7 +108,7 @@ async function main() {
 
   for (const j of jobs) {
     if (!j.hasT || !j.due || j.done) continue;
-    const who = (j.to === 'all' || j.to === 'fam') && j.claim ? [j.claim] : j.to === 'fam' ? ['dad', 'mom', ...KIDS] : j.to !== 'all' ? [j.to] : KIDS;
+    const who = j.to === 'fam' ? ['dad', 'mom', ...KIDS] : j.to !== 'all' ? [j.to] : j.claim ? [j.claim] : KIDS;
     const pts = [[j.due, 'd']];
     if (on('r_pre10')) pts.push([j.due - 600e3, 'p']);
     for (const [t, k] of pts) {
