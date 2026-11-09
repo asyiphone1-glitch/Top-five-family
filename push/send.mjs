@@ -184,6 +184,59 @@ async function main() {
     }
   }
 
+  // לוח משפחתי: תזכורות לאירועים (ולבחינות מ-teach-me שהוגדרה להן תזכורת). אין הגדרה = אין תזכורת
+  {
+    const [evs, tmo] = await Promise.all([list(F + '/cal'), list(F + '/caltm')]);
+    const ALL = ['dad', 'mom', ...KIDS];
+    const KN = { cls: ['חוג', '🎨'], exam: ['בחינה', '📝'], event: ['אירוע', '🎉'], bday: ['יום הולדת', '🎂'], appt: ['תור', '🩺'], other: ['אחר', '📌'] };
+    const p = parts(now);
+    const dk = n => { const x = new Date(Date.UTC(p.y, p.m - 1, p.d) + n * 864e5); return ymd(x.getUTCFullYear(), x.getUTCMonth() + 1, x.getUTCDate()); };
+    const A = dk(-1), B = dk(8), T0 = dk(0), T1 = dk(1);
+    const kd = k => { const a = k.split('-').map(Number); return Date.UTC(a[0], a[1] - 1, a[2]); };
+    const kOf = ms => { const x = new Date(ms); return ymd(x.getUTCFullYear(), x.getUTCMonth() + 1, x.getUTCDate()); };
+    const occ = ev => {
+      const o = [], skip = new Set(ev.skip || []);
+      if (!ev.date) return o;
+      if (!ev.rep) { if (ev.date >= A && ev.date <= B) o.push(ev.date); return o; }
+      const end = ev.until && ev.until < B ? ev.until : B;
+      if (ev.rep === 'w') {
+        let d = kd(ev.date); const a = kd(A);
+        if (d < a) d += Math.floor((a - d) / (7 * 864e5)) * 7 * 864e5;
+        for (let i = 0; i < 4; i++, d += 7 * 864e5) { const k = kOf(d); if (k > end) break; if (k >= A && !skip.has(k)) o.push(k); }
+      } else if (ev.rep === 'y') {
+        const md = ev.date.slice(4);
+        for (const y of new Set([+A.slice(0, 4), +B.slice(0, 4)])) { const k = y + md; if (k >= ev.date && k >= A && k <= end && !skip.has(k)) o.push(k); }
+      }
+      return o;
+    };
+    const remAt = (ev, k) => {
+      const r = ev.rem; if (!r) return 0;
+      const [y, m, d] = k.split('-').map(Number);
+      if (ev.time) {
+        const [hh, mm] = String(ev.time).split(':').map(Number);
+        if (r[0] === 'm') return localToUtc(y, m, d, hh, mm) - Number(r.slice(1)) * 60e3;
+        if (r[0] === 'd') { const x = new Date(kd(k) - Number(r.slice(1)) * 864e5); return localToUtc(x.getUTCFullYear(), x.getUTCMonth() + 1, x.getUTCDate(), hh, mm); }
+        return localToUtc(y, m, d, hh, mm);
+      }
+      if (r[0] === 'd') { const x = new Date(kd(k) - Number(r.slice(1)) * 864e5); return localToUtc(x.getUTCFullYear(), x.getUTCMonth() + 1, x.getUTCDate(), 19, 0); }
+      return localToUtc(y, m, d, 7, 30);
+    };
+    const items = evs.map(e => Object.assign({}, e));
+    for (const o of tmo) if (o.rem && o.date && o.pid) items.push({ id: 'tm_' + o.id, kind: 'exam', title: o.title || 'בחינה', who: [o.pid], date: o.date, time: o.time || '', rem: o.rem, by: o.by || '' });
+    for (const ev of items) {
+      if (!ev.rem) continue;
+      const who = new Set(ev.fam ? ALL : (ev.who || []));
+      if (ev.by) who.add(ev.by);
+      for (const k of occ(ev)) {
+        const t = remAt(ev, k);
+        if (!t || t > now || now - t > WINDOW) continue;
+        const kn = KN[ev.kind] || KN.other;
+        const when = k === T0 ? 'היום' : k === T1 ? 'מחר' : k.slice(8).replace(/^0/, '') + '.' + k.slice(5, 7).replace(/^0/, '');
+        out.push({ key: `e_${ev.id}_${k}_${ev.rem}_${String(ev.time || '').replace(':', '')}`, who: [...who], tab: 'cal', body: kn[1] + ' ' + (ev.title || kn[0]) + ' · ' + when + (ev.time ? ' ב-' + ev.time : '') });
+      }
+    }
+  }
+
   for (const n of out) {
     if (sent.has(n.key)) continue;
     const targets = subs.filter(s => n.who.includes(s.who));
