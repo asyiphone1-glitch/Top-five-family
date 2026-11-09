@@ -170,6 +170,20 @@ async function main() {
     }
   }
 
+  // אוכל: מ-20:00 ועד חצות, כל רבע שעה, לבנות שעוד לא הזמינו ארוחת עשר וצהרון למחר (לא בליל שבת)
+  {
+    const p = parts(now);
+    if (p.h >= 20 && p.h < 24 && p.wd !== 5) {
+      const q = Math.floor(p.mi / 15) * 15;
+      const nx = new Date(Date.UTC(p.y, p.m - 1, p.d) + 864e5);
+      const nk = ymd(nx.getUTCFullYear(), nx.getUTCMonth() + 1, nx.getUTCDate());
+      const fd = await getDoc(`${F}/food/${nk}`);
+      const ord = (fd && fd.orders) || {};
+      const who = KIDS.filter(id => !(ord[id] && ord[id].at));
+      if (who.length) out.push({ key: `f_${nk}_${p.h}${String(q).padStart(2, '0')}`, who, tab: 'food', body: '🍽️ מה להכין לך מחר? בוחרים ארוחת עשר וצהרון' });
+    }
+  }
+
   for (const n of out) {
     if (sent.has(n.key)) continue;
     const targets = subs.filter(s => n.who.includes(s.who));

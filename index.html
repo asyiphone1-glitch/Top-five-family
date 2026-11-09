@@ -336,6 +336,22 @@ input{font:inherit;color:var(--ink)}
 .podlist .rk{flex:none;width:1.6em;text-align:center;font:800 1.1rem var(--display);color:var(--mute)}
 .podlist .pt{margin-inline-start:auto;font:800 1.1rem var(--display);color:var(--accent);white-space:nowrap}
 .podlist small{display:block;color:var(--mute);font-size:.8rem;line-height:1.3}
+/* אוכל */
+.fmeal{margin-top:14px}
+.fmeal h4{margin:0 0 4px;font:700 1.08rem var(--display)}
+.fmeal .field{font-size:1.05rem;padding:12px}
+.fmeal .shopadd{margin-top:4px}
+.fpop .box{max-height:calc(100vh - 40px);overflow-y:auto}
+.fok{color:var(--good);font-weight:700}
+.fwait{color:var(--warn);font-weight:700}
+.fkh{display:flex;align-items:center;gap:10px;font-size:1.1rem}
+.fkh span{margin-inline-start:auto;font-size:.9rem}
+.fline{margin:6px 0 0;font-size:1.05rem;line-height:1.4;word-break:break-word}
+.fml{font-weight:700}
+.fx{font-style:normal;background:var(--warn-soft);border-radius:6px;padding:0 6px}
+.ftot{margin-top:6px}
+.fth{font-weight:700;font-size:.95rem;color:var(--mute)}
+.chip.fed{border-style:dashed}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -444,6 +460,12 @@ input{font:inherit;color:var(--ink)}
     </div>
   </div>
 
+  <div id="tab-food" hidden>
+    <h2 class="sec">אוכל</h2>
+    <p class="date">ארוחת עשר וצהרון. הבנות בוחרות מהתפריט שההורים מכניסים, ואפשר להוסיף משהו במילים.</p>
+    <div id="foodBox"></div>
+  </div>
+
   <div id="tab-dog" hidden>
     <div id="podBox"></div>
     <div id="dogBox"></div>
@@ -492,7 +514,7 @@ input{font:inherit;color:var(--ink)}
     </div>
     <button id="btnSwitch" class="btn quiet" type="button">החלפת פרופיל</button>
     <button id="btnForget" class="btn danger" type="button">ניתוק הטלפון הזה מהמשפחה</button>
-    <p class="hint">גרסה: שלב 4, כולל מסך הבנות, אילוצים שבועיים עד יום חמישי ושיבוץ אוטומטי, דו״ח הוגנות, ניקוד בונוס ופודיום עם הכלבה, צלצול משופר,  פעמון תזכורת לכל משימה ותת־משימה, צבע לכל קטגוריה, כיווץ תתי־משימות, מסך נפרד למשימות משפחתיות, התראות כשהאפליקציה סגורה, רשימת קניות, מונית, משימות ותתי־משימות בלי הגבלה, משימות מההורים עם צלצול, משימות פתוחות, שיבוץ כלבה עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
+    <p class="hint">גרסה: שלב 4, כולל מסך הבנות, אילוצים שבועיים עד יום חמישי ושיבוץ אוטומטי, דו״ח הוגנות, ניקוד בונוס ופודיום עם הכלבה, צלצול משופר,  פעמון תזכורת לכל משימה ותת־משימה, צבע לכל קטגוריה, כיווץ תתי־משימות, מסך נפרד למשימות משפחתיות, התראות כשהאפליקציה סגורה, רשימת קניות, מונית, אוכל (ארוחת עשר וצהרון עם שאלה לבנות כל ערב ב-20:00), משימות ותתי־משימות בלי הגבלה, משימות מההורים עם צלצול, משימות פתוחות, שיבוץ כלבה עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
   </div>
 
   <nav class="nav" aria-label="ניווט">
@@ -502,6 +524,7 @@ input{font:inherit;color:var(--ink)}
     <button id="nv-jobs" type="button"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>משימות<span id="jobBadge" class="nb" hidden></span></button>
     <button id="nv-shop" type="button" hidden><svg viewBox="0 0 24 24"><path d="M3 4h2l2.4 11h11l2-8H6.2"/><circle cx="9" cy="19.5" r="1.5"/><circle cx="17" cy="19.5" r="1.5"/></svg>קניות</button>
     <button id="nv-taxi" type="button"><svg viewBox="0 0 24 24"><path d="M5 17h14v-5l-2-5H7l-2 5z"/><path d="M5 12h14M9 4h6"/><circle cx="8" cy="17.5" r="1.5"/><circle cx="16" cy="17.5" r="1.5"/></svg>מונית<span id="taxiBadge" class="nb" hidden></span></button>
+    <button id="nv-food" type="button"><svg viewBox="0 0 24 24"><path d="M7 3v18M4.5 3v5a2.5 2.5 0 0 0 5 0V3"/><path d="M17 21V3c-2.2 1.3-3.5 4-3.5 7.5V14H17"/></svg>אוכל<span id="foodBadge" class="nb" hidden></span></button>
     <button id="nv-dog" type="button"><svg viewBox="0 0 24 24"><path d="M4 9l2-4 3 2h6l3-2 2 4v4a8 8 0 0 1-16 0z"/><path d="M9.5 12.5h.01M14.5 12.5h.01M10.5 16c1 .8 2 .8 3 0"/></svg>הכלבה</button>
     <button id="nv-home" type="button"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>הבית</button>
     <button id="nv-set" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>הגדרות</button>
@@ -523,6 +546,11 @@ input{font:inherit;color:var(--ink)}
     <button id="remSave" class="btn pri" type="button">שמירה</button>
     <button id="remDel" class="btn danger" type="button" hidden>הסרת התזכורת</button>
     <button id="remCancel" class="btn quiet" type="button">ביטול</button>
+  </div>
+</div>
+<div id="foodPop" class="pop fpop" hidden role="dialog" aria-modal="true" aria-labelledby="foodPopH">
+  <div class="box"><h3 id="foodPopH">🍽️ מה להכין לך למחר?</h3>
+    <div id="foodPopForm"></div>
   </div>
 </div>
 <div id="toast" class="toast" hidden role="status"></div>
@@ -1050,7 +1078,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden){beat();pa
 /* ---------- מסך ראשי ---------- */
 function tab(n){
   $('topBar').hidden=(n==='today'||n==='fam'||n==='kids');
-  ['today','fam','kids','jobs','shop','taxi','dog','home','set'].forEach(k=>{
+  ['today','fam','kids','jobs','shop','taxi','food','dog','home','set'].forEach(k=>{
     $('tab-'+k).hidden=(k!==n);
     $('nv-'+k).classList.toggle('on',k===n);
   });
@@ -1061,6 +1089,7 @@ function tab(n){
   if(n==='jobs'||n==='today')paintJobs();
   if(n==='shop')paintShop();
   if(n==='taxi')paintTaxi();
+  if(n==='food')paintFood(true);
 }
 function paintSettings(){
   $('pinState').textContent=(people[me]||{}).pin?'לפרופיל שלך מוגדר קוד אישי.':'אין קוד אישי לפרופיל שלך.';
@@ -1076,11 +1105,11 @@ function openMain(){
   $('mineH').textContent='המשימות של '+p.name;
   $('dateTxt').textContent=new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
   show('s-main');tab('today');renderTasks();startBeat();
-  weekStart=sunday(new Date());subWeek();subSwaps();subFam();subJobs();subAdv();subCurWk();subNextWk();paintJobForm();subShop();subTaxi();
+  weekStart=sunday(new Date());subWeek();subSwaps();subFam();subJobs();subAdv();subCurWk();subNextWk();paintJobForm();subShop();subTaxi();subFood();
   clearInterval(homeT);homeT=setInterval(()=>{if(!$('tab-home').hidden)paintHome();},30000);
   syncPush();
   const qt=new URLSearchParams(location.search).get('tab');
-  if(qt&&$('tab-'+qt)){tab(qt);history.replaceState(null,'',location.pathname);}
+  if(qt&&$('tab-'+qt)){tab(qt);if(qt==='food')foodFromPush();history.replaceState(null,'',location.pathname);}
 }
 function onPeople(snap){
   if(!$('s-who').hidden)paintWho();
@@ -2591,6 +2620,215 @@ function paintTaxi(){
   });
 }
 
+/* ---------- אוכל: ארוחת עשר וצהרון ---------- */
+const FOOD0={ten:['גבינה','שוקולד','גבינת לכלוכים','חומוס','ריק','טוסט עם גבינה'],lunch:['אורז','תפוח אדמה']};
+const MEALS=[['ten','ארוחת עשר','🥪'],['lunch','צהרון','🍲']];
+const FOOD_H=20,FOOD_SNOOZE=15*60e3,EMPTY='ריק';
+let foodDef=null,foodDays={},foodUnsubs=[],foodKeys='',foodSel='',fdraft=null,fdraftDay='',foodWant=false;
+const foodRef=k=>doc(db,'families',code,'food',k);
+const foodDefRef=()=>doc(db,'families',code,'prefs','food');
+function tmrKey(){const d=new Date();d.setDate(d.getDate()+1);return dkey(d);}
+function foodDayTxt(k){const d=new Date(k+'T12:00');return (k===today()?'היום, ':k===tmrKey()?'מחר, ':'')+'יום '+DAYN[d.getDay()]+' '+d.getDate()+'/'+(d.getMonth()+1);}
+function menuOf(k){
+  const d=foodDays[k]||{},b=foodDef||FOOD0;
+  return {ten:Array.isArray(d.ten)?d.ten:(Array.isArray(b.ten)?b.ten:FOOD0.ten),lunch:Array.isArray(d.lunch)?d.lunch:(Array.isArray(b.lunch)?b.lunch:FOOD0.lunch)};
+}
+function orderOf(k,id){const o=((foodDays[k]||{}).orders||{})[id];return o&&o.at?o:null;}
+function mealTxt(o,mk){if(!o)return '';const a=(o[mk]||[]).slice();if(o[mk+'X'])a.push(o[mk+'X']);return a.join(', ');}
+function subFood(){
+  foodUnsubs.forEach(u=>u());foodUnsubs=[];foodDays={};
+  const ks=[today(),tmrKey()];foodKeys=ks.join('|');
+  if(foodSel&&!ks.includes(foodSel))foodSel='';
+  foodUnsubs.push(onSnapshot(foodDefRef(),s=>{foodDef=s.exists()?s.data():null;paintFood();},()=>{}));
+  ks.forEach(k=>foodUnsubs.push(onSnapshot(foodRef(k),s=>{foodDays[k]=s.exists()?s.data():{};paintFood();checkFood();},()=>{})));
+}
+/* הבנות: האם צריך עכשיו לבקש מהן למלא (מ-20:00, לא בליל שבת) */
+function foodDue(){
+  if(!me||isAdult(me))return false;
+  if(new Date().getHours()<FOOD_H)return false;
+  const t=tmrKey();
+  if(new Date(t+'T12:00').getDay()===6)return false;
+  if(!(t in foodDays))return false;
+  return !orderOf(t,me);
+}
+function paintFoodBadge(){
+  const b=$('foodBadge');if(!b)return;
+  const due=foodDue();b.hidden=!due;b.textContent='!';
+  $('nv-food').setAttribute('aria-label','אוכל'+(due?', צריך למלא למחר':''));
+}
+function checkFood(){
+  if(!me||!code||!db)return;
+  if(foodKeys&&foodKeys!==today()+'|'+tmrKey())subFood();
+  paintFoodBadge();
+  const pop=$('foodPop');
+  if(!foodDue()){if(!pop.hidden&&!isAdult(me)&&orderOf(tmrKey(),me))pop.hidden=true;return;}
+  if(!pop.hidden)return;
+  const sn=Number(LS.get('yaya.food.snooze.'+me))||0;
+  if(!foodWant&&Date.now()<sn)return;
+  foodWant=false;openFoodPop();
+}
+setInterval(checkFood,15000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkFood();});
+function openFoodPop(){
+  $('foodPopH').textContent='🍽️ מה להכין לך ל'+foodDayTxt(tmrKey())+'?';
+  foodForm($('foodPopForm'),true);
+  $('foodPop').hidden=false;chime();
+}
+function closeFoodPop(snooze){
+  if(snooze)LS.set('yaya.food.snooze.'+me,String(Date.now()+FOOD_SNOOZE));
+  $('foodPop').hidden=true;
+}
+/* טופס ההזמנה של הבנה. אותו טופס בחלון הקופץ ובלשונית */
+function foodForm(host,inPop){
+  const k=tmrKey();
+  if(fdraftDay!==k||!fdraft){
+    const o=orderOf(k,me);
+    fdraft={ten:new Set(o?o.ten||[]:[]),tenX:o?o.tenX||'':'',lunch:new Set(o?o.lunch||[]:[]),lunchX:o?o.lunchX||'':''};
+    fdraftDay=k;
+  }
+  host.innerHTML='';
+  const m=menuOf(k);
+  MEALS.forEach(([mk,name,ic])=>{
+    const sec=h('div','fmeal');sec.append(h('h4',null,ic+' '+name));
+    const ch=h('div','chips');ch.setAttribute('role','group');ch.setAttribute('aria-label',name);
+    const opts=m[mk].slice();fdraft[mk].forEach(x=>{if(!opts.includes(x))opts.push(x);});
+    opts.forEach(o=>ch.append(chip(o,fdraft[mk].has(o),()=>{
+      const s=fdraft[mk];
+      if(s.has(o))s.delete(o);else{if(o===EMPTY)s.clear();else s.delete(EMPTY);s.add(o);}
+      foodForm(host,inPop);
+    })));
+    if(!opts.length)ch.append(h('span','date','ההורים עוד לא הכניסו אפשרויות. אפשר לכתוב למטה.'));
+    const inp=h('input','field');inp.maxLength=80;inp.autocomplete='off';
+    inp.placeholder='משהו אחר או תוספת (לא חובה)';inp.value=fdraft[mk+'X'];inp.setAttribute('aria-label','משהו אחר ל'+name);
+    inp.oninput=()=>{fdraft[mk+'X']=inp.value;};
+    sec.append(ch,inp);host.append(sec);
+  });
+  const msg=h('p','msg');msg.setAttribute('role','status');
+  const send=h('button','btn pri',orderOf(k,me)?'עדכון ההזמנה':'שליחה להורים');send.type='button';
+  send.onclick=()=>sendFood(msg);
+  host.append(send);
+  if(inPop){
+    const later=h('button','btn quiet','אחר כך');later.type='button';
+    later.onclick=()=>{closeFoodPop(true);toast('אזכיר שוב בעוד רבע שעה');};
+    host.append(later);
+  }
+  host.append(msg);
+}
+function sendFood(msg){
+  const k=tmrKey(),d=fdraft;
+  const miss=MEALS.filter(([mk])=>!d[mk].size&&!d[mk+'X'].trim()).map(x=>x[1]);
+  if(miss.length){say(msg,'חסרה בחירה ל'+miss.join(' ול')+'. אפשר לבחור או לכתוב.');return;}
+  const o={ten:[...d.ten],tenX:d.tenX.trim().slice(0,80),lunch:[...d.lunch],lunchX:d.lunchX.trim().slice(0,80),at:Date.now()};
+  setDoc(foodRef(k),{orders:{[me]:o}},{merge:true}).catch(()=>toast('השמירה נכשלה. בדקו חיבור.'));
+  foodDays[k]=Object.assign({},foodDays[k]);foodDays[k].orders=Object.assign({},foodDays[k].orders,{[me]:o});
+  closeFoodPop(false);
+  toast('תודה! ההזמנה נשלחה להורים');
+  paintFood(true);paintFoodBadge();
+}
+function paintFood(force){
+  paintFoodBadge();
+  const box=$('foodBox');if(!box||!me||$('tab-food').hidden)return;
+  const a=document.activeElement;
+  if(!force&&a&&box.contains(a)&&a.tagName==='INPUT')return;
+  box.innerHTML='';
+  if(isAdult(me))paintFoodParent(box);else paintFoodKid(box);
+}
+function paintFoodKid(box){
+  const k=tmrKey(),o=orderOf(k,me);
+  const c=h('div','card');
+  c.append(h('h3',null,'ההזמנה שלי ל'+foodDayTxt(k)));
+  const st=h('p','date');
+  if(o){st.className='date fok';st.textContent='✓ נשלח להורים. אפשר לשנות ולשלוח שוב.';}
+  else st.textContent='כל ערב ב-20:00 קופצת שאלה, וחוזרת כל רבע שעה עד שממלאים.';
+  c.append(st);
+  const host=h('div');c.append(host);box.append(c);
+  foodForm(host,false);
+  const t=orderOf(today(),me);
+  if(t){
+    const c2=h('div','card');c2.append(h('h3',null,'מה הזמנתי להיום'));
+    MEALS.forEach(([mk,name,ic])=>c2.append(h('p','fline',ic+' '+name+': '+(mealTxt(t,mk)||'—'))));
+    box.append(c2);
+  }
+}
+function paintFoodParent(box){
+  const ks=[today(),tmrKey()];
+  if(!foodSel)foodSel=new Date().getHours()<14?ks[0]:ks[1];
+  const days=h('div','tdays');days.setAttribute('role','group');days.setAttribute('aria-label','בחירת יום');
+  ks.forEach((k,i)=>{
+    const d=new Date(k+'T12:00'),b=h('button','tday');b.type='button';
+    b.append(h('span',null,i?'מחר':'היום'),h('b',null,d.getDate()+'.'+(d.getMonth()+1)));
+    b.setAttribute('aria-pressed',k===foodSel?'true':'false');
+    b.onclick=()=>{foodSel=k;paintFood(true);};
+    days.append(b);
+  });
+  box.append(days);
+  const k=foodSel,m=menuOf(k);
+  /* סיכום ההזמנות */
+  const kids=PEOPLE.filter(p=>!isAdult(p.id));
+  const done=kids.filter(p=>orderOf(k,p.id)).length;
+  const pr=h('p','progress'+(done===kids.length?' all':''));
+  pr.textContent=done===kids.length?'כל הבנות הזמינו ל'+foodDayTxt(k):done+' מתוך '+kids.length+' בנות הזמינו ל'+foodDayTxt(k);
+  box.append(pr);
+  MEALS.forEach(([mk,name,ic])=>{
+    const cnt={};
+    kids.forEach(p=>{const o=orderOf(k,p.id);if(!o)return;(o[mk]||[]).forEach(x=>cnt[x]=(cnt[x]||0)+1);});
+    const ent=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
+    if(!ent.length)return;
+    const wrap=h('div','ftot');wrap.append(h('div','fth',ic+' סה״כ '+name));
+    const cs=h('div','cnts');
+    ent.forEach(([x,n])=>{const s=h('span','cnt',x+' ');s.append(h('b',null,'×'+n));cs.append(s);});
+    wrap.append(cs);box.append(wrap);
+  });
+  kids.forEach(p=>{
+    const o=orderOf(k,p.id),c=h('div','kc');
+    c.style.setProperty('--kc',p.l);c.style.setProperty('--kc-d',p.d);
+    const hd=h('div','fkh');hd.append(avatar(p.id,36),h('b',null,p.name));
+    const st=h('span',o?'fok':'fwait',o?'✓ הזמינה':'עוד לא מילאה');hd.append(st);
+    c.append(hd);
+    if(o)MEALS.forEach(([mk,name,ic])=>{
+      const ln=h('p','fline');ln.append(h('span','fml',ic+' '+name+': '));
+      ln.append(document.createTextNode((o[mk]||[]).join(', ')||(o[mk+'X']?'':'—')));
+      if(o[mk+'X']){if((o[mk]||[]).length)ln.append(document.createTextNode(', '));ln.append(h('i','fx',o[mk+'X']));}
+      c.append(ln);
+    });
+    box.append(c);
+  });
+  /* עריכת התפריט */
+  const ed=h('div','card');
+  ed.append(h('h3',null,'התפריט ל'+foodDayTxt(k)));
+  ed.append(h('p','date','מה הבנות יכולות לבחור. מה שמשנים כאן נשמר גם לימים הבאים. לחיצה על אפשרות מסירה אותה.'));
+  MEALS.forEach(([mk,name,ic])=>{
+    const sec=h('div','fmeal');sec.append(h('h4',null,ic+' '+name));
+    const ch=h('div','chips');
+    m[mk].forEach(o=>{
+      const b=h('button','chip fed',o+'  ×');b.type='button';b.setAttribute('aria-label','הסרה מהתפריט: '+o);
+      b.onclick=()=>saveMenu(k,mk,m[mk].filter(x=>x!==o));
+      ch.append(b);
+    });
+    if(!m[mk].length)ch.append(h('span','date','אין אפשרויות.'));
+    const row=h('div','shopadd');
+    const inp=h('input','field');inp.maxLength=60;inp.autocomplete='off';inp.placeholder='אפשרות חדשה';inp.setAttribute('aria-label','אפשרות חדשה ל'+name);
+    const add=h('button','btn pri','הוספה');add.type='button';
+    const go=()=>{
+      const v=inp.value.split(/[,،]/).map(s=>s.trim()).filter(Boolean);
+      const nx=m[mk].slice();v.forEach(x=>{if(!nx.includes(x))nx.push(x.slice(0,40));});
+      if(nx.length===m[mk].length){inp.value='';return;}
+      saveMenu(k,mk,nx);
+    };
+    add.onclick=go;inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});
+    row.append(inp,add);
+    sec.append(ch,row);ed.append(sec);
+  });
+  box.append(ed);
+}
+function saveMenu(k,mk,list){
+  const m=menuOf(k),nx={ten:m.ten.slice(),lunch:m.lunch.slice()};nx[mk]=list.slice(0,30);
+  foodDays[k]=Object.assign({},foodDays[k],nx);foodDef=Object.assign({},foodDef,nx);
+  Promise.all([setDoc(foodRef(k),nx,{merge:true}),setDoc(foodDefRef(),nx,{merge:true})]).catch(()=>toast('השמירה נכשלה. בדקו חיבור.'));
+  paintFood(true);
+}
+function foodFromPush(){if(me&&!isAdult(me)){foodWant=true;checkFood();}}
+
 /* ---------- אירועים ---------- */
 $('btnJoin').onclick=()=>enterCode(false);
 $('btnCreate').onclick=()=>enterCode(true);
@@ -2603,7 +2841,7 @@ async function tryPin(){
 }
 $('pinOk').onclick=tryPin;
 $('pinIn').addEventListener('keydown',e=>{if(e.key==='Enter')tryPin();});
-['today','fam','kids','jobs','shop','taxi','dog','home','set'].forEach(k=>{$('nv-'+k).onclick=()=>tab(k);});
+['today','fam','kids','jobs','shop','taxi','food','dog','home','set'].forEach(k=>{$('nv-'+k).onclick=()=>tab(k);});
 $('btnSwitch').onclick=()=>showWho();
 $('codeShow').onclick=()=>{const o=$('codeOut');o.textContent=code;o.hidden=!o.hidden;$('codeShow').textContent=o.hidden?'הצגת הקוד':'הסתרת הקוד';};
 $('pinSave').onclick=async()=>{
@@ -2631,7 +2869,7 @@ const pushOK=()=>'serviceWorker' in navigator&&'PushManager' in window&&'Notific
 let swReg=null;
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js').then(r=>{swReg=r;syncPush();}).catch(()=>{});
-  navigator.serviceWorker.addEventListener('message',e=>{const t=e.data&&e.data.yayaTab;if(t&&me&&$('tab-'+t))tab(t);});
+  navigator.serviceWorker.addEventListener('message',e=>{const t=e.data&&e.data.yayaTab;if(t&&me&&$('tab-'+t)){tab(t);if(t==='food')foodFromPush();}});
 }
 function b64u(s){const p='='.repeat((4-s.length%4)%4),b=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(b,c=>c.charCodeAt(0));}
 async function subId(ep){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(ep));return Array.from(new Uint8Array(b)).slice(0,12).map(x=>x.toString(16).padStart(2,'0')).join('');}
