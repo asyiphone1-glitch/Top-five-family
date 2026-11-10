@@ -3,6 +3,11 @@ on:
   schedule:
     - cron: '*/5 * * * *'
   workflow_dispatch:
+    inputs:
+      tick:
+        description: 'הפעלה אוטומטית מהשירות החיצוני (כל 5 דקות)'
+        required: false
+        default: ''
 permissions:
   contents: write
 concurrency:
@@ -28,7 +33,7 @@ jobs:
         env:
           FAMILY_CODE: ${{ secrets.FAMILY_CODE }}
           VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
-          SHOW_ADV: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}
+          SHOW_ADV: ${{ github.event_name == 'workflow_dispatch' && inputs.tick == '' && '1' || '' }}
       - name: Save development request
         run: |
           if [ -f dev/request.json ] && [ -n "$(git status --porcelain dev)" ]; then
