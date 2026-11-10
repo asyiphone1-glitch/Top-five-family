@@ -636,7 +636,7 @@ input{font:inherit;color:var(--ink)}
     </div>
     <button id="btnSwitch" class="btn quiet" type="button">החלפת פרופיל</button>
     <button id="btnForget" class="btn danger" type="button">ניתוק הטלפון הזה מהמשפחה</button>
-    <p class="hint">גרסה: שלב 4, כולל מסך הבנות, אילוצים שבועיים עד יום חמישי ושיבוץ אוטומטי, דו״ח הוגנות, ניקוד בונוס ופודיום עם לוני, צלצול משופר,  פעמון תזכורת לכל משימה ותת־משימה, צבע לכל קטגוריה, כיווץ תתי־משימות, מסך נפרד למשימות משפחתיות, התראות כשהאפליקציה סגורה, רשימת קניות, מונית, לוח משפחתי (שבועי וחודשי, עם הבחינות מ-teach-me ותזכורות), אוכל (ארוחת עשר, צהרון ושעת השכמה עם שאלה לבנות כל ערב ב-20:00), משימות ותתי־משימות בלי הגבלה, משימות מההורים עם צלצול, משימות חוזרות, הלוח ב"היום שלי" של הבנות, כפתור ללמוד לבחינה ב-teach-me, הצעות מונית מהחוגים, מצב הטלפונים, גיבוי, משימות פתוחות, שיבוץ התורנויות של לוני עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
+    <p class="hint">גרסה: שלב 4, כולל מסך הבנות, אילוצים שבועיים עד יום חמישי ושיבוץ אוטומטי, דו״ח הוגנות, ניקוד בונוס ופודיום עם לוני, צלצול משופר,  פעמון תזכורת לכל משימה ותת־משימה, צבע לכל קטגוריה, כיווץ תתי־משימות, מסך נפרד למשימות משפחתיות, התראות כשהאפליקציה סגורה, רשימת קניות, מונית, לוח משפחתי (שבועי וחודשי, עם הבחינות מ-teach-me ותזכורות), אוכל (ארוחת עשר, צהרון ושעת השכמה לכל המשפחה עם שאלה לבנות כל ערב ב-20:00), משימות ותתי־משימות בלי הגבלה, משימות מההורים עם צלצול, משימות חוזרות, הלוח ב"היום שלי" של הבנות, כפתור ללמוד לבחינה ב-teach-me, הצעות מונית מהחוגים, מצב הטלפונים, גיבוי, משימות פתוחות, שיבוץ התורנויות של לוני עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
   </div>
 
   <nav class="nav" aria-label="ניווט">
@@ -3674,6 +3674,10 @@ function menuOf(k){
   return {ten:Array.isArray(d.ten)?d.ten:(Array.isArray(b.ten)?b.ten:FOOD0.ten),lunch:Array.isArray(d.lunch)?d.lunch:(Array.isArray(b.lunch)?b.lunch:FOOD0.lunch)};
 }
 function orderOf(k,id){const o=((foodDays[k]||{}).orders||{})[id];return o&&o.at?o:null;}
+function wakeOf(k,id){
+  if(isAdult(id)){const w=((foodDays[k]||{}).wakes||{})[id];return w||(k===tmrKey()||k===today()?wakeDef[id]||'':'');}
+  const o=orderOf(k,id);return o&&o.wake?o.wake:'';
+}
 function mealTxt(o,mk){if(!o)return '';const a=(o[mk]||[]).slice();if(o[mk+'X'])a.push(o[mk+'X']);return a.join(', ');}
 function subFood(){
   foodUnsubs.forEach(u=>u());foodUnsubs=[];foodDays={};
@@ -3827,6 +3831,7 @@ function paintFoodParent(box){
     b.onclick=()=>{foodSel=k;paintFood(true);};
     days.append(b);
   });
+  box.append(adultWakeCard());
   box.append(days);
   const k=foodSel,m=menuOf(k);
   /* סיכום ההזמנות */
@@ -3845,7 +3850,7 @@ function paintFoodParent(box){
     ent.forEach(([x,n])=>{const s=h('span','cnt',x+' ');s.append(h('b',null,'×'+n));cs.append(s);});
     wrap.append(cs);box.append(wrap);
   });
-  const wk=kids.map(p=>{const o=orderOf(k,p.id);return [p,o&&o.wake?o.wake:''];}).filter(x=>x[1]).sort((a,b)=>a[1]<b[1]?-1:1);
+  const wk=PEOPLE.map(p=>[p,wakeOf(k,p.id)]).filter(x=>x[1]).sort((a,b)=>a[1]<b[1]?-1:1);
   if(wk.length){
     const wrap=h('div','ftot');wrap.append(h('div','fth','⏰ השכמות לפי הסדר'));
     const cs=h('div','cnts');
@@ -3898,6 +3903,36 @@ function paintFoodParent(box){
     sec.append(ch,row);ed.append(sec);
   });
   box.append(ed);
+}
+/* אבא ואמא: שעת השכמה למחר, עם שעה קבועה. נשמר מיד, בלי חלון קופץ */
+function adultWakeCard(){
+  const k=tmrKey(),wf=wakeDef[me]||'',cur=wakeOf(k,me);
+  const c=h('div','card');c.append(h('h3',null,'⏰ ההשכמה שלי ל'+foodDayTxt(k)));
+  const row=h('div','fwrow');
+  const ti=h('input','field');ti.type='time';ti.step=300;ti.value=cur;ti.setAttribute('aria-label','שעת השכמה מחר');
+  const cl=h('label','cbx');const cb=h('input');cb.type='checkbox';cb.checked=!!wf&&cur===wf;
+  cl.append(cb,document.createTextNode(' שעה קבועה לכל יום'));
+  const setFix=v=>{wakeDef=Object.assign({},wakeDef);if(v)wakeDef[me]=v;else delete wakeDef[me];
+    setDoc(wakeRef(),{[me]:v||deleteField()},{merge:true}).catch(()=>toast('השמירה נכשלה. בדקו חיבור.'));};
+  ti.onchange=()=>{
+    const v=ti.value;
+    foodDays[k]=Object.assign({},foodDays[k]);foodDays[k].wakes=Object.assign({},foodDays[k].wakes,{[me]:v});
+    setDoc(foodRef(k),{wakes:{[me]:v||deleteField()}},{merge:true}).catch(()=>toast('השמירה נכשלה. בדקו חיבור.'));
+    if(wf&&v!==wf)cb.checked=false;
+    else if(cb.checked&&v&&!wf)setFix(v);
+    toast(v?'ההשכמה למחר נשמרה: '+v:'ההשכמה למחר נמחקה');
+    paintFood(true);
+  };
+  cb.onchange=()=>{
+    if(cb.checked){if(!ti.value){cb.checked=false;toast('קודם בוחרים שעה');return;}setFix(ti.value);toast('נקבעה שעה קבועה: '+ti.value);}
+    else{setFix('');toast('השעה הקבועה בוטלה');}
+    paintFood(true);
+  };
+  row.append(ti,cl);c.append(row);
+  c.append(h('p','date',wf?'השעה הקבועה שלך: '+wf+'. שינוי השעה כאן הוא רק למחר, אלא אם מסמנים שוב "שעה קבועה".':'נשמר מיד. מסמנים "שעה קבועה" והיא תחזור כל יום.'));
+  const o=me==='dad'?'mom':'dad',ow=wakeOf(k,o);
+  {const ln=h('p','fline fwk');ln.append(h('span','fml','⏰ '+byId[o].name+': '),ow?h('b',null,ow):h('span','date','עוד לא נקבע'));if(ow&&ow===wakeDef[o])ln.append(h('span','date',' (קבועה)'));c.append(ln);}
+  return c;
 }
 function saveMenu(k,mk,list){
   const m=menuOf(k),nx={ten:m.ten.slice(),lunch:m.lunch.slice()};nx[mk]=list.slice(0,30);
