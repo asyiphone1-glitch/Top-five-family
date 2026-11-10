@@ -871,7 +871,16 @@ function listState(p){
   if(n)lv[0]=0;
   /* ניקוי שורות ריקות שנשארו מהגרסה הקודמת (5 שורות קבועות) */
   const st={tasks:[],done:[],lv:[],rm:[]};
-  t.forEach((x,i)=>{if(x.trim()){st.tasks.push(x);st.done.push(d[i]);st.lv.push(lv[i]);st.rm.push(rm[i]);}});
+  /* מה שסומן כבוצע ביום קודם נעלם מהרשימה. כותרת נשארת אם יש לה תת-משימה שעוד לא בוצעה */
+  const gone=t.map(()=>false);
+  if(p.day&&p.day!==today()&&Array.isArray(p.done)){
+    t.forEach((x,i)=>{
+      if(!p.done[i])return;
+      if(!lv[i]){for(let k=i+1;k<n&&lv[k];k++)if(String(t[k]).trim()&&!p.done[k])return;}
+      gone[i]=true;
+    });
+  }
+  t.forEach((x,i)=>{if(x.trim()&&!gone[i]){st.tasks.push(x);st.done.push(d[i]);st.lv.push(lv[i]);st.rm.push(rm[i]);}});
   if(st.lv.length)st.lv[0]=0;
   return st;
 }
