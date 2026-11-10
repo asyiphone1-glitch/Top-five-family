@@ -388,6 +388,7 @@ input{font:inherit;color:var(--ink)}
 .sugrow{padding:8px 0;border-top:1px solid var(--line)}.sugrow .acts{display:flex;gap:8px;margin-top:6px}
 .prow{flex-wrap:wrap}.pdev{flex-basis:100%;display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.85rem;color:var(--mute);padding-inline-start:20px}.pdev span{font-weight:500}.pdev .bad{color:var(--warn,#B4442C)}
 .advdone{background:color-mix(in srgb,var(--good) 12%,transparent);border-radius:12px;padding:10px 12px;margin:6px 0 10px}.advdone ul{margin:6px 0 0;padding-inline-start:18px}.advgrp{margin:14px 0 4px;font-size:1rem}
+.sentl{list-style:none;margin:6px 0 0;padding:0}.sentl li{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)}.sentl .sx{flex:none;width:18px;font-weight:700;color:var(--mute)}.sentl li.ok .sx{color:var(--good)}.sentl li.ok .st{text-decoration:line-through;text-decoration-thickness:1px;color:var(--mute)}.sentl small{margin-inline-start:auto;color:var(--mute);font-size:.8rem}
 .cev.exam{background:color-mix(in srgb,var(--c) 9%,transparent)}
 .cev .ct{flex:none;width:50px;text-align:center;font:700 1.05rem/1.25 var(--display);direction:ltr;padding-top:1px}
 .cev .ct small{display:block;font:500 .78rem/1.3 var(--body);color:var(--mute)}
@@ -502,6 +503,7 @@ input{font:inherit;color:var(--ink)}
       <button id="jAdd" class="btn pri" type="button">הוספת המשימה</button>
       <p id="jMsg" class="msg" role="status"></p>
     </div>
+    <div id="sentBox" class="card" hidden></div>
     <div id="repBox" class="card" hidden></div>
     <div id="jobsBox"></div>
     <div class="card">
@@ -1063,6 +1065,28 @@ function mergeInbox(st,items){
   });
   return n;
 }
+/* מה ששלחתי לבן/בת הזוג: רק המשימות האלה, לא שאר המשימות האישיות שלו/ה */
+function paintSent(){
+  const b=$('sentBox');if(!b)return;b.innerHTML='';
+  if(!me||!isAdult(me)){b.hidden=true;return;}
+  const sp=spouse(me),p=people[sp]||{},st=listState(p),cat=fromCat(me),rows=[];
+  st.tasks.forEach((t,i)=>{
+    if(st.lv[i]||t.trim()!==cat)return;
+    for(let k=i+1;k<st.tasks.length&&st.lv[k];k++)rows.push({t:st.tasks[k],done:st.done[k]});
+  });
+  (Array.isArray(p.inbox)?p.inbox:[]).filter(x=>x&&x.from===me).forEach(x=>rows.push({t:String(x.t||''),wait:true}));
+  b.hidden=!rows.length;if(b.hidden)return;
+  const nd=rows.filter(r=>r.done).length;
+  b.append(h('h3',null,'📤 שלחתי ל'+byId[sp].name),h('p','date',nd+' מתוך '+rows.length+' בוצעו'));
+  const ul=h('ul','sentl');
+  rows.forEach(r=>{
+    const li=h('li',r.done?'ok':'');
+    li.append(h('span','sx',r.done?'✓':r.wait?'⏳':'○'),h('span','st',r.t));
+    if(r.wait)li.append(h('small',null,'עוד לא נפתחה אצל'+(sp==='mom'?'ה':'ו')));
+    ul.append(li);
+  });
+  b.append(ul);
+}
 let inboxBusy=false;
 async function checkInbox(){
   if(!me||!isAdult(me)||inboxBusy)return;
@@ -1306,6 +1330,7 @@ function tab(n){
   if(n==='dog'){paintDog();paintPodium(true);}
   if(n==='kids')paintKidsTab();
   if(n==='jobs'||n==='today')paintJobs();
+  if(n==='jobs')paintSent();
   if(n==='today'){paintTodayCal();tmLoad(false);}
   if(n==='shop')paintShop();
   if(n==='taxi')paintTaxi();
@@ -1371,7 +1396,7 @@ function openMain(){
 function onPeople(snap){
   if(!$('s-who').hidden)paintWho();
   if(!me||$('s-main').hidden)return;
-  paintHome();paintKidsTab();checkInbox();
+  paintHome();paintKidsTab();checkInbox();paintSent();
   if(!$('tab-dog').hidden)paintDog();
   const mine=snap.docs.find(d=>d.id===me);
   if(!mine||mine.metadata.hasPendingWrites||dirty)return;
