@@ -218,19 +218,19 @@ input{font:inherit;color:var(--ink)}
 .shopadd{display:flex;gap:8px;align-items:stretch}
 .shopadd .field{flex:1;min-width:0}
 .shopadd .btn{width:auto;margin:0;padding:0 18px}
-.scat{margin-top:16px}
-.scat h3{margin:0 0 6px;font:700 1.05rem var(--display);display:flex;justify-content:space-between}
+.scat{margin-top:12px}
+.scat h3{margin:0 0 4px;font:700 .95rem var(--display);display:flex;justify-content:space-between}
 .scat h3 small{color:var(--mute);font-weight:500}
 .sitems{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:16px}
-.sitem{display:flex;align-items:center;gap:12px;padding:8px 12px;border-top:1px solid var(--line)}
+.sitem{display:flex;align-items:center;gap:10px;padding:5px 10px;border-top:1px solid var(--line)}
 .sitem:first-child{border-top:0}
-.sitem .chk{width:46px;height:46px}
+.sitem .chk{width:38px;height:38px}
 .sitem.got .chk{background:var(--good);border-color:var(--good);color:#fff}
 .sitem.got .chk svg{display:block}
 .sitem .st2{flex:1;min-width:0}
-.sitem .tx{font:600 1.15rem/1.3 var(--body);word-break:break-word}
+.sitem .tx{font:500 .98rem/1.3 var(--body);word-break:break-word}
 .sitem.got .tx{text-decoration:line-through;color:var(--mute)}
-.sitem .by3{font-size:.8rem;color:var(--mute)}
+.sitem .by3{font-size:.72rem;color:var(--mute)}
 .sitem .mv{flex:none;min-height:40px;min-width:40px;border:0;background:transparent;color:var(--mute);font:700 1.2rem var(--body);cursor:pointer;border-radius:10px}
 .sitem select{font:inherit;color:var(--ink);background:var(--surface);border:2px solid var(--accent);border-radius:10px;padding:8px;margin-top:6px;width:100%}
 .tdays{display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;margin:0 -2px;scrollbar-width:none}
@@ -363,6 +363,13 @@ input{font:inherit;color:var(--ink)}
 .fwk b{font-size:1.15rem}
 .fth{font-weight:700;font-size:.95rem;color:var(--mute)}
 .chip.fed{border-style:dashed}
+.fask{color:var(--bad);font-weight:700}
+p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:10px 0 0}
+.fplanbox{background:var(--warn-soft);border-radius:14px;padding:10px 12px;margin-top:8px}
+.fplanbox .fline{margin-top:4px}
+.fsub{margin:10px 0 0;color:var(--mute);font-size:.95rem}
+.fx2{font-weight:700}
+.fbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 /* לוח משפחתי */
 .calhead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0 6px}
 .calhead .sec{margin:0}
@@ -636,7 +643,7 @@ input{font:inherit;color:var(--ink)}
     </div>
     <button id="btnSwitch" class="btn quiet" type="button">החלפת פרופיל</button>
     <button id="btnForget" class="btn danger" type="button">ניתוק הטלפון הזה מהמשפחה</button>
-    <p class="hint">גרסה: שלב 4, כולל מסך הבנות, אילוצים שבועיים עד יום חמישי ושיבוץ אוטומטי, דו״ח הוגנות, ניקוד בונוס ופודיום עם לוני, צלצול משופר,  פעמון תזכורת לכל משימה ותת־משימה, צבע לכל קטגוריה, כיווץ תתי־משימות, מסך נפרד למשימות משפחתיות, התראות כשהאפליקציה סגורה, רשימת קניות, מונית, לוח משפחתי (שבועי וחודשי, עם הבחינות מ-teach-me ותזכורות), אוכל (ארוחת עשר, צהרון ושעת השכמה לכל המשפחה עם שאלה לבנות כל ערב ב-20:00), משימות ותתי־משימות בלי הגבלה, משימות מההורים עם צלצול, משימות חוזרות, הלוח ב"היום שלי" של הבנות, כפתור ללמוד לבחינה ב-teach-me, הצעות מונית מהחוגים, מצב הטלפונים, גיבוי, משימות פתוחות, שיבוץ התורנויות של לוני עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
+    <p class="hint">גרסה: שלב 4, כולל מסך הבנות, אילוצים שבועיים עד רביעי 22:00 ושיבוץ אוטומטי, דו״ח הוגנות, ניקוד בונוס ופודיום עם לוני, צלצול משופר,  פעמון תזכורת לכל משימה ותת־משימה, צבע לכל קטגוריה, כיווץ תתי־משימות, מסך נפרד למשימות משפחתיות, התראות כשהאפליקציה סגורה, רשימת קניות, מונית, לוח משפחתי (שבועי וחודשי, עם הבחינות מ-teach-me ותזכורות), אוכל (ארוחת עשר, צהרון ושעת השכמה לכל המשפחה עם שאלה לבנות כל ערב ב-20:00), משימות ותתי־משימות בלי הגבלה, משימות מההורים עם צלצול, משימות חוזרות, הלוח ב"היום שלי" של הבנות, כפתור ללמוד לבחינה ב-teach-me, הצעות מונית מהחוגים, מצב הטלפונים, גיבוי, משימות פתוחות, שיבוץ התורנויות של לוני עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
   </div>
 
   <nav class="nav" aria-label="ניווט">
@@ -1746,9 +1753,9 @@ async function runPlan(wkey,auto){
   }catch(e){dogMsg='השיבוץ לא נשמר. בדקו חיבור.';}
   paintDog();
 }
-/* מועד אחרון לאילוצים: יום חמישי שלפני השבוע, בסוף היום */
-function deadline(wkey){const d=addDays(parseKey(wkey),-3);return new Date(d.getFullYear(),d.getMonth(),d.getDate(),23,59,59).getTime();}
-function dlText(wkey){const d=new Date(deadline(wkey));return 'יום חמישי '+d.getDate()+'/'+(d.getMonth()+1);}
+/* מועד אחרון לאילוצים: יום רביעי שלפני השבוע ב-22:00. אז משבצים את כל המשמרות, גם אם לא כולם מילאו */
+function deadline(wkey){const d=addDays(parseKey(wkey),-4);return new Date(d.getFullYear(),d.getMonth(),d.getDate(),22,0,0).getTime();}
+function dlText(wkey){const d=new Date(deadline(wkey));return 'יום רביעי '+d.getDate()+'/'+(d.getMonth()+1)+' ב-22:00';}
 let nxWk=null,nxUnsub=null,autoBusy=false;
 function nextKey(){return fmt(addDays(sunday(new Date()),7));}
 function subNextWk(){
@@ -1776,8 +1783,8 @@ function consCard(wkey){
   const c=h('div','card');
   const cons=wk.cons||{},mine=cons[me],late=Date.now()>deadline(wkey);
   c.append(h('h3',null,'אילוצים לשבוע הזה'));
-  c.append(h('p','date',late?'המועד להגשת אילוצים עבר. השיבוץ נעשה אוטומטית בכניסה הבאה לאפליקציה.':
-    'עד '+dlText(wkey)+' בלילה כל אחד מסמן מתי הוא לא יכול. אחר כך האפליקציה משבצת לבד, הכי הוגן שאפשר, ואבא מקבל דו״ח.'));
+  c.append(h('p','date',late?'המועד להגשת אילוצים עבר. כל המשמרות משובצות אוטומטית, גם למי שלא מילא.':
+    'עד '+dlText(wkey)+' כל אחד מסמן מתי הוא לא יכול. ב-22:00 האפליקציה משבצת את כל המשמרות, הכי הוגן שאפשר, גם אם מישהו לא מילא. אחר כך אפשר להחליף.'));
   const sts=h('div','cnts');
   PEOPLE.forEach(p=>{const ok=!!cons[p.id];sts.append(h('span','cnt'+(ok?' ok':''),(ok?'✓ ':'○ ')+p.name));});
   c.append(sts);
@@ -1893,7 +1900,7 @@ function paintDog(){
   /* תזכורת לאילוצים של השבוע הבא */
   if(wkey===cur&&nxWk&&!nxWk.gen&&!Object.keys(nxWk.slots||{}).length&&Date.now()<=deadline(nxWk.key)&&!(nxWk.cons||{})[me]){
     const n=h('div','note');
-    n.append(h('div',null,'עד '+dlText(nxWk.key)+' בלילה ממלאים אילוצים לשבוע הבא. אחר כך האפליקציה משבצת לבד.'));
+    n.append(h('div',null,'עד '+dlText(nxWk.key)+' ממלאים אילוצים לשבוע הבא. אז האפליקציה משבצת את כולם, ואפשר להחליף אחר כך.'));
     const b=h('button','btn pri sm','למילוי האילוצים');b.type='button';b.style.marginTop='8px';
     b.onclick=()=>{weekStart=addDays(weekStart,7);draft=null;confirmGen=false;subWeek();};
     n.append(b);box.append(n);
@@ -2008,7 +2015,7 @@ function loadHist(wkey){
 function reportCard(wkey){
   const c=h('div','card rep');
   c.append(h('h3',null,'דו״ח השיבוץ'));
-  const who=wk.auto?'שובץ אוטומטית אחרי המועד של יום חמישי':(byId[wk.by]?'שובץ על ידי '+byId[wk.by].name:'');
+  const who=wk.auto?'שובץ אוטומטית ביום רביעי ב-22:00':(byId[wk.by]?'שובץ על ידי '+byId[wk.by].name:'');
   if(who)c.append(h('p','date',who+(wk.gen?', '+new Date(wk.gen).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'}):'')+'.'));
   const cnt={},per={},walks={};
   PEOPLE.forEach(p=>{cnt[p.id]=0;per[p.id]={m:0,s:0,a:0,b:0,n:0};walks[p.id]=0;});
@@ -3663,7 +3670,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden){calCheckR
 const FOOD0={ten:['גבינה','שוקולד','גבינת לכלוכים','חומוס','ריק','טוסט עם גבינה'],lunch:['אורז','תפוח אדמה']};
 const MEALS=[['ten','ארוחת עשר','🥪'],['lunch','צהרון','🍲']];
 const FOOD_H=20,FOOD_SNOOZE=15*60e3,EMPTY='ריק';
-let wakeDef={},foodDef=null,foodDays={},foodUnsubs=[],foodKeys='',foodSel='',fdraft=null,fdraftDay='',foodWant=false;
+let wakeDef={},foodDef=null,foodDays={},foodUnsubs=[],foodKeys='',foodSel='',fdraft=null,fdraftDay='',foodWant=false,foodAlt=false,pdraft=null;
 const foodRef=k=>doc(db,'families',code,'food',k);
 const foodDefRef=()=>doc(db,'families',code,'prefs','food');
 const wakeRef=()=>doc(db,'families',code,'prefs','wake');
@@ -3678,14 +3685,21 @@ function wakeOf(k,id){
   if(isAdult(id)){const w=((foodDays[k]||{}).wakes||{})[id];return w||(k===tmrKey()||k===today()?wakeDef[id]||'':'');}
   const o=orderOf(k,id);return o&&o.wake?o.wake:'';
 }
+/* תכנון של אבא או אמא לבת: st = wait (מחכה לה), ok (אישרה), alt (ביקשה משהו אחר), altok (ההורה אישר את הבקשה), kept (ההורה השאיר את התכנון) */
+function planOf(k,id){const p=((foodDays[k]||{}).plans||{})[id];return p&&p.at&&p.st?p:null;}
+function effOf(k,id){const p=planOf(k,id);return p&&(p.st==='wait'||p.st==='alt')?p:orderOf(k,id);}
+const planned=by=>by==='mom'?'אמא תכננה':'אבא תכנן';
+function mealLines(host,o,cls){MEALS.forEach(([mk,name,ic])=>{const ln=h('p','fline'+(cls?' '+cls:''));ln.append(h('span','fml',ic+' '+name+': '),document.createTextNode(mealTxt(o,mk)||'—'));host.append(ln);});}
+function mealsOf(o){return {ten:(o.ten||[]).slice(),tenX:o.tenX||'',lunch:(o.lunch||[]).slice(),lunchX:o.lunchX||''};}
+function setLocal(k,f,id,v){foodDays[k]=Object.assign({},foodDays[k]);foodDays[k][f]=Object.assign({},foodDays[k][f],{[id]:v});}
 function mealTxt(o,mk){if(!o)return '';const a=(o[mk]||[]).slice();if(o[mk+'X'])a.push(o[mk+'X']);return a.join(', ');}
 function subFood(){
   foodUnsubs.forEach(u=>u());foodUnsubs=[];foodDays={};
   const ks=[today(),tmrKey()];foodKeys=ks.join('|');
   if(foodSel&&!ks.includes(foodSel))foodSel='';
   foodUnsubs.push(onSnapshot(foodDefRef(),s=>{foodDef=s.exists()?s.data():null;paintFood();},()=>{}));
-  foodUnsubs.push(onSnapshot(wakeRef(),s=>{wakeDef=s.exists()?s.data():{};if(!$('foodPop').hidden)foodForm($('foodPopForm'),true);paintFood();},()=>{}));
-  ks.forEach(k=>foodUnsubs.push(onSnapshot(foodRef(k),s=>{foodDays[k]=s.exists()?s.data():{};paintFood();checkFood();},()=>{})));
+  foodUnsubs.push(onSnapshot(wakeRef(),s=>{wakeDef=s.exists()?s.data():{};refreshFoodPop();paintFood();},()=>{}));
+  ks.forEach(k=>foodUnsubs.push(onSnapshot(foodRef(k),s=>{foodDays[k]=s.exists()?s.data():{};paintFood();checkFood();refreshFoodPop();},()=>{})));
 }
 /* הבנות: האם צריך עכשיו לבקש מהן למלא (מ-20:00, לא בליל שבת) */
 function foodDue(){
@@ -3694,7 +3708,13 @@ function foodDue(){
   const t=tmrKey();
   if(new Date(t+'T12:00').getDay()===6)return false;
   if(!(t in foodDays))return false;
-  return !orderOf(t,me);
+  const pl=planOf(t,me);
+  return pl?pl.st==='wait':!orderOf(t,me);
+}
+function refreshFoodPop(){
+  const pop=$('foodPop');if(pop.hidden||!me||isAdult(me))return;
+  const a=document.activeElement;if(a&&pop.contains(a)&&a.tagName==='INPUT')return;
+  kidFood($('foodPopForm'),true);
 }
 function paintFoodBadge(){
   const b=$('foodBadge');if(!b)return;
@@ -3706,7 +3726,7 @@ function checkFood(){
   if(foodKeys&&foodKeys!==today()+'|'+tmrKey())subFood();
   paintFoodBadge();
   const pop=$('foodPop');
-  if(!foodDue()){if(!pop.hidden&&!isAdult(me)&&orderOf(tmrKey(),me))pop.hidden=true;return;}
+  if(!foodDue()){const pl=planOf(tmrKey(),me);if(!pop.hidden&&!isAdult(me)&&(pl?pl.st!=='wait':orderOf(tmrKey(),me)))pop.hidden=true;return;}
   if(!pop.hidden)return;
   const sn=Number(LS.get('yaya.food.snooze.'+me))||0;
   if(!foodWant&&Date.now()<sn)return;
@@ -3715,28 +3735,46 @@ function checkFood(){
 setInterval(checkFood,15000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkFood();});
 function openFoodPop(){
-  $('foodPopH').textContent='🍽️ מה להכין לך ל'+foodDayTxt(tmrKey())+'?';
-  foodForm($('foodPopForm'),true);
+  foodAlt=false;kidFood($('foodPopForm'),true);
   $('foodPop').hidden=false;chime();
 }
 function closeFoodPop(snooze){
   if(snooze)LS.set('yaya.food.snooze.'+me,String(Date.now()+FOOD_SNOOZE));
-  $('foodPop').hidden=true;
+  $('foodPop').hidden=true;foodAlt=false;
 }
-/* טופס ההזמנה של הבנה. אותו טופס בחלון הקופץ ובלשונית */
-function foodForm(host,inPop){
-  const k=tmrKey();
-  if(fdraftDay!==k||!fdraft){
-    const o=orderOf(k,me);
-    const wf=wakeDef[me]||'';
-    fdraft={ten:new Set(o?o.ten||[]:[]),tenX:o?o.tenX||'':'',lunch:new Set(o?o.lunch||[]:[]),lunchX:o?o.lunchX||'':'',
-      wake:o&&o.wake?o.wake:wf,wTouch:!!(o&&o.wake)};
-    fdraft.wakeFix=!!wf&&fdraft.wake===wf;
-    fdraftDay=k;
-  }
+/* מה שמוצג לבת בחלון ובלשונית: תכנון מאבא/אמא אם יש, אחרת טופס ההזמנה הרגיל */
+function kidFood(host,inPop){
+  const k=tmrKey(),pl=planOf(k,me);
+  if(inPop)$('foodPopH').textContent=pl&&pl.st==='wait'&&!foodAlt?'🍽️ '+planned(pl.by)+' לך ל'+foodDayTxt(k):'🍽️ מה להכין לך ל'+foodDayTxt(k)+'?';
+  if(!pl)return foodForm(host,inPop);
+  if(foodAlt&&(pl.st==='wait'||pl.st==='ok'))return foodForm(host,inPop,'a');
+  planView(host,inPop,pl);
+}
+/* הכנה של הטיוטה: o = הזמנה רגילה, a = בקשה חלופית, p = אישור תכנון (רק שעת השכמה) */
+function fEnsure(k,mode){
+  const key=k+'|'+mode;
+  if(fdraftDay===key&&fdraft)return;
+  const prev=fdraft&&fdraftDay.startsWith(k+'|')?fdraft:null;
+  const pl=planOf(k,me),ow=orderOf(k,me),wf=wakeDef[me]||'';
+  const o=mode==='a'?(pl&&pl.alt)||pl:mode==='o'?ow:null;
+  const wk=prev&&prev.wTouch?prev.wake:(o&&o.wake)||(ow&&ow.wake)||wf;
+  fdraft={ten:new Set(o?o.ten||[]:[]),tenX:o?o.tenX||'':'',lunch:new Set(o?o.lunch||[]:[]),lunchX:o?o.lunchX||'':'',
+    wake:wk,wTouch:!!(prev&&prev.wTouch)||!!(o&&o.wake)||!!(ow&&ow.wake)};
+  fdraft.wakeFix=prev?prev.wakeFix:!!wf&&fdraft.wake===wf;
+  fdraftDay=key;
+}
+/* טופס ההזמנה של הבת. אותו טופס בחלון הקופץ ובלשונית. mode a = בקשה למשהו אחר במקום התכנון */
+function foodForm(host,inPop,mode){
+  const k=tmrKey(),alt=mode==='a',pl=planOf(k,me);
+  fEnsure(k,alt?'a':'o');
   /* השעה הקבועה הגיעה אחרי שהטופס נפתח: ממלאים אותה אם הבת עוד לא נגעה בשעה */
   if(!fdraft.wTouch&&wakeDef[me]&&fdraft.wake!==wakeDef[me]){fdraft.wake=wakeDef[me];fdraft.wakeFix=true;}
   host.innerHTML='';
+  if(alt){
+    const n=h('div','fplanbox');n.append(h('p','fml','מה '+planned(pl.by)+':'));mealLines(n,pl);
+    n.append(h('p','date','בוחרים או כותבים מה מתאים לך במקום. הבקשה תגיע ל'+(pl.by==='mom'?'אמא':'אבא')+' לאישור.'));
+    host.append(n);
+  }
   const m=menuOf(k);
   MEALS.forEach(([mk,name,ic])=>{
     const sec=h('div','fmeal');sec.append(h('h4',null,ic+' '+name));
@@ -3745,7 +3783,7 @@ function foodForm(host,inPop){
     opts.forEach(o=>ch.append(chip(o,fdraft[mk].has(o),()=>{
       const s=fdraft[mk];
       if(s.has(o))s.delete(o);else{if(o===EMPTY)s.clear();else s.delete(EMPTY);s.add(o);}
-      foodForm(host,inPop);
+      foodForm(host,inPop,mode);
     })));
     if(!opts.length)ch.append(h('span','date','ההורים עוד לא הכניסו אפשרויות. אפשר לכתוב למטה.'));
     const inp=h('input','field');inp.maxLength=80;inp.autocomplete='off';
@@ -3755,9 +3793,53 @@ function foodForm(host,inPop){
   });
   host.append(wakeSec());
   const msg=h('p','msg');msg.setAttribute('role','status');
-  const send=h('button','btn pri',orderOf(k,me)?'עדכון ההזמנה':'שליחה להורים');send.type='button';
-  send.onclick=()=>sendFood(msg);
+  const send=h('button','btn pri',alt?'שליחת הבקשה ל'+(pl.by==='mom'?'אמא':'אבא'):orderOf(k,me)?'עדכון ההזמנה':'שליחה להורים');send.type='button';
+  send.onclick=()=>alt?sendAlt(msg):sendFood(msg);
   host.append(send);
+  if(alt){
+    const back=h('button','btn quiet','חזרה למה ש'+planned(pl.by));back.type='button';
+    back.onclick=()=>{foodAlt=false;kidFood(host,inPop);};
+    host.append(back);
+  }
+  if(inPop){
+    const later=h('button','btn quiet','אחר כך');later.type='button';
+    later.onclick=()=>{closeFoodPop(true);toast('אזכיר שוב בעוד רבע שעה');};
+    host.append(later);
+  }
+  host.append(msg);
+}
+/* הבת רואה את מה שאבא או אמא תכננו: מאשרת, או מבקשת משהו אחר */
+function planView(host,inPop,pl){
+  const k=tmrKey(),who=pl.by==='mom'?'אמא':'אבא';
+  host.innerHTML='';
+  const box=h('div','fplanbox');
+  if(pl.st==='alt'){
+    box.append(h('p','fwait','✋ ביקשת משהו אחר. מחכה לתשובה מ'+who+'.'));
+    box.append(h('p','fml','מה ביקשת:'));mealLines(box,pl.alt||{},'fx2');
+    box.append(h('p','fml','מה '+planned(pl.by)+':'));mealLines(box,pl);
+    host.append(box);return;
+  }
+  if(pl.st==='altok'||pl.st==='kept'){
+    const ok=pl.st==='altok';
+    const dm=(pl.dby||pl.by)==='mom',dn=dm?'אמא':'אבא';
+    box.append(h('p','fok',ok?'✓ '+dn+(dm?' אישרה':' אישר')+' את הבקשה שלך':'📝 '+dn+(dm?' השאירה':' השאיר')+' את מה ש'+planned(pl.by)));
+    mealLines(box,ok?pl.alt||{}:pl);
+    const o=orderOf(k,me);if(o&&o.wake)box.append(h('p','fline','⏰ השכמה: '+o.wake));
+    host.append(box);return;
+  }
+  box.append(h('p','fml','📝 '+planned(pl.by)+' לך:'));
+  mealLines(box,pl);
+  if(pl.st==='ok')box.append(h('p','fok','✓ אישרת. אפשר עדיין לבקש משהו אחר.'));
+  host.append(box);
+  fEnsure(k,'p');
+  if(!fdraft.wTouch&&wakeDef[me]&&fdraft.wake!==wakeDef[me]){fdraft.wake=wakeDef[me];fdraft.wakeFix=true;}
+  host.append(wakeSec());
+  const msg=h('p','msg');msg.setAttribute('role','status');
+  const ok=h('button','btn pri',pl.st==='ok'?'עדכון שעת ההשכמה':'✓ מאשרת');ok.type='button';
+  ok.onclick=()=>approvePlan(msg);
+  const no=h('button','btn','✋ לא מתאים לי, לבקש משהו אחר');no.type='button';
+  no.onclick=()=>{foodAlt=true;kidFood(host,inPop);};
+  host.append(ok,no);
   if(inPop){
     const later=h('button','btn quiet','אחר כך');later.type='button';
     later.onclick=()=>{closeFoodPop(true);toast('אזכיר שוב בעוד רבע שעה');};
@@ -3779,19 +3861,51 @@ function wakeSec(){
   sec.append(h('p','date',wf?'השעה הקבועה שלך: '+wf+'. אפשר לשנות רק למחר, והקבועה תחזור אחר כך.':'מסמנים "שעה קבועה" והיא תמולא לבד כל ערב.'));
   return sec;
 }
-function sendFood(msg){
-  const k=tmrKey(),d=fdraft;
-  const miss=MEALS.filter(([mk])=>!d[mk].size&&!d[mk+'X'].trim()).map(x=>x[1]);
-  if(miss.length){say(msg,'חסרה בחירה ל'+miss.join(' ול')+'. אפשר לבחור או לכתוב.');return;}
-  if(!/^\d\d:\d\d$/.test(d.wake||'')){say(msg,'חסרה שעת השכמה למחר.');return;}
-  const o={ten:[...d.ten],tenX:d.tenX.trim().slice(0,80),lunch:[...d.lunch],lunchX:d.lunchX.trim().slice(0,80),wake:d.wake,at:Date.now()};
-  setDoc(foodRef(k),{orders:{[me]:o}},{merge:true}).catch(()=>toast('השמירה נכשלה. בדקו חיבור.'));
-  const wf=wakeDef[me]||'';
+function draftOk(msg,meals){
+  const d=fdraft;
+  if(meals){const miss=MEALS.filter(([mk])=>!d[mk].size&&!d[mk+'X'].trim()).map(x=>x[1]);
+    if(miss.length){say(msg,'חסרה בחירה ל'+miss.join(' ול')+'. אפשר לבחור או לכתוב.');return false;}}
+  if(!/^\d\d:\d\d$/.test(d.wake||'')){say(msg,'חסרה שעת השכמה למחר.');return false;}
+  return true;
+}
+const draftMeals=()=>({ten:[...fdraft.ten],tenX:fdraft.tenX.trim().slice(0,80),lunch:[...fdraft.lunch],lunchX:fdraft.lunchX.trim().slice(0,80)});
+function saveWakeFix(){
+  const d=fdraft,wf=wakeDef[me]||'';
   if(d.wakeFix&&d.wake!==wf){wakeDef=Object.assign({},wakeDef,{[me]:d.wake});setDoc(wakeRef(),{[me]:d.wake},{merge:true}).catch(()=>{});}
   else if(!d.wakeFix&&wf&&d.wake===wf){wakeDef=Object.assign({},wakeDef);delete wakeDef[me];setDoc(wakeRef(),{[me]:deleteField()},{merge:true}).catch(()=>{});}
-  foodDays[k]=Object.assign({},foodDays[k]);foodDays[k].orders=Object.assign({},foodDays[k].orders,{[me]:o});
+}
+const failSave=()=>toast('השמירה נכשלה. בדקו חיבור.');
+function sendFood(msg){
+  const k=tmrKey();
+  if(!draftOk(msg,true))return;
+  const o=Object.assign(draftMeals(),{wake:fdraft.wake,at:Date.now()});
+  setDoc(foodRef(k),{orders:{[me]:o}},{merge:true}).catch(failSave);
+  saveWakeFix();setLocal(k,'orders',me,o);
   closeFoodPop(false);
   toast('תודה! ההזמנה נשלחה להורים');
+  paintFood(true);paintFoodBadge();
+}
+/* הבת מאשרת את התכנון: הוא נהיה ההזמנה שלה */
+function approvePlan(msg){
+  const k=tmrKey(),pl=planOf(k,me);if(!pl)return;
+  if(!draftOk(msg,false))return;
+  const now=Date.now(),o=Object.assign(mealsOf(pl),{wake:fdraft.wake,at:now,src:'plan'});
+  setDoc(foodRef(k),{orders:{[me]:o},plans:{[me]:{st:'ok',dt:now}}},{merge:true}).catch(failSave);
+  saveWakeFix();setLocal(k,'orders',me,o);setLocal(k,'plans',me,Object.assign({},pl,{st:'ok',dt:now}));
+  closeFoodPop(false);
+  toast(pl.st==='ok'?'שעת ההשכמה עודכנה':'תודה! '+(pl.by==='mom'?'אמא':'אבא')+' יראו שאישרת');
+  paintFood(true);paintFoodBadge();
+}
+/* הבת מבקשת משהו אחר במקום התכנון. ההורה מאשר או משאיר את התכנון */
+function sendAlt(msg){
+  const k=tmrKey(),pl=planOf(k,me);if(!pl)return;
+  if(!draftOk(msg,true))return;
+  const a=Object.assign(draftMeals(),{wake:fdraft.wake,at:Date.now()});
+  setDoc(foodRef(k),{plans:{[me]:{st:'alt',alt:a,dt:deleteField(),dby:deleteField()}}},{merge:true}).catch(failSave);
+  saveWakeFix();
+  const np=Object.assign({},pl,{st:'alt',alt:a});delete np.dt;delete np.dby;setLocal(k,'plans',me,np);
+  foodAlt=false;closeFoodPop(false);
+  toast('הבקשה נשלחה ל'+(pl.by==='mom'?'אמא':'אבא'));
   paintFood(true);paintFoodBadge();
 }
 function paintFood(force){
@@ -3806,12 +3920,14 @@ function paintFoodKid(box){
   const k=tmrKey(),o=orderOf(k,me);
   const c=h('div','card');
   c.append(h('h3',null,'ההזמנה שלי ל'+foodDayTxt(k)));
-  const st=h('p','date');
-  if(o){st.className='date fok';st.textContent='✓ נשלח להורים. אפשר לשנות ולשלוח שוב.';}
-  else st.textContent='כל ערב ב-20:00 קופצת שאלה, וחוזרת כל רבע שעה עד שממלאים.';
-  c.append(st);
+  if(!planOf(k,me)){
+    const st=h('p','date');
+    if(o){st.className='date fok';st.textContent='✓ נשלח להורים. אפשר לשנות ולשלוח שוב.';}
+    else st.textContent='כל ערב ב-20:00 קופצת שאלה, וחוזרת כל רבע שעה עד שממלאים.';
+    c.append(st);
+  }
   const host=h('div');c.append(host);box.append(c);
-  foodForm(host,false);
+  kidFood(host,false);
   const t=orderOf(today(),me);
   if(t){
     const c2=h('div','card');c2.append(h('h3',null,'מה הזמנתי להיום'));
@@ -3834,15 +3950,18 @@ function paintFoodParent(box){
   box.append(adultWakeCard());
   box.append(days);
   const k=foodSel,m=menuOf(k);
-  /* סיכום ההזמנות */
+  /* סיכום ההזמנות. תכנון שעוד מחכה לבת נספר לפי התכנון */
   const kids=PEOPLE.filter(p=>!isAdult(p.id));
-  const done=kids.filter(p=>orderOf(k,p.id)).length;
+  const fin=id=>{const pl=planOf(k,id);return pl?!(pl.st==='wait'||pl.st==='alt')&&!!orderOf(k,id):!!orderOf(k,id);};
+  const done=kids.filter(p=>fin(p.id)).length;
   const pr=h('p','progress'+(done===kids.length?' all':''));
-  pr.textContent=done===kids.length?'כל הבנות הזמינו ל'+foodDayTxt(k):done+' מתוך '+kids.length+' בנות הזמינו ל'+foodDayTxt(k);
+  pr.textContent=done===kids.length?'כל הבנות סגרו ל'+foodDayTxt(k):done+' מתוך '+kids.length+' בנות סגרו ל'+foodDayTxt(k);
   box.append(pr);
+  const asks=kids.filter(p=>{const pl=planOf(k,p.id);return pl&&pl.st==='alt';});
+  if(asks.length)box.append(h('p','fask','✋ '+asks.map(p=>p.name).join(', ')+' '+(asks.length>1?'ביקשו':'ביקשה')+' משהו אחר. התשובה למטה.'));
   MEALS.forEach(([mk,name,ic])=>{
     const cnt={};
-    kids.forEach(p=>{const o=orderOf(k,p.id);if(!o)return;(o[mk]||[]).forEach(x=>cnt[x]=(cnt[x]||0)+1);});
+    kids.forEach(p=>{const o=effOf(k,p.id);if(!o)return;(o[mk]||[]).forEach(x=>cnt[x]=(cnt[x]||0)+1);});
     const ent=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
     if(!ent.length)return;
     const wrap=h('div','ftot');wrap.append(h('div','fth',ic+' סה״כ '+name));
@@ -3857,25 +3976,57 @@ function paintFoodParent(box){
     wk.forEach(([p,t])=>{const s=h('span','cnt',p.name+' ');s.append(h('b',null,t));cs.append(s);});
     wrap.append(cs);box.append(wrap);
   }
+  const canPlan=k===tmrKey();
   kids.forEach(p=>{
-    const o=orderOf(k,p.id),c=h('div','kc');
+    const o=orderOf(k,p.id),pl=planOf(k,p.id),c=h('div','kc');
     c.style.setProperty('--kc',p.l);c.style.setProperty('--kc-d',p.d);
     const hd=h('div','fkh');hd.append(avatar(p.id,36),h('b',null,p.name));
-    const st=h('span',o?'fok':'fwait',o?'✓ הזמינה':'עוד לא מילאה');hd.append(st);
+    let stc='fwait',stt='עוד לא מילאה';
+    if(pl){const w=pl.by==='mom'?'אמא':'אבא';
+      ({wait:()=>{stc='fwait';stt='⏳ '+planned(pl.by)+', מחכה לאישור'},ok:()=>{stc='fok';stt='✓ אישרה את התכנון'},
+        alt:()=>{stc='fask';stt='✋ ביקשה משהו אחר'},altok:()=>{stc='fok';stt='✓ הבקשה אושרה'},kept:()=>{stc='fok';stt='✓ נשאר התכנון של '+w}}[pl.st]||(()=>{}))();
+    }else if(o){stc='fok';stt='✓ הזמינה';}
+    hd.append(h('span',stc,stt));
     c.append(hd);
-    if(o)MEALS.forEach(([mk,name,ic])=>{
-      const ln=h('p','fline');ln.append(h('span','fml',ic+' '+name+': '));
-      ln.append(document.createTextNode((o[mk]||[]).join(', ')||(o[mk+'X']?'':'—')));
-      if(o[mk+'X']){if((o[mk]||[]).length)ln.append(document.createTextNode(', '));ln.append(h('i','fx',o[mk+'X']));}
+    const show=(x,lbl)=>{
+      if(lbl)c.append(h('p','fml fsub',lbl));
+      MEALS.forEach(([mk,name,ic])=>{
+        const ln=h('p','fline');ln.append(h('span','fml',ic+' '+name+': '));
+        ln.append(document.createTextNode((x[mk]||[]).join(', ')||(x[mk+'X']?'':'—')));
+        if(x[mk+'X']){if((x[mk]||[]).length)ln.append(document.createTextNode(', '));ln.append(h('i','fx',x[mk+'X']));}
+        c.append(ln);
+      });
+    };
+    if(pl&&pl.st==='alt'){
+      show(pl.alt||{},'מה היא מבקשת:');
+      show(pl,'מה '+planned(pl.by)+':');
+      const r=h('div','fbtns');
+      const y=h('button','btn sm pri','✓ לאשר את הבקשה');y.type='button';y.onclick=()=>decidePlan(k,p.id,true);
+      const n=h('button','btn sm','להשאיר את התכנון');n.type='button';n.onclick=()=>decidePlan(k,p.id,false);
+      r.append(y,n);c.append(r);
+    }else if(pl&&pl.st==='wait'){
+      show(pl);
+      if(o)c.append(h('p','fline date','לפני התכנון הזמינה: '+MEALS.map(([mk,name])=>name+' – '+(mealTxt(o,mk)||'—')).join(' · ')));
+    }else if(o)show(o);
+    const wkv=(o&&o.wake)||(pl&&pl.st==='alt'&&pl.alt&&pl.alt.wake)||'';
+    if(wkv){
+      const ln=h('p','fline fwk');ln.append(h('span','fml','⏰ השכמה: '),h('b',null,wkv));
+      if(wakeDef[p.id]===wkv)ln.append(h('span','date',' (קבועה)'));
       c.append(ln);
-    });
-    if(o&&o.wake){
-      const ln=h('p','fline fwk');ln.append(h('span','fml','⏰ השכמה: '),h('b',null,o.wake));
-      if(wakeDef[p.id]===o.wake)ln.append(h('span','date',' (קבועה)'));
-      c.append(ln);
-    }else if(!o&&wakeDef[p.id])c.append(h('p','fline date','⏰ שעה קבועה: '+wakeDef[p.id]));
+    }else if(wakeDef[p.id])c.append(h('p','fline date','⏰ שעה קבועה: '+wakeDef[p.id]));
+    if(canPlan){
+      const r=h('div','fbtns');
+      const e=h('button','btn sm',pl?'✏️ לשנות את התכנון':'📝 לקבוע לה');e.type='button';
+      e.onclick=()=>{const src=effOf(k,p.id)||o;pdraft=null;pEnsure(k);pdraft.kids=new Set([p.id]);
+        if(src){const m=mealsOf(src);pdraft.ten=new Set(m.ten);pdraft.tenX=m.tenX;pdraft.lunch=new Set(m.lunch);pdraft.lunchX=m.lunchX;}
+        paintFood(true);const t=$('fplan');if(t)t.scrollIntoView({behavior:'smooth',block:'start'});};
+      r.append(e);
+      if(pl){const x=h('button','btn sm quiet','ביטול התכנון');x.type='button';x.onclick=()=>cancelPlan(k,p.id);r.append(x);}
+      c.append(r);
+    }
     box.append(c);
   });
+  if(canPlan)box.append(planCard(k));
   /* עריכת התפריט */
   const ed=h('div','card');
   ed.append(h('h3',null,'התפריט ל'+foodDayTxt(k)));
@@ -3903,6 +4054,70 @@ function paintFoodParent(box){
     sec.append(ch,row);ed.append(sec);
   });
   box.append(ed);
+}
+/* אבא או אמא קובעים לבנות מה לאכול מחר. הבנות מאשרות או מבקשות משהו אחר */
+function pEnsure(k){if(!pdraft||pdraft.k!==k)pdraft={k,kids:new Set(),ten:new Set(),tenX:'',lunch:new Set(),lunchX:''};}
+function planCard(k){
+  pEnsure(k);const d=pdraft,m=menuOf(k);
+  const kids=PEOPLE.filter(p=>!isAdult(p.id));
+  const c=h('div','card');c.id='fplan';
+  c.append(h('h3',null,'📝 לקבוע לבנות ל'+foodDayTxt(k)));
+  c.append(h('p','date','בוחרים בנות ומה הן יאכלו. כל בת תקבל את זה לאישור, ואם לא מתאים לה היא תבקש משהו אחר.'));
+  const ks=h('div','chips');ks.setAttribute('role','group');ks.setAttribute('aria-label','לאילו בנות');
+  const all=kids.every(p=>d.kids.has(p.id));
+  ks.append(chip('כל הבנות',all,()=>{if(all)d.kids.clear();else kids.forEach(p=>d.kids.add(p.id));paintFood(true);}));
+  kids.forEach(p=>ks.append(chip(p.name,d.kids.has(p.id),()=>{d.kids.has(p.id)?d.kids.delete(p.id):d.kids.add(p.id);paintFood(true);})));
+  c.append(ks);
+  MEALS.forEach(([mk,name,ic])=>{
+    const sec=h('div','fmeal');sec.append(h('h4',null,ic+' '+name));
+    const ch=h('div','chips');ch.setAttribute('role','group');ch.setAttribute('aria-label',name);
+    const opts=m[mk].slice();d[mk].forEach(x=>{if(!opts.includes(x))opts.push(x);});
+    opts.forEach(o=>ch.append(chip(o,d[mk].has(o),()=>{
+      const s=d[mk];if(s.has(o))s.delete(o);else{if(o===EMPTY)s.clear();else s.delete(EMPTY);s.add(o);}
+      paintFood(true);
+    })));
+    const inp=h('input','field');inp.maxLength=80;inp.autocomplete='off';
+    inp.placeholder='משהו אחר או תוספת (לא חובה)';inp.value=d[mk+'X'];inp.setAttribute('aria-label','משהו אחר ל'+name);
+    inp.oninput=()=>{d[mk+'X']=inp.value;};
+    sec.append(ch,inp);c.append(sec);
+  });
+  const msg=h('p','msg');msg.setAttribute('role','status');
+  const go=h('button','btn pri','שליחה לאישור הבנות');go.type='button';
+  go.onclick=()=>savePlan(k,msg);
+  c.append(go,msg);
+  return c;
+}
+function savePlan(k,msg){
+  const d=pdraft;
+  if(!d.kids.size){say(msg,'בוחרים לפחות בת אחת.');return;}
+  const miss=MEALS.filter(([mk])=>!d[mk].size&&!d[mk+'X'].trim()).map(x=>x[1]);
+  if(miss.length){say(msg,'חסרה בחירה ל'+miss.join(' ול')+'. אפשר לבחור או לכתוב.');return;}
+  const now=Date.now(),base={ten:[...d.ten],tenX:d.tenX.trim().slice(0,80),lunch:[...d.lunch],lunchX:d.lunchX.trim().slice(0,80),by:me,at:now,st:'wait'};
+  const plans={};
+  d.kids.forEach(id=>{plans[id]=Object.assign({},base,{alt:deleteField(),dt:deleteField(),dby:deleteField()});setLocal(k,'plans',id,Object.assign({},base));});
+  setDoc(foodRef(k),{plans},{merge:true}).catch(failSave);
+  const names=[...d.kids].map(id=>byId[id].name);
+  pdraft=null;
+  toast('נשלח לאישור: '+names.join(', '));
+  paintFood(true);
+}
+/* ההורה עונה לבקשה של הבת: לאשר (הבקשה נהיית ההזמנה) או להשאיר את התכנון */
+function decidePlan(k,id,yes){
+  const pl=planOf(k,id);if(!pl||pl.st!=='alt')return;
+  const a=pl.alt||{},now=Date.now();
+  const o=Object.assign(mealsOf(yes?a:pl),{wake:a.wake||((orderOf(k,id)||{}).wake)||'',at:now,src:yes?'alt':'plan'});
+  const st=yes?'altok':'kept';
+  setDoc(foodRef(k),{orders:{[id]:o},plans:{[id]:{st,dt:now,dby:me}}},{merge:true}).catch(failSave);
+  setLocal(k,'orders',id,o);setLocal(k,'plans',id,Object.assign({},pl,{st,dt:now,dby:me}));
+  toast(yes?'אישרת ל'+byId[id].name+' את הבקשה':'נשאר התכנון ל'+byId[id].name);
+  paintFood(true);
+}
+function cancelPlan(k,id){
+  const pl=((foodDays[k]||{}).plans||{});
+  setDoc(foodRef(k),{plans:{[id]:deleteField()}},{merge:true}).catch(failSave);
+  foodDays[k]=Object.assign({},foodDays[k]);const np=Object.assign({},pl);delete np[id];foodDays[k].plans=np;
+  toast('התכנון ל'+byId[id].name+' בוטל');
+  paintFood(true);
 }
 /* אבא ואמא: שעת השכמה למחר, עם שעה קבועה. נשמר מיד, בלי חלון קופץ */
 function adultWakeCard(){

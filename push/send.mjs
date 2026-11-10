@@ -186,20 +186,38 @@ async function main() {
     }
   }
 
-  // יום חמישי 18:00: תזכורת למי שעוד לא מילא אילוצים לשבוע הבא (המועד בסוף היום)
+  // יום רביעי: 18:00 תזכורת למי שעוד לא מילא אילוצים לשבוע הבא. 22:00 המועד נסגר והאפליקציה משבצת את כל המשמרות
   {
     const p = parts(now);
-    if (p.wd === 4) {
-      const t = localToUtc(p.y, p.m, p.d, 18, 0);
-      if (t <= now && now - t <= WINDOW) {
-        const nx = new Date(Date.UTC(p.y, p.m - 1, p.d) + 3 * 864e5);
-        const nk = ymd(nx.getUTCFullYear(), nx.getUTCMonth() + 1, nx.getUTCDate());
+    if (p.wd === 3) {
+      const nx = new Date(Date.UTC(p.y, p.m - 1, p.d) + 4 * 864e5);
+      const nk = ymd(nx.getUTCFullYear(), nx.getUTCMonth() + 1, nx.getUTCDate());
+      const t18 = localToUtc(p.y, p.m, p.d, 18, 0), t22 = localToUtc(p.y, p.m, p.d, 22, 0);
+      const in18 = t18 <= now && now - t18 <= WINDOW, in22 = t22 <= now && now - t22 <= WINDOW;
+      if (in18 || in22) {
         const w = await getDoc(`${F}/weeks/${nk}`);
         const cons = (w && w.cons) || {};
-        if (!(w && w.gen)) {
+        if (in18 && !(w && w.gen)) {
           const who = [...KIDS, 'mom'].filter(id => !cons[id]);
-          if (who.length) out.push({ key: `c_${nk}`, who, tab: 'dog', body: 'עד הלילה ממלאים אילוצים לשבוע הבא בלשונית של לוני. מחר האפליקציה משבצת לבד.' });
+          if (who.length) out.push({ key: `c_${nk}`, who, tab: 'dog', body: 'עד 22:00 הערב ממלאים אילוצים לשבוע הבא בלשונית של לוני. ב-22:00 האפליקציה משבצת את כולם.' });
         }
+        // פתיחת האפליקציה בטלפון כלשהו מריצה את השיבוץ, אז שולחים לכולם
+        if (in22) out.push({ key: `g_${nk}`, who: ['dad', 'mom', ...KIDS], tab: 'dog', body: '🐩 השיבוץ של לוני לשבוע הבא נקבע. פותחים ורואים מתי התור שלך. אפשר להחליף דרך האפליקציה.' });
+      }
+    }
+  }
+
+  // בקשות החלפה בתורנות של לוני: הודעה למי שביקשו ממנה, ולמבקשת כשענו לה
+  {
+    const sw = await list(F + '/swaps').catch(() => []);
+    const NM = { dad: 'אבא', mom: 'אמא', ziv: 'זיו', roni: 'רוני', hili: 'הילי', aviv: 'אביב' };
+    for (const x of sw) {
+      const at = Number(x.at) || 0;
+      if (!at || now - at > 12 * 3600e3 || !x.to || !x.from) continue;
+      if (x.status === 'pending') out.push({ key: `s_${x.id}`, who: [x.to], tab: 'dog', body: `🐩 ${NM[x.from] || ''} מבקש${x.from === 'dad' ? '' : 'ת'} להחליף איתך תורנות של לוני. נכנסים לאשר או לסרב.` });
+      else if (x.status === 'approved' || x.status === 'declined') {
+        const m = x.to === 'dad', ok = x.status === 'approved';
+        out.push({ key: `s_${x.id}_${x.status}`, who: [x.from], tab: 'dog', body: `🐩 ${NM[x.to] || ''} ${ok ? (m ? 'אישר' : 'אישרה') + ' את ההחלפה. הלוח עודכן.' : (m ? 'לא יכול' : 'לא יכולה') + ' להחליף. אפשר לבקש ממישהו אחר.'}` });
       }
     }
   }
@@ -212,10 +230,37 @@ async function main() {
       const nx = new Date(Date.UTC(p.y, p.m - 1, p.d) + 864e5);
       const nk = ymd(nx.getUTCFullYear(), nx.getUTCMonth() + 1, nx.getUTCDate());
       const fd = await getDoc(`${F}/food/${nk}`);
-      const ord = (fd && fd.orders) || {};
-      const who = KIDS.filter(id => !(ord[id] && ord[id].at));
+      const ord = (fd && fd.orders) || {}, pls = (fd && fd.plans) || {};
+      const pl = id => pls[id] && pls[id].at && pls[id].st ? pls[id] : null;
+      const who = KIDS.filter(id => !pl(id) && !(ord[id] && ord[id].at));
       if (who.length) out.push({ key: `f_${nk}_${p.h}${String(q).padStart(2, '0')}`, who, tab: 'food', body: '🍽️ מה להכין לך מחר? בוחרים ארוחת עשר, צהרון ושעת השכמה' });
+      const wp = KIDS.filter(id => pl(id) && pl(id).st === 'wait');
+      if (wp.length) out.push({ key: `fw_${nk}_${p.h}${String(q).padStart(2, '0')}`, who: wp, tab: 'food', body: '🍽️ מחכה לך תכנון אוכל למחר. מאשרים או מבקשים משהו אחר' });
     }
+  }
+
+  // תכנון אוכל של אבא/אמא לבנות: הודעה לבת על תכנון חדש, להורים על בקשה למשהו אחר, ולבת על התשובה
+  {
+    const p = parts(now);
+    const NM = { dad: 'אבא', mom: 'אמא', ziv: 'זיו', roni: 'רוני', hili: 'הילי', aviv: 'אביב' };
+    const ks = [0, 1].map(n => { const x = new Date(Date.UTC(p.y, p.m - 1, p.d) + n * 864e5); return ymd(x.getUTCFullYear(), x.getUTCMonth() + 1, x.getUTCDate()); });
+    const docs = await Promise.all(ks.map(k => getDoc(`${F}/food/${k}`)));
+    const mt = (o, mk) => [...((o && o[mk]) || []), ...(o && o[mk + 'X'] ? [o[mk + 'X']] : [])].join(', ') || '—';
+    const fresh = t => t && now - Number(t) < 12 * 3600e3;
+    ks.forEach((k, i) => {
+      const pls = (docs[i] && docs[i].plans) || {};
+      const when = i ? 'מחר' : 'היום';
+      for (const id of KIDS) {
+        const x = pls[id]; if (!x || !x.at || !x.st) continue;
+        const pm = x.by === 'mom';
+        if (x.st === 'wait' && fresh(x.at)) out.push({ key: `fp_${k}_${id}_${x.at}`, who: [id], tab: 'food', body: `🍽️ ${pm ? 'אמא תכננה' : 'אבא תכנן'} לך אוכל ל${when}. מאשרים או מבקשים משהו אחר` });
+        if (x.st === 'alt' && x.alt && fresh(x.alt.at)) out.push({ key: `fa_${k}_${id}_${x.alt.at}`, who: ['dad', 'mom'], tab: 'food', body: `🍽️ ${NM[id]} ביקשה משהו אחר ל${when}: ארוחת עשר – ${mt(x.alt, 'ten')}, צהרון – ${mt(x.alt, 'lunch')}` });
+        if ((x.st === 'altok' || x.st === 'kept') && fresh(x.dt)) {
+          const dm = (x.dby || x.by) === 'mom';
+          out.push({ key: `fd_${k}_${id}_${x.dt}`, who: [id], tab: 'food', body: x.st === 'altok' ? `🍽️ ${dm ? 'אמא אישרה' : 'אבא אישר'} את הבקשה שלך` : `🍽️ ${dm ? 'אמא השאירה' : 'אבא השאיר'} את התכנון ל${when}` });
+        }
+      }
+    });
   }
 
   // לוח משפחתי: תזכורות לאירועים (ולבחינות מ-teach-me שהוגדרה להן תזכורת). אין הגדרה = אין תזכורת
