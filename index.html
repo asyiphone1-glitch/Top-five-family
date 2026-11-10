@@ -614,7 +614,7 @@ input{font:inherit;color:var(--ink)}
       <input id="bkFile" type="file" accept="application/json,.json" hidden>
       <p id="bkMsg" class="msg" role="status"></p>
     </div>
-    <div class="card">
+    <div id="codeCard" class="card">
       <h3>הקוד המשפחתי</h3>
       <p class="date">צריך אותו כדי לחבר טלפון חדש.</p>
       <button id="codeShow" class="btn quiet" type="button">הצגת הקוד</button>
@@ -791,14 +791,18 @@ function startFamily(){
     setNet(snap.metadata.fromCache?'cache':'ok');
     onPeople(snap);
   },()=>setNet('err'));
+  if(me&&byId[me]&&!isAdult(me)&&!LS.get('yaya.lock'))LS.set('yaya.lock',me);
   if(me&&byId[me])openMain();else showWho();
 }
 
 /* ---------- בחירת פרופיל ו-PIN ---------- */
 function showWho(){me=null;LS.del('tff.me');clearInterval(hb);paintWho();show('s-who');}
+/* נעילה: בת שבחרה את הפרופיל שלה רואה בטלפון הזה רק אותו. אבא או אמא יכולים לבטל */
+const lockOf=()=>{const l=LS.get('yaya.lock');return l&&byId[l]&&!isAdult(l)?l:null;};
 function paintWho(){
   const g=$('whoGrid');g.innerHTML='';
-  PEOPLE.forEach(p=>{
+  const lk=lockOf();
+  (lk?PEOPLE.filter(p=>p.id===lk):PEOPLE).forEach(p=>{
     const b=document.createElement('button');
     b.type='button';b.className='who-btn';
     b.style.setProperty('--pc',p.l);b.style.setProperty('--pc-d',p.d);
@@ -809,8 +813,22 @@ function paintWho(){
     b.onclick=()=>pick(p.id);
     g.append(b);
   });
+  {const o=$('whoUnlock');if(o)o.remove();}
+  if(lk){
+    const u=h('button','btn quiet sm','ביטול הנעילה (אבא או אמא)');u.type='button';u.style.marginTop='18px';
+    u.onclick=()=>{
+      pinTarget='__unlock';
+      const par=['dad','mom'].some(id=>(people[id]||{}).pin);
+      $('pinTitle').textContent='ביטול הנעילה של הטלפון';
+      $('pinIn').maxLength=par?4:40;$('pinIn').inputMode=par?'numeric':'text';
+      $('pinIn').value='';say($('pinMsg'),par?'הקוד האישי של אבא או של אמא.':'הקוד המשפחתי.',true);
+      show('s-pin');setTimeout(()=>$('pinIn').focus(),50);
+    };
+    u.id='whoUnlock';g.after(u);
+  }
 }
 function pick(pid){
+  const lk=lockOf();if(lk&&pid!==lk)return;
   if((people[pid]||{}).pin){
     pinTarget=pid;
     $('pinTitle').textContent='קוד אישי של '+byId[pid].name;
@@ -819,7 +837,9 @@ function pick(pid){
   }else enter(pid);
 }
 function enter(pid){
-  me=pid;LS.set('tff.me',pid);qz=null;openMain();
+  me=pid;LS.set('tff.me',pid);qz=null;
+  if(!isAdult(pid))LS.set('yaya.lock',pid);
+  openMain();
   if(!(people[pid]||{}).pin&&!LS.get('tff.pinask.'+pid)){
     LS.set('tff.pinask.'+pid,'1');
     tab('set');say($('setMsg'),'מומלץ להגדיר כאן קוד אישי בן 4 ספרות, כדי שאחרים לא ייכנסו לפרופיל שלך.',true);
@@ -1328,6 +1348,7 @@ $('bkFile').onchange=async()=>{
 };
 function paintSettings(){
   paintBackup();
+  {const lk=!!lockOf()&&!isAdult(me);$('btnSwitch').hidden=lk;$('btnForget').hidden=lk;$('codeCard').hidden=!isAdult(me);}
   $('pinState').textContent=(people[me]||{}).pin?'לפרופיל שלך מוגדר קוד אישי.':'אין קוד אישי לפרופיל שלך.';
   if(!qz)qz=loadPrefs();
   paintQuiz();
@@ -3715,8 +3736,17 @@ function foodFromPush(){if(me&&!isAdult(me)){foodWant=true;checkFood();}}
 $('btnJoin').onclick=()=>enterCode(false);
 $('btnCreate').onclick=()=>enterCode(true);
 $('code').addEventListener('keydown',e=>{if(e.key==='Enter')enterCode(false);});
-$('pinBack').onclick=()=>{pinTarget=null;show('s-who');};
+$('pinBack').onclick=()=>{pinTarget=null;$('pinIn').maxLength=4;$('pinIn').inputMode='numeric';show('s-who');};
 async function tryPin(){
+  if(pinTarget==='__unlock'){
+    const v=$('pinIn').value;let ok=false;
+    for(const id of ['dad','mom']){const pp=(people[id]||{}).pin;if(pp&&pp===await hashPin(id,v))ok=true;}
+    if(!['dad','mom'].some(id=>(people[id]||{}).pin))ok=normCode(v)===code;
+    $('pinIn').maxLength=4;$('pinIn').inputMode='numeric';
+    if(ok){LS.del('yaya.lock');pinTarget=null;paintWho();show('s-who');}
+    else{say($('pinMsg'),'הקוד לא נכון. נסו שוב.');$('pinIn').value='';}
+    return;
+  }
   const h=await hashPin(pinTarget,$('pinIn').value);
   if(h&&h===(people[pinTarget]||{}).pin){enter(pinTarget);}
   else{say($('pinMsg'),'הקוד לא נכון. נסו שוב.');$('pinIn').value='';}
