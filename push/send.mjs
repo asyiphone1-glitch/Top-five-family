@@ -135,6 +135,15 @@ async function main() {
       });
     };
     for (const p of ppl) scan(p, p.id, [p.id], 'today');
+    // משימות שאבא ואמא שלחו זה לזו ועוד לא נכנסו לרשימה (האפליקציה של המקבל סגורה)
+    for (const p of ppl) {
+      if (!Array.isArray(p.inbox)) continue;
+      for (const x of p.inbox) {
+        const r = Number(x && x.rm) || 0, t = String((x && x.t) || '').trim();
+        if (!r || !t || r > now || now - r > WINDOW) continue;
+        out.push({ key: `t_${p.id}_${r}_${hsh(t)}`, who: [p.id], tab: 'today', body: 'תזכורת: ' + (x.from === 'mom' ? 'משימה מאמא' : 'משימה מאבא') + ' ‹ ' + t });
+      }
+    }
     // הרשימה המשפחתית הישנה הוסרה, המשימות שלה עברו למשימות "לכל המשפחה"
   }
 

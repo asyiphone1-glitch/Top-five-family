@@ -1005,6 +1005,52 @@ function renderList(ul,st,onSave,onProg,label,focusAt){
 }
 function renderTasks(){renderList($('tasks'),work,save,progress,'משימה');}
 
+/* ---------- משימות שאבא ואמא שולחים זה לזו ---------- */
+const spouse=id=>id==='dad'?'mom':'dad';
+const fromCat=id=>id==='dad'?'משימה מאבא':'משימה מאמא';
+/* מכניסה משימות שהגיעו לתוך הרשימה, תחת קטגוריה לפי השולח. מחזירה כמה נוספו */
+function mergeInbox(st,items){
+  let n=0;
+  items.forEach(x=>{
+    const t=String(x.t||'').trim();if(!t||!byId[x.from])return;
+    const cat=fromCat(x.from);
+    let m=st.tasks.findIndex((v,i)=>!st.lv[i]&&v.trim()===cat);
+    if(m<0){m=0;st.tasks.splice(0,0,cat);st.done.splice(0,0,false);st.lv.splice(0,0,0);st.rm.splice(0,0,0);}
+    const at=blockEnd(st,m);
+    if(st.tasks.length>=MAXT)return;
+    st.tasks.splice(at,0,t);st.done.splice(at,0,false);st.lv.splice(at,0,1);st.rm.splice(at,0,Number(x.rm)||0);
+    st.done[m]=false;n++;
+  });
+  return n;
+}
+let inboxBusy=false;
+async function checkInbox(){
+  if(!me||!isAdult(me)||inboxBusy)return;
+  const ib=(people[me]||{}).inbox;
+  if(!Array.isArray(ib)||!ib.length)return;
+  const a=document.activeElement;
+  if(a&&a.tagName==='INPUT'&&$('tasks').contains(a))return;
+  inboxBusy=true;
+  try{
+    clearTimeout(saveT);dirty=false;
+    let nx=null,got=[];
+    await runTransaction(db,async tx=>{
+      const sn=await tx.get(pdoc(me));
+      got=(sn.exists()&&Array.isArray(sn.data().inbox))?sn.data().inbox:[];
+      if(!got.length){nx=null;return;}
+      nx=JSON.parse(JSON.stringify(work));
+      mergeInbox(nx,got);
+      tx.set(pdoc(me),{name:byId[me].name,...packList(nx),day:today(),inbox:[]},{merge:true});
+    });
+    if(nx){
+      work=nx;renderTasks();
+      const fr=[...new Set(got.map(x=>x.from).filter(f=>byId[f]))];
+      toast(fr.map(f=>byId[f].name).join(' ו')+(fr.length===1&&fr[0]==='mom'?' שלחה':' שלח')+' לך '+(got.length>1?got.length+' משימות':'משימה'));
+    }
+  }catch(e){}
+  inboxBusy=false;
+}
+
 /* ---------- משימות משפחתיות (אבא ואמא) ---------- */
 function famProgress(){paintProgress($('famProgress'),fam,'הוסיפו משימות של הבית, למשל קניות או תשלומים');}
 function renderFam(){renderList($('famTasks'),fam,saveFam,famProgress,'משימה משפחתית');}
@@ -1216,7 +1262,7 @@ function openMain(){
   $('dateTxt').textContent=new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
   show('s-main');tab('today');renderTasks();startBeat();
   weekStart=sunday(new Date());subWeek();subSwaps();subFam();subJobs();subAdv();subCurWk();subNextWk();paintJobForm();subShop();subTaxi();subFood();subCal();
-  clearInterval(homeT);homeT=setInterval(()=>{if(!$('tab-home').hidden)paintHome();},30000);
+  clearInterval(homeT);homeT=setInterval(()=>{if(!$('tab-home').hidden)paintHome();checkInbox();},30000);
   syncPush();
   const qt=new URLSearchParams(location.search).get('tab');
   if(qt&&$('tab-'+qt)){tab(qt);if(qt==='food')foodFromPush();history.replaceState(null,'',location.pathname);}
@@ -1224,7 +1270,7 @@ function openMain(){
 function onPeople(snap){
   if(!$('s-who').hidden)paintWho();
   if(!me||$('s-main').hidden)return;
-  paintHome();paintKidsTab();
+  paintHome();paintKidsTab();checkInbox();
   if(!$('tab-dog').hidden)paintDog();
   const mine=snap.docs.find(d=>d.id===me);
   if(!mine||mine.metadata.hasPendingWrites||dirty)return;
@@ -2228,11 +2274,14 @@ function jobSort(a,b){
 }
 function paintJobForm(){
   const f=$('jobForm');f.hidden=!isAdult(me);if(f.hidden)return;
-  const sel=$('jTo');if(!sel.options.length){
+  const sel=$('jTo');if(sel.dataset.me!==me){
+    const keep=sel.value;sel.innerHTML='';sel.dataset.me=me;
+    const sp=spouse(me),so=h('option',null,'👤 ל'+byId[sp].name+' (לרשימת המשימות של'+(sp==='mom'?'ה':'ו')+')');so.value='p:'+sp;sel.append(so);
     const fo=h('option',null,'🏠 כל המשפחה');fo.value='fam';sel.append(fo);
     const o=h('option',null,'כל הבנות: מי שלוקחת ראשונה');o.value='all';sel.append(o);
     const e=h('option',null,'כל הבנות: כל אחת עושה בעצמה');e.value='each';sel.append(e);
     KIDS.forEach(k=>{const x=h('option',null,byId[k].name);x.value=k;sel.append(x);});
+    sel.value=[...sel.options].some(o=>o.value===keep)?keep:'fam';
   }
   if(!$('jDate').value)$('jDate').value=today();
   $('jDate').min=today();
@@ -2250,6 +2299,22 @@ $('jAdd').onclick=async()=>{
     if(due<Date.now()-60000){say(m,'השעה הזאת כבר עברה. בחרו שעה מאוחרת יותר.');return;}
   }
   const to=$('jTo').value;
+  if(to.startsWith('p:')){
+    const sp=to.slice(2);
+    let tail='';
+    if(ds&&ds!==today()&&!hasT){const d=new Date(due);tail=' ('+DAYN[d.getDay()]+' '+d.getDate()+'/'+(d.getMonth()+1)+')';}
+    const items=lines.map((t,i)=>({id:Date.now().toString(36)+i+Math.random().toString(36).slice(2,6),t:(t.slice(0,80-tail.length)+tail),rm:hasT?due:0,from:me,at:Date.now()+i}));
+    try{
+      await runTransaction(db,async tx=>{
+        const sn=await tx.get(pdoc(sp));
+        const cur=(sn.exists()&&Array.isArray(sn.data().inbox))?sn.data().inbox:[];
+        tx.set(pdoc(sp),{inbox:cur.concat(items).slice(-60)},{merge:true});
+      });
+      $('jText').value='';$('jTime').value='';
+      say(m,(lines.length>1?'נשלחו '+lines.length+' משימות':'המשימה נשלחה')+' ל'+byId[sp].name+'. '+(lines.length>1?'הן יופיעו':'היא תופיע')+' ברשימת המשימות של'+(sp==='mom'?'ה':'ו')+' תחת "'+fromCat(me)+'"'+(hasT?', עם תזכורת בשעה שבחרת.':'.'),true);
+    }catch(e){say(m,'השליחה נכשלה. בדקו חיבור.');}
+    return;
+  }
   try{
     const base=(t,i)=>({text:t.slice(0,120),due:due,hasT:hasT,by:me,at:Date.now()+i,claim:null,done:false,ok:false});
     const w=[];
