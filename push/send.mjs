@@ -214,7 +214,7 @@ async function main() {
       const fd = await getDoc(`${F}/food/${nk}`);
       const ord = (fd && fd.orders) || {};
       const who = KIDS.filter(id => !(ord[id] && ord[id].at));
-      if (who.length) out.push({ key: `f_${nk}_${p.h}${String(q).padStart(2, '0')}`, who, tab: 'food', body: '🍽️ מה להכין לך מחר? בוחרים ארוחת עשר וצהרון' });
+      if (who.length) out.push({ key: `f_${nk}_${p.h}${String(q).padStart(2, '0')}`, who, tab: 'food', body: '🍽️ מה להכין לך מחר? בוחרים ארוחת עשר, צהרון ושעת השכמה' });
     }
   }
 
