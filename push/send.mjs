@@ -101,6 +101,18 @@ async function main() {
   const now = Date.now();
   const F = `families/${CODE}`;
   const [subs, jobs, adv, logs] = await Promise.all([list(F + '/push'), list(F + '/jobs'), getDoc(F + '/prefs/advice'), list(F + '/pushlog')]);
+  // "צא לפיתוח": אבא לחץ באפליקציה, ההחלטות נכתבות לקובץ בריפו כדי שקלוד יקרא אותן
+  if (adv && adv._dev && adv._dev.at) {
+    const mk = await getDoc(F + '/prefs/devout');
+    if (!mk || Number(mk.at) !== Number(adv._dev.at)) {
+      const dec = {};
+      for (const k in adv) if (!k.startsWith('_') && adv[k] && adv[k].s) dec[k] = { s: adv[k].s, by: adv[k].by || '', at: adv[k].at || 0 };
+      fs.mkdirSync('dev', { recursive: true });
+      fs.writeFileSync('dev/request.json', JSON.stringify({ at: adv._dev.at, by: adv._dev.by || '', ids: adv._dev.ids || [], decisions: dec }, null, 2) + '\n');
+      await put(F + '/prefs/devout', { at: Number(adv._dev.at) });
+      console.log('בקשת פיתוח נכתבה ל-dev/request.json');
+    }
+  }
   if (!subs.length) { console.log('אין טלפונים רשומים להתראות.'); return; }
   const on = id => ((adv && adv[id] && adv[id].s) || ADV0[id]) === 'yes';
   const sent = new Set(logs.map(l => l.id));

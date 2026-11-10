@@ -565,7 +565,7 @@ input{font:inherit;color:var(--ink)}
   </div>
 
   <div id="tab-home" hidden>
-    <div id="advCard" class="card" hidden><h3 id="advH">המלצות צוות היועצים</h3><p class="date">כל המלצה נכנסת לאפליקציה רק אם תלחצו "מקבל". יום אחרי ההחלטה ההמלצה יורדת מהמסך, ואפשר לראות ולשנות אותה ב"החלטות קודמות".</p><div id="advBox"></div></div>
+    <div id="advCard" class="card" hidden><h3 id="advH">המלצות צוות היועצים</h3><p class="date">כל המלצה נכנסת לאפליקציה רק אם תלחצו "מקבל". המלצה שנבנתה, או שלא התקבלה לפני יותר מיום, עוברת לארכיון, ושם אפשר לראות ולשנות אותה.</p><div id="advBox"></div></div>
     <div id="weekCard" class="card rep" hidden></div>
     <div class="card"><h3>מי מחובר עכשיו</h3><div id="presence"></div></div>
   </div>
@@ -2190,7 +2190,11 @@ const ADV0_AT=new Date(2026,10,8,11,0).getTime();
 function decision(id){return adv[id]||(ADV0[id]?{s:ADV0[id],by:'dad',at:ADV0_AT}:null);}
 /* המלצה שהוחלט עליה נעלמת מהמסך יום אחרי ההחלטה */
 const ADV_KEEP=864e5;let advOld=false;
-function advHidden(r){const st=decision(r.id);return !!st&&Date.now()-(st.at||0)>ADV_KEEP;}
+/* המלצות שכבר נבנו באפליקציה. מה שנבנה, או שלא התקבל לפני יותר מיום, עובר לארכיון */
+const BUILT=new Set(['r_dogring','r_pre10','r_approve','r_fair','r_cheer','r_push','r_week']);
+function advHidden(r){const st=decision(r.id);if(!st)return false;if(st.s==='yes')return BUILT.has(r.id)||!r.build;return Date.now()-(st.at||0)>ADV_KEEP;}
+const inDev=id=>!!(adv._dev&&Array.isArray(adv._dev.ids)&&adv._dev.ids.includes(id));
+const toDev=()=>RECS.filter(r=>r.build&&!BUILT.has(r.id)&&on(r.id)&&!inDev(r.id));
 function on(id){return (decision(id)||{}).s==='yes';}
 function subAdv(){
   if(advUnsub)advUnsub();
@@ -2206,18 +2210,29 @@ function paintAdvice(){
   const vis=RECS.filter(r=>advOld||!advHidden(r)),old=RECS.filter(advHidden).length;
   card.hidden=!vis.length&&!old;if(card.hidden)return;
   if(!vis.length)box.append(h('p','date','אין המלצות חדשות.'));
+  const dv=toDev();
+  if(dv.length){
+    const go=h('button','btn pri','🚀 צא לפיתוח ('+dv.length+')');go.type='button';
+    go.onclick=()=>{
+      const ids=[...new Set([...((adv._dev&&adv._dev.ids)||[]).filter(id=>!BUILT.has(id)),...dv.map(r=>r.id)])];
+      setDoc(advDoc(),{_dev:{at:Date.now(),by:me,ids:ids}},{merge:true})
+        .then(()=>toast('נשלח לפיתוח: '+dv.length+' המלצות. כשהן ייבנו הן יעברו לארכיון.'))
+        .catch(()=>toast('השליחה נכשלה. בדקו חיבור.'));
+    };
+    box.append(h('p','date','אישרת '+dv.length+' המלצות שדורשות בנייה. הכפתור מעביר אותן לפיתוח.'),go);
+  }
   vis.forEach(r=>{
     const m=TEAM[r.w],st=decision(r.id);
     const row=h('div','rec');
     const a=h('span','avl');a.style.cssText='width:44px;height:44px;font-size:1rem;background:'+m.c;a.textContent=m.n.replace('ד"ר ','').split(' ').map(x=>x[0]).join('');a.setAttribute('aria-hidden','true');
     const b=h('div');
     b.append(h('div','who3',m.n+' · '+m.r));
-    const t=h('div','rt',r.t);if(r.build&&r.id!=='r_week')t.append(h('span','tag','דורש בנייה'));
+    const t=h('div','rt',r.t);if(r.build&&!BUILT.has(r.id))t.append(h('span','tag','דורש בנייה'));
     b.append(t,h('div','rd',r.d));
     let stt='ממתין להחלטה',cls='rs';
     if(st){
       const bp=byId[st.by],who=bp?bp.name:'';
-      if(st.s==='yes'){stt=(r.build?(r.id==='r_week'?'פעיל באפליקציה':'אושר לבנייה בשלב הבא'):'פעיל באפליקציה')+(who?' · '+who+(bp.g==='m'?' אישר':' אישרה'):'');cls+=' yes';}
+      if(st.s==='yes'){stt=(!r.build||BUILT.has(r.id)?'פעיל באפליקציה':inDev(r.id)?'🛠️ בפיתוח':'אושר, מחכה ל"צא לפיתוח"')+(who?' · '+who+(bp.g==='m'?' אישר':' אישרה'):'');cls+=' yes';}
       else{stt='לא התקבל'+(who?' · '+who:'');cls+=' no';}
     }
     b.append(h('div',cls,stt));
@@ -2231,7 +2246,7 @@ function paintAdvice(){
     row.append(a,b,acts);box.append(row);
   });
   if(old){
-    const t=h('button','btn quiet sm',advOld?'הסתרת החלטות קודמות':'החלטות קודמות ('+old+')');t.type='button';
+    const t=h('button','btn quiet sm',advOld?'הסתרת הארכיון':'🗄️ ארכיון ('+old+')');t.type='button';
     t.onclick=()=>{advOld=!advOld;paintAdvice();};box.append(t);
   }
 }

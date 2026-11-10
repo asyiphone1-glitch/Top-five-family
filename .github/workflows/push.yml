@@ -3,6 +3,8 @@ on:
   schedule:
     - cron: '*/5 * * * *'
   workflow_dispatch:
+permissions:
+  contents: write
 concurrency:
   group: yaya-push
   cancel-in-progress: false
@@ -26,3 +28,12 @@ jobs:
         env:
           FAMILY_CODE: ${{ secrets.FAMILY_CODE }}
           VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
+      - name: Save development request
+        run: |
+          if [ -f dev/request.json ] && [ -n "$(git status --porcelain dev)" ]; then
+            git config user.name "yaya-bot"
+            git config user.email "yaya-bot@users.noreply.github.com"
+            git add dev/request.json
+            git commit -m "בקשת פיתוח מהאפליקציה"
+            git pull --rebase -q origin main && git push -q origin HEAD:main
+          fi
