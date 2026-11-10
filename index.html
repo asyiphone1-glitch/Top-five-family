@@ -2083,9 +2083,12 @@ function ringPrime(){
   if(ringReady)return;
   try{
     if(!ringEl){ringEl=new Audio(ringWav());ringEl.preload='auto';ringEl.setAttribute('playsinline','');ringEl.onended=()=>{ringWant=false;};}
-    /* מנגנים את הקובץ בלחיצה הראשונה ועוצרים מיד (בתחילתו יש שקט), כדי שהטלפון יאפשר לצלצל אחר כך גם בלי לחיצה */
+    /* מנגנים את הקובץ בלחיצה הראשונה, מושתק, ועוצרים מיד, כדי שהטלפון יאפשר לצלצל אחר כך גם בלי לחיצה.
+       ההשתקה חשובה: באייפון העצירה מגיעה באיחור, ובלעדיה נשמע צלצול בכל פתיחה */
+    if(!ringWant)ringEl.muted=true;
     const pr=ringEl.play();
-    if(pr&&pr.then)pr.then(()=>{ringReady=true;if(!ringWant){ringEl.pause();ringEl.currentTime=0;}}).catch(()=>{});
+    const done=()=>{if(!ringWant){ringEl.pause();ringEl.currentTime=0;}ringEl.muted=false;};
+    if(pr&&pr.then)pr.then(()=>{ringReady=true;done();}).catch(()=>{ringEl.muted=false;});
   }catch(e){}
 }
 function unlockAudio(){
@@ -2104,7 +2107,7 @@ function chime(){
   try{navigator.vibrate&&navigator.vibrate([400,150,400,150,400]);}catch(e){}
   if(ringEl){
     try{
-      ringWant=true;ringEl.currentTime=0;
+      ringWant=true;ringEl.muted=false;ringEl.currentTime=0;
       const pr=ringEl.play();
       if(pr&&pr.catch)pr.catch(()=>chimeWA());
       return;
