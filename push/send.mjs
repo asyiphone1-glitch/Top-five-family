@@ -148,7 +148,7 @@ async function main() {
       if (!who || done[key]) continue;
       const t = localToUtc(p.y, p.m, p.d, DOGT[k][0], DOGT[k][1]);
       if (t > now || now - t > WINDOW) continue;
-      out.push({ key: `d_${ymd(p.y, p.m, p.d)}_${k}`, who: [who], tab: 'dog', body: 'תורך להוציא את הכלבה (' + DOGT[k][2] + ')' });
+      out.push({ key: `d_${ymd(p.y, p.m, p.d)}_${k}`, who: [who], tab: 'dog', body: 'תורך להוציא את לוני (' + DOGT[k][2] + ')' });
     }
   }
 
@@ -164,7 +164,7 @@ async function main() {
         const cons = (w && w.cons) || {};
         if (!(w && w.gen)) {
           const who = [...KIDS, 'mom'].filter(id => !cons[id]);
-          if (who.length) out.push({ key: `c_${nk}`, who, tab: 'dog', body: 'עד הלילה ממלאים אילוצים לשבוע הבא בלשונית הכלבה. מחר האפליקציה משבצת לבד.' });
+          if (who.length) out.push({ key: `c_${nk}`, who, tab: 'dog', body: 'עד הלילה ממלאים אילוצים לשבוע הבא בלשונית של לוני. מחר האפליקציה משבצת לבד.' });
         }
       }
     }
