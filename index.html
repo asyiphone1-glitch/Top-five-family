@@ -2182,16 +2182,24 @@ function ringWav(){
   }
   return URL.createObjectURL(new Blob([buf],{type:'audio/wav'}));
 }
+/* קובץ שקט לגמרי (חצי שנייה של אפסים). מנגנים אותו בלחיצה הראשונה כדי שהטלפון יאפשר לצלצל אחר כך בלי לחיצה.
+   הצלצול האמיתי נטען לאותו נגן רק כשיש תזכורת, ולכן בפתיחת האפליקציה לא יכול להישמע שום צליל */
+function silentWav(){
+  const sr=8000,n=4000,buf=new ArrayBuffer(44+n*2),v=new DataView(buf);
+  const ws=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i));};
+  ws(0,'RIFF');v.setUint32(4,36+n*2,true);ws(8,'WAVE');ws(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);ws(36,'data');v.setUint32(40,n*2,true);
+  return URL.createObjectURL(new Blob([buf],{type:'audio/wav'}));
+}
+let ringUrl=null,silUrl=null;
 function ringPrime(){
   if(ringReady)return;
   try{
-    if(!ringEl){ringEl=new Audio(ringWav());ringEl.preload='auto';ringEl.setAttribute('playsinline','');ringEl.onended=()=>{ringWant=false;};}
-    /* מנגנים את הקובץ בלחיצה הראשונה, מושתק, ועוצרים מיד, כדי שהטלפון יאפשר לצלצל אחר כך גם בלי לחיצה.
-       ההשתקה חשובה: באייפון העצירה מגיעה באיחור, ובלעדיה נשמע צלצול בכל פתיחה */
-    if(!ringWant)ringEl.muted=true;
+    if(!ringEl){silUrl=silentWav();ringEl=new Audio(silUrl);ringEl.preload='auto';ringEl.setAttribute('playsinline','');ringEl.onended=()=>{ringWant=false;};}
+    if(ringWant)return;
+    if(ringEl.src!==silUrl)ringEl.src=silUrl;
     const pr=ringEl.play();
-    const done=()=>{if(!ringWant){ringEl.pause();ringEl.currentTime=0;}ringEl.muted=false;};
-    if(pr&&pr.then)pr.then(()=>{ringReady=true;done();}).catch(()=>{ringEl.muted=false;});
+    if(pr&&pr.then)pr.then(()=>{ringReady=true;}).catch(()=>{});
   }catch(e){}
 }
 function unlockAudio(){
@@ -2210,7 +2218,10 @@ function chime(){
   try{navigator.vibrate&&navigator.vibrate([400,150,400,150,400]);}catch(e){}
   if(ringEl){
     try{
-      ringWant=true;ringEl.muted=false;ringEl.currentTime=0;
+      ringWant=true;
+      if(!ringUrl)ringUrl=ringWav();
+      if(ringEl.src!==ringUrl)ringEl.src=ringUrl;
+      ringEl.currentTime=0;
       const pr=ringEl.play();
       if(pr&&pr.catch)pr.catch(()=>chimeWA());
       return;
