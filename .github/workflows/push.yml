@@ -28,6 +28,7 @@ jobs:
         env:
           FAMILY_CODE: ${{ secrets.FAMILY_CODE }}
           VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
+          SHOW_ADV: ${{ github.event_name == 'workflow_dispatch'           VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}          VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }} '1' || '' }}
       - name: Save development request
         run: |
           if [ -f dev/request.json ] && [ -n "$(git status --porcelain dev)" ]; then

@@ -101,6 +101,7 @@ async function main() {
   const now = Date.now();
   const F = `families/${CODE}`;
   const [subs, jobs, adv, logs] = await Promise.all([list(F + '/push'), list(F + '/jobs'), getDoc(F + '/prefs/advice'), list(F + '/pushlog')]);
+  if (process.env.SHOW_ADV) console.log('החלטות:', JSON.stringify(Object.fromEntries(Object.entries(adv || {}).map(([k, v]) => [k, k.startsWith('_') ? v : (v && v.s)]))));
   // "צא לפיתוח": אבא לחץ באפליקציה, ההחלטות נכתבות לקובץ בריפו כדי שקלוד יקרא אותן
   if (adv && adv._dev && adv._dev.at) {
     const mk = await getDoc(F + '/prefs/devout');
