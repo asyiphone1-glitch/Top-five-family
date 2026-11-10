@@ -161,6 +161,17 @@ async function main() {
     // הרשימה המשפחתית הישנה הוסרה, המשימות שלה עברו למשימות "לכל המשפחה"
   }
 
+  // פידבק כתוב מההורים: התראה לילדה כשמגיע פידבק חדש
+  {
+    const nts = await list(F + '/notes').catch(() => []);
+    for (const n of nts) {
+      const at = Number(n.at) || 0;
+      if (!n.to || n.seen || !at || now - at > 6 * 3600e3) continue;
+      const t = String(n.t || '').trim(); if (!t) continue;
+      out.push({ key: `n_${n.id}`, who: [n.to], tab: 'today', body: (n.by === 'mom' ? 'פידבק מאמא: ' : 'פידבק מאבא: ') + (t.length > 90 ? t.slice(0, 90) + '…' : t) });
+    }
+  }
+
   if (on('r_dogring')) {
     const p = parts(now);
     const sunMs = Date.UTC(p.y, p.m - 1, p.d) - p.wd * 864e5, s = new Date(sunMs);

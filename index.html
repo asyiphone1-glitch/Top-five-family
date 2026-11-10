@@ -279,6 +279,14 @@ input{font:inherit;color:var(--ink)}
 .kr.ok .km svg{display:block}
 .kr .kt{flex:none;font-size:.75rem;color:var(--warn);font-weight:700}
 .kr.ok span.kt{text-decoration:none;color:var(--good)}
+.kr .kx{flex:none;border:0;background:none;color:var(--mute);font-size:.9rem;padding:4px 6px;cursor:pointer;border-radius:8px}
+.kr .kx.arm{color:#fff;background:var(--warn);font-weight:700}
+.fbw{margin-top:10px;border-top:1px solid var(--line);padding-top:4px}
+.fbt{width:100%;box-sizing:border-box;font:inherit;font-size:1rem;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--bg,transparent);color:inherit;resize:vertical;margin:4px 0 6px}
+.fbs{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-top:1px solid var(--line)}
+.fbs small{color:var(--mute);font-size:.78rem}
+.fbs .btn{align-self:flex-start;margin-top:4px}
+.fbc{margin-bottom:12px}.fbc .fbs.new span{font-weight:700}
 .kc .none{color:var(--mute);font-size:.92rem;padding:4px 0}
 .nav.many{overflow-x:auto;scrollbar-width:none}
 .nav.many::-webkit-scrollbar{display:none}
@@ -476,6 +484,7 @@ input{font:inherit;color:var(--ink)}
   <div id="tab-today">
     <h2 id="mineH" class="ttl">המשימות שלי</h2>
     <p id="progress" class="progress" hidden></p>
+    <div id="myNotes" class="card fbc" hidden></div>
     <ul id="tasks" class="tasks"></ul>
     <div id="todayCal" class="card tcal" hidden></div>
     <div id="todayJobs" hidden></div>
@@ -1212,10 +1221,10 @@ function paintKidsTab(){
     const p=byId[id],groups=[];
     const st=listState(people[id]);
     const own=[];
-    st.tasks.forEach((t,i)=>{if(t.trim())own.push({t:t,ok:!!st.done[i],sub:!!st.lv[i],head:hasSubs(st,i)});});
+    st.tasks.forEach((t,i)=>{if(t.trim())own.push({t:t,ok:!!st.done[i],sub:!!st.lv[i],head:hasSubs(st,i),del:{k:'own',id:id,i:i}});});
     if(own.length)groups.push(['משימות אישיות',own]);
     const pj=jobs.filter(j=>resp(j)===id&&(!j.done||(j.doneAt&&j.doneAt>=sod))).sort(jobSort)
-      .map(j=>({t:j.text+(j.hasT&&j.due?' · '+hhmm(new Date(j.due)):''),ok:!!j.done,tag:j.done&&waiting(j)?'ממתין לאישור':(isLate(j)?'באיחור':'')}));
+      .map(j=>({t:j.text+(j.hasT&&j.due?' · '+hhmm(new Date(j.due)):''),ok:!!j.done,tag:isLate(j)?'באיחור':'',del:{k:'job',id:j.id}}));
     if(pj.length)groups.push(['משימות מההורים',pj]);
     const dogs=[];
     SLOTS.forEach(sl=>{
@@ -1238,10 +1247,71 @@ function paintKidsTab(){
         row.append(h('span',null,r.t));
         if(r.tag)row.append(h('span','kt',r.tag));
         const m=h('i','km');m.innerHTML=CHECK;m.setAttribute('aria-label',r.ok?'בוצע':'עוד לא');m.setAttribute('role','img');
-        row.append(m);c.append(row);
+        row.append(m);
+        if(r.del){
+          const dk=r.del.k+':'+r.del.id+':'+(r.del.i==null?'':r.del.i),arm=kidDelArm===dk;
+          const x=h('button','kx'+(arm?' arm':''),arm?'למחוק?':'✕');x.type='button';x.setAttribute('aria-label','מחיקת המשימה');
+          x.onclick=()=>{if(kidDelArm!==dk){kidDelArm=dk;paintKidsTab();return;}kidDelArm=null;kidDel(r.del);};
+          row.append(x);
+        }
+        c.append(row);
       });
     });
+    c.append(fbBox(id));
     box.append(c);
+  });
+}
+let kidDelArm=null;
+function kidDel(d){
+  if(d.k==='job'){deleteDoc(jobRef(d.id)).catch(()=>toast('המחיקה נכשלה.'));return;}
+  const st=listState(people[d.id]);if(!st.tasks[d.i])return;
+  ['tasks','done','lv','rm'].forEach(k=>st[k].splice(d.i,1));
+  setDoc(pdoc(d.id),{...packList(st),day:today()},{merge:true}).catch(()=>toast('המחיקה נכשלה.'));
+}
+/* ---------- פידבק כתוב מההורים לכל ילדה ---------- */
+let notes=[],notesUnsub=null;const fbDraft={};
+const notesCol=()=>collection(db,'families',code,'notes');
+function subNotes(){
+  if(notesUnsub)notesUnsub();
+  notesUnsub=onSnapshot(notesCol(),snap=>{
+    notes=snap.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>(b.at||0)-(a.at||0));
+    if(isAdult(me)){const old=Date.now()-60*864e5;notes.filter(n=>n.at<old).forEach(n=>deleteDoc(doc(notesCol(),n.id)).catch(()=>{}));}
+    paintKidsTab();paintMyNotes();
+  },()=>{});
+}
+function fbBox(id){
+  const w=h('div','fbw');
+  w.append(h('div','kg','פידבק ל'+byId[id].name));
+  const ta=document.createElement('textarea');ta.className='fbt';ta.rows=2;ta.maxLength=600;
+  ta.placeholder='מה היה טוב היום, ומה אפשר לשפר';ta.value=fbDraft[id]||'';
+  ta.oninput=()=>{fbDraft[id]=ta.value;};
+  const b=h('button','btn pri sm','שליחה');b.type='button';
+  b.onclick=()=>{
+    const t=ta.value.trim();if(!t)return;
+    setDoc(doc(notesCol()),{to:id,by:me,t:t,at:Date.now(),seen:false})
+      .then(()=>{fbDraft[id]='';toast('הפידבק נשלח ל'+byId[id].name);})
+      .catch(()=>toast('השליחה נכשלה. בדקו חיבור.'));
+  };
+  w.append(ta,b);
+  notes.filter(n=>n.to===id).slice(0,3).forEach(n=>{
+    const r=h('div','fbs');
+    r.append(h('span',null,n.t));
+    r.append(h('small',null,(byId[n.by]?byId[n.by].name+' · ':'')+dshort(fmt(new Date(n.at)))+' · '+(n.seen?'נקרא ✓':'עוד לא נקרא')));
+    w.append(r);
+  });
+  return w;
+}
+function paintMyNotes(){
+  const c=$('myNotes');if(!c)return;
+  const mine=me&&!isAdult(me)?notes.filter(n=>n.to===me&&(!n.seen||Date.now()-n.at<3*864e5)).slice(0,3):[];
+  c.hidden=!mine.length;c.innerHTML='';if(c.hidden)return;
+  c.append(h('h3',null,'פידבק מההורים'));
+  mine.forEach(n=>{
+    const r=h('div','fbs'+(n.seen?'':' new'));
+    r.append(h('span',null,n.t));
+    r.append(h('small',null,(byId[n.by]?'מ'+byId[n.by].name+' · ':'')+dshort(fmt(new Date(n.at)))));
+    if(!n.seen){const b=h('button','btn quiet sm','קראתי');b.type='button';b.onclick=()=>setDoc(doc(notesCol(),n.id),{seen:true,seenAt:Date.now()},{merge:true}).catch(()=>{});r.append(b);}
+    c.append(r);
   });
 }
 /* ---------- הבית: מי מחובר ---------- */
@@ -1331,7 +1401,7 @@ function tab(n){
   if(n==='kids')paintKidsTab();
   if(n==='jobs'||n==='today')paintJobs();
   if(n==='jobs')paintSent();
-  if(n==='today'){paintTodayCal();tmLoad(false);}
+  if(n==='today'){paintTodayCal();tmLoad(false);paintMyNotes();}
   if(n==='shop')paintShop();
   if(n==='taxi')paintTaxi();
   if(n==='food')paintFood(true);
@@ -1387,7 +1457,7 @@ function openMain(){
   $('mineH').textContent='המשימות של '+p.name;
   $('dateTxt').textContent=new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
   show('s-main');tab('today');renderTasks();startBeat();
-  weekStart=sunday(new Date());subWeek();subSwaps();subFam();subJobs();subRep();subAdv();subCurWk();subNextWk();paintJobForm();subShop();subTaxi();subFood();subCal();
+  weekStart=sunday(new Date());subWeek();subSwaps();subFam();subJobs();subRep();subAdv();subCurWk();subNextWk();paintJobForm();subShop();subTaxi();subFood();subCal();subNotes();
   clearInterval(homeT);homeT=setInterval(()=>{if(!$('tab-home').hidden)paintHome();checkInbox();},30000);
   syncPush();
   const qt=new URLSearchParams(location.search).get('tab');
@@ -2329,7 +2399,7 @@ const advDoc=()=>doc(db,'families',code,'prefs','advice');
 /* החלטות שאבא קיבל בשיחה (8/11/2026). החלטה שנשמרת באפליקציה גוברת עליהן */
 const ADV0={r_dogring:'yes',r_pre10:'yes',r_limit2:'no',r_release:'no',r_approve:'yes',r_fair:'yes',r_cheer:'yes',r_push:'yes',r_week:'yes'};
 const ADV0_AT=new Date(2026,10,8,11,0).getTime();
-function decision(id){return adv[id]||(ADV0[id]?{s:ADV0[id],by:'dad',at:ADV0_AT}:null);}
+function decision(id){if(id==='r_approve')return {s:'no',by:'dad',at:0};return adv[id]||(ADV0[id]?{s:ADV0[id],by:'dad',at:ADV0_AT}:null);}
 /* המלצה שהוחלט עליה נעלמת מהמסך יום אחרי ההחלטה */
 const ADV_KEEP=864e5;let advOld=false;
 /* המלצות שכבר נבנו באפליקציה. מה שנבנה, או שלא התקבל לפני יותר מיום, עובר לארכיון */
@@ -2342,7 +2412,9 @@ const isDone=r=>{const st=decision(r.id);return !!st&&st.s==='yes'&&(BUILT.has(r
 function advHidden(r){const st=decision(r.id);if(!st)return false;if(st.s==='yes')return BUILT.has(r.id)||!r.build;return Date.now()-(st.at||0)>ADV_KEEP;}
 const inDev=id=>!!(adv._dev&&Array.isArray(adv._dev.ids)&&adv._dev.ids.includes(id));
 const toDev=()=>RECS.filter(r=>r.build&&!BUILT.has(r.id)&&on(r.id)&&!inDev(r.id));
-function on(id){return (decision(id)||{}).s==='yes';}
+/* אישור הורה בוטל לבקשת אבא (10/11/2026): "בוצע" נסגר מיד */
+const OFF=new Set(['r_approve']);
+function on(id){return !OFF.has(id)&&(decision(id)||{}).s==='yes';}
 function subAdv(){
   if(advUnsub)advUnsub();
   advUnsub=onSnapshot(advDoc(),snap=>{adv=snap.exists()?snap.data():{};paintAdvice();paintJobs();},()=>{});
