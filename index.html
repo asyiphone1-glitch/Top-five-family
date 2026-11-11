@@ -3916,8 +3916,11 @@ let wakeDef={},foodDef=null,foodDays={},foodUnsubs=[],foodKeys='',foodSel='',fdr
 const foodRef=k=>doc(db,'families',code,'food',k);
 const foodDefRef=()=>doc(db,'families',code,'prefs','food');
 const wakeRef=()=>doc(db,'families',code,'prefs','wake');
-function tmrKey(){const d=new Date();d.setDate(d.getDate()+1);return dkey(d);}
-function foodDayTxt(k){const d=new Date(k+'T12:00');return (k===today()?'היום, ':k===tmrKey()?'מחר, ':'')+'יום '+DAYN[d.getDay()]+' '+d.getDate()+'/'+(d.getMonth()+1);}
+/* עד 04:00 הלילה עוד שייך לערב הקודם: "מחר" באוכל הוא היום בבוקר */
+const FOOD_NIGHT=4;
+function fToday(){const d=new Date();if(d.getHours()<FOOD_NIGHT)d.setDate(d.getDate()-1);return dkey(d);}
+function tmrKey(){const d=new Date();if(d.getHours()>=FOOD_NIGHT)d.setDate(d.getDate()+1);return dkey(d);}
+function foodDayTxt(k){const d=new Date(k+'T12:00');return (k===fToday()?'היום, ':k===tmrKey()?'מחר, ':'')+'יום '+DAYN[d.getDay()]+' '+d.getDate()+'/'+(d.getMonth()+1);}
 function menuOf(k){
   const d=foodDays[k]||{},b=foodDef||FOOD0;
   return {ten:Array.isArray(d.ten)?d.ten:(Array.isArray(b.ten)?b.ten:FOOD0.ten),lunch:Array.isArray(d.lunch)?d.lunch:(Array.isArray(b.lunch)?b.lunch:FOOD0.lunch)};
@@ -3931,11 +3934,11 @@ function kidWakeInfo(k,id){
   const own=o&&o.wake?{t:o.wake,at:o.at}:(pl&&pl.st==='alt'&&pl.alt&&pl.alt.wake?{t:pl.alt.wake,at:pl.alt.at}:null);
   if(pw&&(!own||pw.at>=own.at))return {t:pw.t,src:'p',by:pw.by};
   if(own)return {t:own.t,src:'k'};
-  if((k===tmrKey()||k===today())&&wakeDef[id])return {t:wakeDef[id],src:'f'};
+  if((k===tmrKey()||k===fToday())&&wakeDef[id])return {t:wakeDef[id],src:'f'};
   return null;
 }
 function wakeOf(k,id){
-  if(isAdult(id)){const w=((foodDays[k]||{}).wakes||{})[id];return w||(k===tmrKey()||k===today()?wakeDef[id]||'':'');}
+  if(isAdult(id)){const w=((foodDays[k]||{}).wakes||{})[id];return w||(k===tmrKey()||k===fToday()?wakeDef[id]||'':'');}
   const w=kidWakeInfo(k,id);return w?w.t:'';
 }
 const wakeSrcTxt=w=>!w?'':w.src==='p'?(w.by==='mom'?'אמא קבעה':'אבא קבע'):w.src==='k'?'בחרה בעצמה':'קבועה';
@@ -3978,13 +3981,30 @@ function kidSummary(host,o,w,status,dayTxt){
 function mealsOf(o){return {ten:(o.ten||[]).slice(),tenX:o.tenX||'',lunch:(o.lunch||[]).slice(),lunchX:o.lunchX||''};}
 function setLocal(k,f,id,v){foodDays[k]=Object.assign({},foodDays[k]);foodDays[k][f]=Object.assign({},foodDays[k][f],{[id]:v});}
 function mealTxt(o,mk){if(!o)return '';const a=(o[mk]||[]).slice();if(o[mk+'X'])a.push(o[mk+'X']);return a.join(', ');}
+/* תיקון: הזמנות שנשלחו אחרי חצות (לפני 04:00) נשמרו בטעות ליום שאחרי. מעבירים אותן ליום הנכון */
+async function healNightFood(){
+  try{
+    const k=tmrKey(),d=new Date(k+'T12:00');d.setDate(d.getDate()+1);const nk=dkey(d);
+    const s=await getDoc(foodRef(nk));if(!s.exists())return;
+    const ords=s.data().orders||{},cur=(await getDoc(foodRef(k))).data()||{},have=cur.orders||{};
+    const mv={},rm={};
+    Object.entries(ords).forEach(([id,o])=>{
+      if(!o||!o.at)return;const t=new Date(o.at);
+      if(dkey(t)===k&&t.getHours()<FOOD_NIGHT){rm[id]=deleteField();if(!(have[id]&&have[id].at))mv[id]=o;}
+    });
+    if(!Object.keys(rm).length)return;
+    if(Object.keys(mv).length)await setDoc(foodRef(k),{orders:mv},{merge:true});
+    await setDoc(foodRef(nk),{orders:rm},{merge:true});
+  }catch(e){}
+}
 function subFood(){
   foodUnsubs.forEach(u=>u());foodUnsubs=[];foodDays={};
-  const ks=[today(),tmrKey()];foodKeys=ks.join('|');
+  const ks=[fToday(),tmrKey()];foodKeys=ks.join('|');
   if(foodSel&&!ks.includes(foodSel))foodSel='';
   foodUnsubs.push(onSnapshot(foodDefRef(),s=>{foodDef=s.exists()?s.data():null;paintFood();},()=>{}));
   foodUnsubs.push(onSnapshot(wakeRef(),s=>{wakeDef=s.exists()?s.data():{};refreshFoodPop();paintFood();},()=>{}));
   ks.forEach(k=>foodUnsubs.push(onSnapshot(foodRef(k),s=>{foodDays[k]=s.exists()?s.data():{};paintFood();checkFood();refreshFoodPop();},()=>{})));
+  healNightFood();
 }
 /* הבנות: האם צריך עכשיו לבקש מהן למלא (מ-20:00, לא בליל שבת) */
 function foodDue(){
@@ -4008,7 +4028,7 @@ function paintFoodBadge(){
 }
 function checkFood(){
   if(!me||!code||!db)return;
-  if(foodKeys&&foodKeys!==today()+'|'+tmrKey())subFood();
+  if(foodKeys&&foodKeys!==fToday()+'|'+tmrKey())subFood();
   paintFoodBadge();
   const pop=$('foodPop');
   if(!foodDue()){const pl=planOf(tmrKey(),me);if(!pop.hidden&&!isAdult(me)&&(pl?pl.st!=='wait':orderOf(tmrKey(),me)))pop.hidden=true;return;}
@@ -4243,16 +4263,16 @@ function paintFoodKid(box){
   }
   const host=h('div');c.append(host);box.append(c);
   kidFood(host,false);
-  const t=orderOf(today(),me);
+  const t=orderOf(fToday(),me);
   if(t){
     const c2=h('div','card');c2.append(h('h3',null,'מה הזמנתי להיום'));
-    {const w=kidWakeInfo(today(),me);kidSummary(c2,t,w&&w.src!=='f'?w:null,null,'להיום');}
+    {const w=kidWakeInfo(fToday(),me);kidSummary(c2,t,w&&w.src!=='f'?w:null,null,'להיום');}
     box.append(c2);
   }
 }
 function paintFoodParent(box){
-  const ks=[today(),tmrKey()];
-  if(!foodSel)foodSel=new Date().getHours()<14?ks[0]:ks[1];
+  const ks=[fToday(),tmrKey()];
+  if(!foodSel){const hr=new Date().getHours();foodSel=hr>=FOOD_NIGHT&&hr<14?ks[0]:ks[1];}
   const days=h('div','tdays');days.setAttribute('role','group');days.setAttribute('aria-label','בחירת יום');
   ks.forEach((k,i)=>{
     const d=new Date(k+'T12:00'),b=h('button','tday');b.type='button';
