@@ -4202,8 +4202,12 @@ function wakeCard(k){
     const cl=h('label','cbx');const cb=h('input');cb.type='checkbox';cb.checked=!!wf&&cur===wf;
     cb.setAttribute('aria-label','שעה קבועה ל'+p.name);
     cl.append(cb,document.createTextNode(' קבועה'));
-    ti.onchange=()=>{
+    /* באייפון החלון של השעה מעדכן את השדה תוך כדי גלילה. שומרים רק כשיוצאים מהשדה, כדי שהחלון לא ייסגר באמצע */
+    let start=cur;
+    ti.onfocus=()=>{start=ti.value;};
+    ti.onblur=()=>{
       const v=ti.value,now=Date.now();
+      if(v===start)return;start=v;
       foodDays[k]=Object.assign({},foodDays[k]);
       const ws=Object.assign({},foodDays[k].wakes);if(v)ws[id]=v;else delete ws[id];foodDays[k].wakes=ws;
       const up={wakes:{[id]:v||deleteField()}};
@@ -4213,7 +4217,8 @@ function wakeCard(k){
       if(wf&&v!==wf)cb.checked=false;
       else if(cb.checked&&v&&!wf)setFix(id,v);
       toast(v?'השכמה ל'+(mine?'מחר':p.name)+': '+v:'ההשכמה של '+p.name+' נמחקה');
-      paintFood(true);
+      /* מציירים מחדש רק אחרי רגע, כדי שלחיצה על "קבועה" או על שעה אחרת לא תלך לאיבוד */
+      setTimeout(()=>{const a=document.activeElement;if(a&&a.type==='time'&&$('foodBox').contains(a))return;paintFood(true);},400);
     };
     cb.onchange=()=>{
       if(cb.checked){if(!ti.value){cb.checked=false;toast('קודם בוחרים שעה');return;}setFix(id,ti.value);toast('שעה קבועה ל'+p.name+': '+ti.value);}
