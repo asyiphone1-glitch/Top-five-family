@@ -1624,7 +1624,7 @@ function subSwaps(){
 function normPrefs(r,id){
   r=r||{};
   return {hard:(r.hard||[]).slice(),like:(r.like||[]).slice(),avoid:(r.avoid||[]).slice(),
-          block:(r.block||[]).slice(),once:(r.once||[]).map(o=>({d:o.d,s:(o.s||[]).slice()})),
+          block:(r.block||[]).slice(),once:[],
           max:r.max||(id==='dad'?10:id==='mom'?2:5),wb:[]};
 }
 function loadPrefs(){return normPrefs((people[me]||{}).prefs,me);}
@@ -1672,48 +1672,12 @@ function blockGrid(){
   });
   return wrap;
 }
-function onceBox(){
-  const wrap=h('div');
-  const list=h('div');
-  const t0=today();
-  qz.once=qz.once.filter(o=>o.d>=t0);
-  const paintList=()=>{
-    list.innerHTML='';
-    qz.once.slice().sort((a,b)=>a.d<b.d?-1:1).forEach(o=>{
-      const r=h('div','once');
-      const dt=parseKey(o.d);
-      const all=o.s.length>=SLOTS.length;
-      r.append(h('span',null,'יום '+DAYN[dt.getDay()]+' '+dt.getDate()+'/'+(dt.getMonth()+1)+': '+(all?'כל היום':o.s.map(k=>SHORT[k]).join(', '))));
-      const x=h('button','btn quiet sm','הסרה');x.type='button';
-      x.onclick=()=>{qz.once.splice(qz.once.indexOf(o),1);paintList();};
-      r.append(x);list.append(r);
-    });
-  };
-  const di=h('input','qsel');di.type='date';di.min=t0;di.setAttribute('aria-label','תאריך האילוץ');
-  const sel=[];
-  const chips=chipRow(SLOTS.map(x=>({n:SHORT[x.k],v:x.k})),sel,'שעות חסומות בתאריך','blk');
-  const add=h('button','btn quiet sm','הוספת אילוץ חד-פעמי');add.type='button';
-  const m=h('p','msg');
-  add.onclick=()=>{
-    if(!di.value){say(m,'בחרו תאריך.');return;}
-    const keys=sel.length?sel.slice():SLOTS.map(x=>x.k);
-    const ex=qz.once.find(o=>o.d===di.value);
-    if(ex)keys.forEach(k=>{if(!ex.s.includes(k))ex.s.push(k);});else qz.once.push({d:di.value,s:keys});
-    say(m,'נוסף. לא לשכוח ללחוץ "שמירת השאלון".',true);
-    di.value='';sel.length=0;chips.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed','false'));
-    paintList();
-  };
-  wrap.append(di,h('div','hint','אם לא בוחרים שעות, כל היום חסום.'),chips,add,m,list);
-  paintList();
-  return wrap;
-}
 function paintQuiz(){
   const q=$('quiz');q.innerHTML='';
   const days=DAYN.map((n,i)=>({n:n,v:i}));
   const sl=SLOTS.map(x=>({n:x.n==='בוקר'||x.n==='אחרי בית הספר'?x.n:'שעה '+x.n,v:x.k}));
   const add=(t,node,sub)=>{const l=h('label',null,t);q.append(l);if(sub)q.append(h('div','hint',sub));q.append(node);};
   add(G('מתי אני לא יכול בכלל, כל שבוע?','מתי אני לא יכולה בכלל, כל שבוע?'),blockGrid(),'חוג קבוע, אימון וכדומה. השיבוץ לעולם לא ישים אותך בזמן מסומן באדום.');
-  add('אילוץ חד-פעמי בתאריך מסוים',onceBox(),'בת מצווה, טיול שנתי, מבחן. גם כאן השיבוץ לא ישים אותך.');
   add('באילו ימים עמוס לי, ועדיף שלא?',chipRow(days,qz.hard,'ימים עמוסים'),'זו בקשה ולא איסור. השיבוץ ינסה להימנע.');
   add('באילו שעות נוח לי להוציא?',chipRow(sl,qz.like,'שעות נוחות'));
   add('באילו שעות הכי קשה לי?',chipRow(sl,qz.avoid,'שעות קשות'));
@@ -1725,7 +1689,7 @@ function paintQuiz(){
 }
 $('quizSave').onclick=()=>{
   if(!qz)return;
-  qz.hard.sort();qz.like.sort();qz.avoid.sort();qz.block.sort();qz.once=qz.once.filter(o=>o.d>=today());
+  qz.hard.sort();qz.like.sort();qz.avoid.sort();qz.block.sort();qz.once=[];
   setDoc(pdoc(me),{prefs:qz,prefsDone:true},{merge:true})
     .then(()=>say($('quizMsg'),'השאלון נשמר.',true))
     .catch(()=>say($('quizMsg'),'השמירה נכשלה. בדקו חיבור.'));
