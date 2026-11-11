@@ -281,6 +281,7 @@ input{font:inherit;color:var(--ink)}
 .kr .kt{flex:none;font-size:.75rem;color:var(--warn);font-weight:700}
 .kr.ok span.kt{text-decoration:none;color:var(--good)}
 .kc.kme{margin-top:6px}
+.dtog{display:block;margin:18px 0 0;border:0;background:none;color:var(--mute);font:700 1rem var(--body);padding:6px 0;cursor:pointer}
 .kc.kme .kr:first-child{border-top:0}
 .kr button.km{padding:0;background:transparent;color:inherit;cursor:pointer;font:inherit}
 .kr.ok button.km{background:var(--good);color:#fff}
@@ -562,7 +563,7 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
     <div id="sentBox" class="card" hidden></div>
     <div id="repBox" class="card" hidden></div>
     <div id="jobsBox"></div>
-    <div class="card">
+    <div id="ringCard" class="card">
       <h3>צלצול תזכורת</h3>
       <p class="date">כשמגיעה שעת משימה והאפליקציה פתוחה, הטלפון מצלצל כמה שניות ומציג הודעה. עוצמת הצלצול נקבעת לפי עוצמת המדיה בטלפון (הכפתורים בצד כשמתנגן משהו). כשהאפליקציה סגורה מגיעה התראה רגילה של הטלפון, עם הצליל שלו.</p>
       <button id="ringTest" class="btn quiet" type="button">בדיקת צלצול</button>
@@ -1331,7 +1332,7 @@ function kidQuickRow(id){
   const row=h('div','kr kqr');
   const inp=document.createElement('input');
   inp.className='kq';inp.type='text';inp.maxLength=120;inp.enterKeyHint='enter';inp.autocomplete='off';
-  inp.placeholder='משימה חדשה ל'+byId[id].name+'…';inp.setAttribute('aria-label','משימה חדשה ל'+byId[id].name);
+  inp.placeholder=id===me?'משימה חדשה בשבילי…':'משימה חדשה ל'+byId[id].name+'…';inp.setAttribute('aria-label','משימה חדשה ל'+byId[id].name);
   inp.value=kqDraft[id]||'';
   inp.oninput=()=>{kqDraft[id]=inp.value;};
   const save=()=>{
@@ -2901,8 +2902,14 @@ function sectionGrp(box,title,list,empty){
   gids.forEach(g=>{const all=jobs.filter(j=>j.grp===g);items.push({k:all[0],el:()=>grpItem(all)});});
   const ul=h('ul','jobs');items.sort((a,c)=>jobSort(a.k,c.k)).forEach(i=>ul.append(i.el()));box.append(ul);
 }
-function section(box,title,list,empty){
-  box.append(h('h2','sec',title));
+function section(box,title,list,empty,quick){
+  if(title)box.append(h('h2','sec',title));
+  if(quick&&me&&!isAdult(me)){
+    const c=h('div','kc kme');const p=byId[me];
+    if(p){c.style.setProperty('--kc',p.l);c.style.setProperty('--kc-d',p.d);}
+    list.slice().sort(jobSort).forEach(j=>c.append(kidJobRow(j)));
+    c.append(kidQuickRow(me));box.append(c);return;
+  }
   if(!list.length){if(empty)box.append(h('p','date',empty));return;}
   if(me&&!isAdult(me)){
     /* אצל הבנות: שורות קצרות כמו במסך "הבנות היום" */
@@ -2933,12 +2940,25 @@ function kidJobRow(j){
   if(fn){m.type='button';m.onclick=fn;m.setAttribute('aria-label',j.done?'ביטול סימון':'סימון שבוצע');}
   else{m.setAttribute('role','img');m.setAttribute('aria-label',j.done?'בוצע':'עוד לא');}
   row.append(m);
+  if(j.by===me&&r===me){
+    const dk='own:'+j.id,arm=delArm===dk;
+    const x=h('button','kx'+(arm?' arm':''),arm?'למחוק?':'✕');x.type='button';x.setAttribute('aria-label','מחיקת המשימה');
+    x.onclick=()=>{if(delArm!==dk){delArm=dk;paintJobs();return;}delArm=null;deleteDoc(jobRef(j.id)).catch(()=>toast('המחיקה נכשלה.'));};
+    row.append(x);
+  }
   return row;
 }
+let showDone=false,jobsPend=false;
+function jobsBusy(){const a=document.activeElement;return !!(a&&a.classList&&a.classList.contains('kq')&&($('jobsBox').contains(a)||$('todayJobs').contains(a)));}
 function paintJobs(){
   const box=$('jobsBox');if(!box||!me)return;
   paintBadge();
   if($('tab-jobs').hidden&&$('tab-today').hidden)return;
+  const rc=$('ringCard');if(rc)rc.hidden=!isAdult(me);
+  /* בזמן שהבת מקלידה משימה חדשה לא מציירים מחדש, כדי לא לסגור את המקלדת */
+  if(jobsBusy()){jobsPend=true;return;}
+  jobsPend=false;
+  if(!box.dataset.fo){box.dataset.fo='1';box.addEventListener('focusout',()=>setTimeout(()=>{if(jobsPend&&!jobsBusy())paintJobs();},200));}
   box.innerHTML='';
   const recent=j=>!j.done||!j.doneAt||Date.now()-j.doneAt<3*864e5;
   if(isAdult(me)){
@@ -2951,12 +2971,17 @@ function paintJobs(){
     sectionGrp(box,'בוצעו לאחרונה',jobs.filter(j=>j.done&&!waiting(j)&&recent(j)&&!(j.grp&&grpOpen(j.grp))));
   }else{
     const mine=jobs.filter(j=>!j.done&&resp(j)===me);
-    section(box,'מחכות לך',mine,'אין משימות שמחכות לך כרגע.');
+    section(box,'מחכות לך',mine,'',true);
     const famOpen=jobs.filter(j=>!j.done&&j.to==='fam');
     if(famOpen.length)section(box,'🏠 משימות של כל המשפחה',famOpen);
     section(box,'פתוחות, אפשר לקחת',jobs.filter(j=>!j.done&&j.to==='all'&&!j.claim),'אין משימות פתוחות.');
     section(box,'האחיות לקחו',jobs.filter(j=>!j.done&&j.to==='all'&&j.claim&&j.claim!==me));
-    section(box,'בוצעו לאחרונה',jobs.filter(j=>j.done&&recent(j)&&(resp(j)===me||j.doneBy===me||openTo(j)||j.to==='fam')));
+    const dl=jobs.filter(j=>j.done&&recent(j)&&(resp(j)===me||j.doneBy===me||openTo(j)||j.to==='fam'));
+    if(dl.length){
+      const t=h('button','dtog',(showDone?'− ':'+ ')+'בוצעו לאחרונה ('+dl.length+')');t.type='button';t.setAttribute('aria-expanded',String(showDone));
+      t.onclick=()=>{showDone=!showDone;paintJobs();};box.append(t);
+      if(showDone)section(box,'',dl);
+    }
   }
   /* משימות מההורים גם במסך "היום שלי" של הבנות */
   const tj=$('todayJobs');
