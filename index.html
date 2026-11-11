@@ -312,6 +312,12 @@ input{font:inherit;color:var(--ink)}
 .fbs.med{background:var(--warn-soft);border-radius:12px;padding:8px 10px;border-top:0;margin-top:6px}
 .fbmbig{font-size:2.4rem;line-height:1}
 .fbs .btn{align-self:flex-start;margin-top:4px}
+.fbrep{margin-top:6px;padding:8px 10px;border-radius:12px;background:color-mix(in srgb,var(--act) 10%,var(--surface));border-inline-start:4px solid var(--act);font-size:.98rem;line-height:1.4;word-break:break-word}
+.fbrep.new{background:color-mix(in srgb,var(--act) 18%,var(--surface))}
+.fbrep small{color:var(--mute);font-size:.78rem}
+.fbtns2{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.fbtns2 .btn{margin:0}
+.fbquick{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .fbc{margin-bottom:12px}.fbc .fbs.new span{font-weight:700}
 .kc .none{color:var(--mute);font-size:.92rem;padding:4px 0}
 .nav.many{overflow-x:auto;scrollbar-width:none}
@@ -1371,7 +1377,7 @@ function kidDel(d){
   setDoc(pdoc(d.id),{...packList(st),day:today()},{merge:true}).catch(()=>toast('המחיקה נכשלה.'));
 }
 /* ---------- פידבק כתוב מההורים לכל ילדה ---------- */
-let notes=[],notesUnsub=null;const fbDraft={};
+let notes=[],notesUnsub=null;const fbDraft={},rpDraft={},rpOpen={};
 const notesCol=()=>collection(db,'families',code,'notes');
 function subNotes(){
   if(notesUnsub)notesUnsub();
@@ -1414,6 +1420,12 @@ function fbBox(id){
     const r=h('div','fbs'+(n.medal?' med':''));
     r.append(h('span',null,n.medal?'🏅 צל״ש'+(n.t?': '+n.t:''):n.t));
     r.append(h('small',null,(byId[n.by]?byId[n.by].name+' · ':'')+dshort(fmt(new Date(n.at)))+' · '+(n.seen?'נקרא ✓':'עוד לא נקרא')));
+    if(n.reply){
+      const rp=h('div','fbrep'+(Date.now()-(n.rAt||0)<864e5?' new':''));
+      rp.append(h('b',null,'💬 '+byId[id].name+': '),document.createTextNode(n.reply));
+      rp.append(h('small',null,' · '+dshort(fmt(new Date(n.rAt||n.at)))));
+      r.append(rp);
+    }
     w.append(r);
   });
   return w;
@@ -1428,7 +1440,33 @@ function paintMyNotes(){
     if(n.medal){r.append(h('span','fbmbig','🏅'),h('b',null,'קיבלת צל״ש מ'+(byId[n.by]?byId[n.by].name:'ההורים')+'!'));if(n.t)r.append(h('span',null,n.t));}
     else r.append(h('span',null,n.t));
     r.append(h('small',null,(byId[n.by]?'מ'+byId[n.by].name+' · ':'')+dshort(fmt(new Date(n.at)))));
-    if(!n.seen){const b=h('button','btn quiet sm','קראתי');b.type='button';b.onclick=()=>setDoc(doc(notesCol(),n.id),{seen:true,seenAt:Date.now()},{merge:true}).catch(()=>{});r.append(b);}
+    if(n.reply&&!rpOpen[n.id]){
+      const rp=h('div','fbrep');rp.append(h('b',null,'💬 התגובה שלי: '),document.createTextNode(n.reply));r.append(rp);
+    }
+    const bar=h('div','fbtns2');
+    if(!n.seen){const b=h('button','btn quiet sm','קראתי');b.type='button';b.onclick=()=>setDoc(doc(notesCol(),n.id),{seen:true,seenAt:Date.now()},{merge:true}).catch(()=>{});bar.append(b);}
+    if(!rpOpen[n.id]){
+      const rb=h('button','btn sm',n.reply?'✏️ לשנות תגובה':'💬 להגיב');rb.type='button';
+      rb.onclick=()=>{rpOpen[n.id]=true;if(n.reply&&rpDraft[n.id]==null)rpDraft[n.id]=n.reply;paintMyNotes();const t=document.getElementById('rp_'+n.id);if(t)t.focus();};
+      bar.append(rb);r.append(bar);
+    }else{
+      if(bar.childNodes.length)r.append(bar);
+      const send=v=>{
+        const t=(v||'').trim();if(!t){toast('כתבי משהו ואז שליחה');return;}
+        setDoc(doc(notesCol(),n.id),{reply:t.slice(0,400),rAt:Date.now(),seen:true,seenAt:n.seenAt||Date.now()},{merge:true})
+          .then(()=>{rpOpen[n.id]=false;delete rpDraft[n.id];toast('התגובה נשלחה ל'+(byId[n.by]?byId[n.by].name:'ההורים'));paintMyNotes();})
+          .catch(()=>toast('השליחה נכשלה. בדקו חיבור.'));
+      };
+      const qk=h('div','fbquick');
+      ['❤️ תודה!','😊 שמחתי','💪 אשתדל','🙏 תודה רבה'].forEach(q=>{const b=h('button','chip',q);b.type='button';b.onclick=()=>send(q);qk.append(b);});
+      const ta=document.createElement('textarea');ta.className='fbt';ta.rows=2;ta.maxLength=400;ta.id='rp_'+n.id;
+      ta.placeholder='מה רצית לכתוב ל'+(byId[n.by]?byId[n.by].name:'הורים')+'?';ta.value=rpDraft[n.id]||'';
+      ta.oninput=()=>{rpDraft[n.id]=ta.value;};
+      const row=h('div','fbtns2');
+      const sb=h('button','btn pri sm','שליחה');sb.type='button';sb.onclick=()=>send(ta.value);
+      const cb=h('button','btn quiet sm','ביטול');cb.type='button';cb.onclick=()=>{rpOpen[n.id]=false;paintMyNotes();};
+      row.append(sb,cb);r.append(qk,ta,row);
+    }
     c.append(r);
   });
 }
