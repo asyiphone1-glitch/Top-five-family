@@ -280,6 +280,11 @@ input{font:inherit;color:var(--ink)}
 .kr.ok .km svg{display:block}
 .kr .kt{flex:none;font-size:.75rem;color:var(--warn);font-weight:700}
 .kr.ok span.kt{text-decoration:none;color:var(--good)}
+.kc.kme{margin-top:6px}
+.kc.kme .kr:first-child{border-top:0}
+.kr button.km{padding:0;background:transparent;color:inherit;cursor:pointer;font:inherit}
+.kr.ok button.km{background:var(--good);color:#fff}
+.kr .kclaim{flex:none;padding:4px 12px;min-height:0}
 .kr .kx{flex:none;border:0;background:none;color:var(--mute);font-size:.9rem;padding:4px 6px;cursor:pointer;border-radius:8px}
 .kr .kx.arm{color:#fff;background:var(--warn);font-weight:700}
 /* שורה פנויה להוספה מהירה של משימה לילדה */
@@ -1432,7 +1437,7 @@ function paintWeekSum(){
   c.append(h('p','hint','הסיכום מתאפס בכל יום ראשון.'));
 }
 function weekPop(){
-  if(!on('r_week')||new Date().getDay()!==5||!me)return;
+  if(!on('r_week')||new Date().getDay()!==5||!me||!isAdult(me))return;
   const k='yaya.wk.'+fmt(sunday(new Date()));
   if(LS.get(k))return;LS.set(k,'1');
   toast('סיכום השבוע מחכה בלשונית "הבית"');
@@ -1486,6 +1491,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden){beat();pa
 
 /* ---------- מסך ראשי ---------- */
 function tab(n){
+  if(me&&!isAdult(me)&&(n==='taxi'||n==='home'||n==='shop'))n='today';
   $('topBar').hidden=(n==='today'||n==='fam'||n==='kids');
   ['today','fam','kids','jobs','shop','taxi','food','cal','dog','home','set'].forEach(k=>{
     $('tab-'+k).hidden=(k!==n);
@@ -2897,7 +2903,36 @@ function sectionGrp(box,title,list,empty){
 function section(box,title,list,empty){
   box.append(h('h2','sec',title));
   if(!list.length){if(empty)box.append(h('p','date',empty));return;}
+  if(me&&!isAdult(me)){
+    /* אצל הבנות: שורות קצרות כמו במסך "הבנות היום" */
+    const c=h('div','kc kme');const p=byId[me];
+    if(p){c.style.setProperty('--kc',p.l);c.style.setProperty('--kc-d',p.d);}
+    list.slice().sort(jobSort).forEach(j=>c.append(kidJobRow(j)));
+    box.append(c);return;
+  }
   const ul=h('ul','jobs');list.slice().sort(jobSort).forEach(j=>ul.append(jobItem(j)));box.append(ul);
+}
+function kidJobRow(j){
+  const r=resp(j);
+  const row=h('div','kr'+(j.done?' ok':''));
+  row.append(h('span',null,(j.to==='fam'?'🏠 ':'')+j.text+(j.hasT&&j.due?' · '+hhmm(new Date(j.due)):'')));
+  let tag='';
+  if(!j.done&&isLate(j))tag='באיחור';
+  else if(!j.done&&j.to==='all'&&j.claim&&j.claim!==me&&byId[j.claim])tag=byId[j.claim].name+gx(j.claim,' לקח',' לקחה');
+  else if(j.done&&j.doneBy&&j.doneBy!==me&&byId[j.doneBy])tag=byId[j.doneBy].name;
+  if(tag)row.append(h('span','kt',tag));
+  if(!j.done&&j.to==='all'&&!j.claim){
+    const b=h('button','btn sm pri kclaim','לוקחת');b.type='button';b.onclick=()=>claimJob(j);row.append(b);
+    return row;
+  }
+  let fn=null;
+  if(!j.done){if(j.to==='fam')fn=()=>doneOpen(j);else if(r===me)fn=()=>markDone(j,true);}
+  else if((r===me||j.doneBy===me)&&!(j.ok&&on('r_approve')))fn=()=>markDone(j,false);
+  const m=document.createElement(fn?'button':'i');m.className='km';m.innerHTML=CHECK;
+  if(fn){m.type='button';m.onclick=fn;m.setAttribute('aria-label',j.done?'ביטול סימון':'סימון שבוצע');}
+  else{m.setAttribute('role','img');m.setAttribute('aria-label',j.done?'בוצע':'עוד לא');}
+  row.append(m);
+  return row;
 }
 function paintJobs(){
   const box=$('jobsBox');if(!box||!me)return;
@@ -3110,6 +3145,9 @@ function subShop(){
   if(learnUnsub){learnUnsub();learnUnsub=null;}
   const adult=isAdult(me);
   $('nv-shop').hidden=!adult;
+  /* מונית והבית (סיכום שבועי, מצב הטלפונים, יועצים) רק להורים */
+  $('nv-taxi').hidden=!adult;$('nv-home').hidden=!adult;
+  if(!adult&&(!$('tab-taxi').hidden||!$('tab-home').hidden))tab('today');
   if(!adult){shop=[];return;}
   shopUnsub=onSnapshot(shopCol(),snap=>{shop=snap.docs.map(d=>Object.assign({id:d.id},d.data()));paintShop();},()=>{});
   learnUnsub=onSnapshot(learnDoc(),snap=>{shopLearn=snap.exists()?snap.data():{};},()=>{});
