@@ -99,6 +99,8 @@ input{font:inherit;color:var(--ink)}
 .soon b{color:var(--warn)}
 .nav{position:fixed;inset:auto 0 0 0;display:flex;gap:4px;background:var(--surface);border-top:1px solid var(--line);
   padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));z-index:30}
+/* iOS: כשהמקלדת פתוחה הסרגל הקבוע 'נתקע' באמצע המסך, אז מסתירים אותו בזמן הקלדה */
+body.typing .nav,body.typing .fab{display:none}
 .nav button{flex:1;min-height:56px;border:0;border-radius:14px;background:transparent;color:var(--mute);font:700 .8rem var(--body);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}
 .nav button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .nav button.on{color:var(--accent);background:var(--soft)}
@@ -4634,6 +4636,15 @@ $('pushTest').onclick=()=>{
   if(!code){show('s-setup');return;}
   try{await authed();startFamily();}
   catch(e){show('s-setup');say($('setupMsg'),'לא הצלחתי להתחבר. בדקו אינטרנט, ושכניסה אנונימית (Anonymous) מופעלת ב-Firebase.');}
+})();
+
+/* תיקון iOS: הסתרת סרגל הניווט בזמן הקלדה והחזרתו למקום כשהמקלדת נסגרת */
+(function(){
+  const isField=el=>!!(el&&el.matches&&el.matches('textarea,[contenteditable="true"],input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=range]):not([type=color])'));
+  const done=()=>{if(!isField(document.activeElement)&&document.body.classList.contains('typing')){document.body.classList.remove('typing');window.scrollTo(window.scrollX,window.scrollY);}};
+  document.addEventListener('focusin',e=>{if(isField(e.target))document.body.classList.add('typing');});
+  document.addEventListener('focusout',()=>setTimeout(done,120));
+  if(window.visualViewport)visualViewport.addEventListener('resize',done);
 })();
 </script>
 </body>
