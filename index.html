@@ -282,6 +282,12 @@ input{font:inherit;color:var(--ink)}
 .kr.ok span.kt{text-decoration:none;color:var(--good)}
 .kr .kx{flex:none;border:0;background:none;color:var(--mute);font-size:.9rem;padding:4px 6px;cursor:pointer;border-radius:8px}
 .kr .kx.arm{color:#fff;background:var(--warn);font-weight:700}
+/* שורה פנויה להוספה מהירה של משימה לילדה */
+.kr.kqr{border-top:1px dashed var(--line)}
+.kr .kq{flex:1;min-width:0;border:0;background:transparent;font-size:1.02rem;padding:4px 0;outline:none;border-radius:0}
+.kr .kq::placeholder{color:var(--mute);opacity:.8}
+.kr.kqr:focus-within{border-top-color:var(--kc)}
+.kr .kqp{flex:none;color:var(--mute);font-weight:700;font-size:1.1rem;width:26px;text-align:center}
 .fbw{margin-top:10px;border-top:1px solid var(--line);padding-top:4px}
 .fbt{width:100%;box-sizing:border-box;font:inherit;font-size:1rem;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--bg,transparent);color:inherit;resize:vertical;margin:4px 0 6px}
 .fbs{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-top:1px solid var(--line)}
@@ -669,7 +675,7 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
     </div>
     <button id="btnSwitch" class="btn quiet" type="button">החלפת פרופיל</button>
     <button id="btnForget" class="btn danger" type="button">ניתוק הטלפון הזה מהמשפחה</button>
-    <p class="hint">גרסה: שלב 4, כולל מסך הבנות, אילוצים שבועיים עד חמישי 22:00 (חוגים מהלוח נחסמים לבד) ושיבוץ אוטומטי, דו״ח הוגנות, ניקוד בונוס ופודיום עם לוני, צלצול משופר,  פעמון תזכורת לכל משימה ותת־משימה, צבע לכל קטגוריה, כיווץ תתי־משימות, מסך נפרד למשימות משפחתיות, התראות כשהאפליקציה סגורה, רשימת קניות, מונית, לוח משפחתי (שבועי וחודשי, עם הבחינות מ-teach-me ותזכורות), אוכל (ארוחת עשר, צהרון ושעת השכמה לכל המשפחה עם שאלה לבנות כל ערב ב-20:00, אבא ואמא קובעים השכמה לכל בת, וסיכום של כולם במבט אחד), משימות ותתי־משימות בלי הגבלה, משימות מההורים עם צלצול, משימות חוזרות, הלוח ב"היום שלי" של הבנות, כפתור ללמוד לבחינה ב-teach-me, הצעות מונית מהחוגים, מצב הטלפונים, גיבוי, משימות פתוחות, שיבוץ התורנויות של לוני עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
+    <p class="hint">גרסה: שלב 4, כולל מסך הבנות (עם שורה פנויה להוספה מהירה של משימה לכל בת), אילוצים שבועיים עד חמישי 22:00 (חוגים מהלוח נחסמים לבד) ושיבוץ אוטומטי, דו״ח הוגנות, ניקוד בונוס ופודיום עם לוני, צלצול משופר,  פעמון תזכורת לכל משימה ותת־משימה, צבע לכל קטגוריה, כיווץ תתי־משימות, מסך נפרד למשימות משפחתיות, התראות כשהאפליקציה סגורה, רשימת קניות, מונית, לוח משפחתי (שבועי וחודשי, עם הבחינות מ-teach-me ותזכורות), אוכל (ארוחת עשר, צהרון ושעת השכמה לכל המשפחה עם שאלה לבנות כל ערב ב-20:00, אבא ואמא קובעים השכמה לכל בת, וסיכום של כולם במבט אחד), משימות ותתי־משימות בלי הגבלה, משימות מההורים עם צלצול, משימות חוזרות, הלוח ב"היום שלי" של הבנות, כפתור ללמוד לבחינה ב-teach-me, הצעות מונית מהחוגים, מצב הטלפונים, גיבוי, משימות פתוחות, שיבוץ התורנויות של לוני עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
   </div>
 
   <nav class="nav" aria-label="ניווט">
@@ -1260,6 +1266,10 @@ function paintKids(){
 /* ---------- מסך הבנות: כל ילדה, המשימות שלה והאם סיימה ---------- */
 function paintKidsTab(){
   const box=$('kidsAll');if(!box||!me||!isAdult(me)||$('tab-kids').hidden)return;
+  /* בזמן הקלדה בשורה הפנויה או בפידבק לא מציירים מחדש, כדי לא לסגור את המקלדת */
+  if(kidsBusy()){kidsPend=true;return;}
+  kidsPend=false;
+  if(!box.dataset.fo){box.dataset.fo='1';box.addEventListener('focusout',()=>setTimeout(()=>{if(kidsPend&&!kidsBusy())paintKidsTab();},200));}
   box.innerHTML='';
   const now=new Date(),dw=now.getDay(),sod=startOfDay(now);
   KIDS.forEach(id=>{
@@ -1270,7 +1280,7 @@ function paintKidsTab(){
     if(own.length)groups.push(['משימות אישיות',own]);
     const pj=jobs.filter(j=>resp(j)===id&&(!j.done||(j.doneAt&&j.doneAt>=sod))).sort(jobSort)
       .map(j=>({t:j.text+(j.hasT&&j.due?' · '+hhmm(new Date(j.due)):''),ok:!!j.done,tag:isLate(j)?'באיחור':'',del:{k:'job',id:j.id}}));
-    if(pj.length)groups.push(['משימות מההורים',pj]);
+    groups.push(['משימות מההורים',pj,true]);
     const dogs=[];
     SLOTS.forEach(sl=>{
       if(!hasSlot(dw,sl.k))return;
@@ -1284,8 +1294,7 @@ function paintKidsTab(){
     const hd=h('div','kh2');hd.append(avatar(id,52),h('b',null,p.name));
     const cn=h('small',tot&&dn===tot?'all':'',tot?(dn===tot?'סיימה הכול 🎉':dn+' מתוך '+tot):'');hd.append(cn);c.append(hd);
     if(tot){const bar=h('div','kbar'),f=h('i');f.style.width=Math.round(100*dn/tot)+'%';bar.append(f);c.append(bar);}
-    if(!groups.length)c.append(h('div','none','אין משימות להיום'));
-    groups.forEach(([title,rows])=>{
+    groups.forEach(([title,rows,quick])=>{
       c.append(h('div','kg',title));
       rows.forEach(r=>{
         const row=h('div','kr'+(r.ok?' ok':'')+(r.sub?' sub':'')+(r.head?' head':''));
@@ -1301,12 +1310,41 @@ function paintKidsTab(){
         }
         c.append(row);
       });
+      if(quick)c.append(kidQuickRow(id));
     });
     c.append(fbBox(id));
     box.append(c);
   });
 }
-let kidDelArm=null;
+let kidDelArm=null,kidsPend=false;const kqDraft={};
+function kidsBusy(){
+  const a=document.activeElement,box=$('kidsAll');
+  return !!(a&&box&&box.contains(a)&&(a.classList.contains('kq')||a.classList.contains('fbt')));
+}
+/* שורה פנויה בסוף "משימות מההורים": כותבים, Enter, והמשימה נשמרת לילדה להיום. מיד נפתחת שורה פנויה חדשה */
+function kidQuickRow(id){
+  const row=h('div','kr kqr');
+  const inp=document.createElement('input');
+  inp.className='kq';inp.type='text';inp.maxLength=120;inp.enterKeyHint='enter';inp.autocomplete='off';
+  inp.placeholder='משימה חדשה ל'+byId[id].name+'…';inp.setAttribute('aria-label','משימה חדשה ל'+byId[id].name);
+  inp.value=kqDraft[id]||'';
+  inp.oninput=()=>{kqDraft[id]=inp.value;};
+  const save=()=>{
+    const t=inp.value.trim();if(!t)return;
+    inp.value='';kqDraft[id]='';
+    const d=new Date(),due=new Date(d.getFullYear(),d.getMonth(),d.getDate(),23,59).getTime();
+    setDoc(doc(jobsCol()),{text:t.slice(0,120),due:due,hasT:false,by:me,at:Date.now(),claim:null,done:false,ok:false,to:id})
+      .catch(()=>{toast('השמירה נכשלה. בדקו חיבור.');kqDraft[id]=t;kidsPend=true;});
+    /* מציגים את המשימה מיד מעל השורה הפנויה, בלי לחכות לשרת ובלי לסגור את המקלדת */
+    const nr=h('div','kr');nr.append(h('span',null,t));
+    const m=h('i','km');m.innerHTML=CHECK;m.setAttribute('role','img');m.setAttribute('aria-label','עוד לא');nr.append(m);
+    row.before(nr);
+  };
+  inp.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();save();}};
+  inp.onblur=save;
+  row.append(h('span','kqp','+'),inp);
+  return row;
+}
 function kidDel(d){
   if(d.k==='job'){deleteDoc(jobRef(d.id)).catch(()=>toast('המחיקה נכשלה.'));return;}
   const st=listState(people[d.id]);if(!st.tasks[d.i])return;
