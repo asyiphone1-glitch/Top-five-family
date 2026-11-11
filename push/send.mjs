@@ -77,9 +77,10 @@ async function list(path) {
   return out;
 }
 async function put(path, data) {
-  const fields = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, typeof v === 'number' ? { integerValue: String(v) } : { stringValue: String(v) }]));
-  if (DRY) return;
-  await fetch(`${BASE}/${enc(path)}`, { method: 'PATCH', headers: H(), body: JSON.stringify({ fields }) });
+  const fields = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, typeof v === 'number' ? { integerValue: String(v) } : typeof v === 'boolean' ? { booleanValue: v } : { stringValue: String(v) }]));
+  if (DRY) return true;
+  const r = await fetch(`${BASE}/${enc(path)}`, { method: 'PATCH', headers: H(), body: JSON.stringify({ fields }) });
+  return r.ok;
 }
 async function del(path) { if (!DRY) await fetch(`${BASE}/${enc(path)}`, { method: 'DELETE', headers: H() }); }
 
@@ -96,10 +97,45 @@ function localToUtc(y, m, d, h, mi) {
 }
 const ymd = (y, m, d) => y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0');
 
+// ---- גיבוי לילי (r5_autobk): כל לילה אחרי 03:00, נשמר בתוך מסד הנתונים הנעול, 14 לילות אחרונים ----
+const BK_COLS = ['people', 'jobs', 'rep', 'swaps', 'weeks', 'prefs', 'shop', 'taxi', 'cal', 'caltm', 'food'];
+const BK_KEEP = 14, BK_CHUNK = 250000;
+async function nightly(F, now) {
+  const p = parts(now);
+  if (p.h < 3 || p.h >= 6) return;
+  const day = ymd(p.y, p.m, p.d);
+  const mk = await getDoc(F + '/prefs/bkmark');
+  if (mk && mk.date === day) return;
+  const out = { app: 'yaya', v: 1, at: now, data: {} };
+  for (const c of BK_COLS) {
+    out.data[c] = {};
+    for (const d of await list(F + '/' + c)) { const id = d.id; delete d.id; out.data[c][id] = d; }
+  }
+  const js = JSON.stringify(out), n = Math.max(1, Math.ceil(js.length / BK_CHUNK));
+  const cnt = Object.values(out.data).reduce((a, x) => a + Object.keys(x).length, 0);
+  for (let i = 0; i < n; i++) await put(`${F}/bk/${day}_${i}`, { date: day, at: now, part: i, parts: n, items: cnt, json: js.slice(i * BK_CHUNK, (i + 1) * BK_CHUNK) });
+  const days = [...new Set([...String((mk && mk.days) || '').split(',').filter(Boolean), day])].sort().reverse();
+  for (const old of days.slice(BK_KEEP)) for (let i = 0; i < 20; i++) await del(`${F}/bk/${old}_${i}`);
+  await put(F + '/prefs/bkmark', { date: day, at: now, items: cnt, days: days.slice(0, BK_KEEP).join(',') });
+  console.log('גיבוי לילי נשמר:', day, cnt, 'פריטים');
+}
+
 async function main() {
   await signIn();
   const now = Date.now();
   const F = `families/${CODE}`;
+  // רישום השרת כ"טלפון" במשפחה (r5_rules). אחרי הנעילה, שרת חדש מחכה לאישור של אבא
+  const uid = (() => { try { return JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString()).user_id; } catch (e) { return ''; } })();
+  if (uid) {
+    const me = await getDoc(`${F}/dev/${uid}`).catch(() => null);
+    if (!me) {
+      const base = { at: now, kind: 'שרת', pid: 'server', seen: now };
+      if (!(await put(`${F}/dev/${uid}`, { ...base, ok: true }))) await put(`${F}/dev/${uid}`, { ...base, ok: false });
+    } else if (me.ok !== true) { console.log('שרת ההתראות מחכה לאישור של אבא או אמא בלשונית "הבית" > "טלפונים במשפחה".'); process.exit(1); }
+  }
+  // נורה ירוקה לאבא: השרת רץ (r5_health)
+  await put(F + '/prefs/health', { at: now, run: String(process.env.GITHUB_RUN_ID || '') }).catch(() => {});
+  await nightly(F, now).catch(e => console.log('הגיבוי הלילי נכשל:', e.message || e));
   const [subs, jobs, adv, logs] = await Promise.all([list(F + '/push'), list(F + '/jobs'), getDoc(F + '/prefs/advice'), list(F + '/pushlog')]);
   if (process.env.SHOW_ADV) { const pr = await list(F + '/people').catch(e => String(e)); const pf = await list(F + '/prefs').catch(e => String(e)); console.log('בדיקה: משימות', jobs.length, 'פרופילים', Array.isArray(pr) ? pr.length : pr, 'prefs', Array.isArray(pf) ? pf.map(d => d.id).join(',') : pf, 'advice?', adv === null ? 'אין מסמך' : Object.keys(adv).length + ' שדות'); }
   if (process.env.SHOW_ADV) console.log('החלטות:', JSON.stringify(Object.fromEntries(Object.entries(adv || {}).map(([k, v]) => [k, k.startsWith('_') ? v : (v && v.s)]))));
@@ -128,7 +164,7 @@ async function main() {
     for (const [t, k] of pts) {
       if (t > now || now - t > WINDOW) continue;
       if (k === 'p' && now >= j.due) continue;
-      out.push({ key: `j_${j.id}_${k}_${j.due}`, who, tab: 'jobs', body: (k === 'p' ? 'בעוד 10 דקות: ' : 'הגיע הזמן: ') + j.text });
+      out.push({ key: `j_${j.id}_${k}_${j.due}`, who, tab: 'jobs', body: '📋 ' + (k === 'p' ? 'בעוד 10 דקות: ' : 'הגיע הזמן: ') + j.text });
     }
   }
 
@@ -145,7 +181,7 @@ async function main() {
         if (!r || !t || r > now || now - r > WINDOW) return;
         if (d.day === td && Array.isArray(d.done) && d.done[i]) return;
         let m = -1; if (Array.isArray(d.lv) && d.lv[i]) { m = i; while (m > 0 && d.lv[m]) m--; }
-        out.push({ key: `t_${owner}_${r}_${hsh(t)}`, who, tab, body: 'תזכורת: ' + (m >= 0 ? String(d.tasks[m]) + ' ‹ ' : '') + t });
+        out.push({ key: `t_${owner}_${r}_${hsh(t)}`, who, tab, body: '✅ תזכורת: ' + (m >= 0 ? String(d.tasks[m]) + ' ‹ ' : '') + t });
       });
     };
     for (const p of ppl) scan(p, p.id, [p.id], 'today');
@@ -155,7 +191,7 @@ async function main() {
       for (const x of p.inbox) {
         const r = Number(x && x.rm) || 0, t = String((x && x.t) || '').trim();
         if (!r || !t || r > now || now - r > WINDOW) continue;
-        out.push({ key: `t_${p.id}_${r}_${hsh(t)}`, who: [p.id], tab: 'today', body: 'תזכורת: ' + (x.from === 'mom' ? 'משימה מאמא' : 'משימה מאבא') + ' ‹ ' + t });
+        out.push({ key: `t_${p.id}_${r}_${hsh(t)}`, who: [p.id], tab: 'today', body: '📋 תזכורת: ' + (x.from === 'mom' ? 'משימה מאמא' : 'משימה מאבא') + ' ‹ ' + t });
       }
     }
     // הרשימה המשפחתית הישנה הוסרה, המשימות שלה עברו למשימות "לכל המשפחה"
@@ -184,7 +220,7 @@ async function main() {
       if (!who || done[key]) continue;
       const t = localToUtc(p.y, p.m, p.d, DOGT[k][0], DOGT[k][1]);
       if (t > now || now - t > WINDOW) continue;
-      out.push({ key: `d_${ymd(p.y, p.m, p.d)}_${k}`, who: [who], tab: 'dog', body: 'תורך להוציא את לוני (' + DOGT[k][2] + ')' });
+      out.push({ key: `d_${ymd(p.y, p.m, p.d)}_${k}`, who: [who], tab: 'dog', body: '🐾 תורך להוציא את לוני (' + DOGT[k][2] + ')' });
     }
   }
 
@@ -201,10 +237,10 @@ async function main() {
         const cons = (w && w.cons) || {};
         if (in18 && !(w && w.gen)) {
           const who = [...KIDS, 'mom'].filter(id => !cons[id]);
-          if (who.length) out.push({ key: `c_${nk}`, who, tab: 'dog', body: 'עד 22:00 הערב ממלאים אילוצים לשבוע הבא בלשונית של לוני. ב-22:00 האפליקציה משבצת את כולם.' });
+          if (who.length) out.push({ key: `c_${nk}`, who, tab: 'dog', body: '🐾 עד 22:00 הערב ממלאים אילוצים לשבוע הבא בלשונית של לוני. ב-22:00 האפליקציה משבצת את כולם.' });
         }
         // פתיחת האפליקציה בטלפון כלשהו מריצה את השיבוץ, אז שולחים לכולם
-        if (in22) out.push({ key: `g_${nk}`, who: ['dad', 'mom', ...KIDS], tab: 'dog', body: '🐩 השיבוץ של לוני לשבוע הבא נקבע. פותחים ורואים מתי התור שלך. אפשר להחליף דרך האפליקציה.' });
+        if (in22) out.push({ key: `g_${nk}`, who: ['dad', 'mom', ...KIDS], tab: 'dog', body: '🐾 השיבוץ של לוני לשבוע הבא נקבע. פותחים ורואים מתי התור שלך. אפשר להחליף דרך האפליקציה.' });
       }
     }
   }
@@ -216,10 +252,10 @@ async function main() {
     for (const x of sw) {
       const at = Number(x.at) || 0;
       if (!at || now - at > 12 * 3600e3 || !x.to || !x.from) continue;
-      if (x.status === 'pending') out.push({ key: `s_${x.id}`, who: [x.to], tab: 'dog', body: `🐩 ${NM[x.from] || ''} מבקש${x.from === 'dad' ? '' : 'ת'} להחליף איתך תורנות של לוני. נכנסים לאשר או לסרב.` });
+      if (x.status === 'pending') out.push({ key: `s_${x.id}`, who: [x.to], tab: 'dog', body: `🐾 ${NM[x.from] || ''} מבקש${x.from === 'dad' ? '' : 'ת'} להחליף איתך תורנות של לוני. נכנסים לאשר או לסרב.` });
       else if (x.status === 'approved' || x.status === 'declined') {
         const m = x.to === 'dad', ok = x.status === 'approved';
-        out.push({ key: `s_${x.id}_${x.status}`, who: [x.from], tab: 'dog', body: `🐩 ${NM[x.to] || ''} ${ok ? (m ? 'אישר' : 'אישרה') + ' את ההחלפה. הלוח עודכן.' : (m ? 'לא יכול' : 'לא יכולה') + ' להחליף. אפשר לבקש ממישהו אחר.'}` });
+        out.push({ key: `s_${x.id}_${x.status}`, who: [x.from], tab: 'dog', body: `🐾 ${NM[x.to] || ''} ${ok ? (m ? 'אישר' : 'אישרה') + ' את ההחלפה. הלוח עודכן.' : (m ? 'לא יכול' : 'לא יכולה') + ' להחליף. אפשר לבקש ממישהו אחר.'}` });
       }
     }
   }

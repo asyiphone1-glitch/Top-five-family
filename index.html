@@ -471,6 +471,15 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
 .study.hot{background:var(--accent);color:#fff;font-size:1.05rem;padding:10px 18px}
 .reprow{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}.reprow .date{grid-column:1}.reprow button{grid-row:1/3;grid-column:2}
 .sugrow{padding:8px 0;border-top:1px solid var(--line)}.sugrow .acts{display:flex;gap:8px;margin-top:6px}
+.task.swp{transition:none;position:relative;z-index:2}.task:not(.swp){transition:transform .18s}.task.swgo[data-sw=r]{box-shadow:inset 0 0 0 2px var(--good)}.task.swgo[data-sw=l]{box-shadow:inset 0 0 0 2px var(--bad)}
+.party{position:fixed;inset:0;z-index:60;pointer-events:auto;overflow:hidden}.party i{position:absolute;top:-12px;width:9px;height:14px;border-radius:2px;animation:pfall linear forwards}
+@keyframes pfall{to{top:105%;transform:rotate(720deg)}}
+.party .pdog{position:absolute;left:50%;bottom:22%;width:140px;height:118px;transform:translateX(-50%);animation:pjump .5s ease-in-out 6 alternate}
+@keyframes pjump{from{transform:translate(-50%,0)}to{transform:translate(-50%,-60px)}}
+.party .ptxt{position:absolute;left:0;right:0;top:38%;text-align:center;font:800 1.7rem var(--display);color:var(--ink);text-shadow:0 2px 0 var(--surface)}
+@media (prefers-reduced-motion:reduce){.party i,.party .pdog{animation:none}}
+.ty{border-inline-start:5px solid var(--ty,var(--act));padding-inline-start:10px}.ty-task{--ty:#2563EB}.ty-job{--ty:#7C3AED}.ty-cal{--ty:#0E7C86}.ty-dog{--ty:#C98512}.ty-ride{--ty:#D97706}.ty-food{--ty:#16A34A}.ty-shop{--ty:#DB2777}
+.hl .hlrow{font-weight:800;font-size:1.05rem}.hl.bad{border:2px solid var(--bad)}.perr{flex-basis:100%;font-size:.82rem;color:var(--bad);padding-inline-start:20px}.prow .acts{display:flex;gap:6px;margin-inline-start:auto}#devBox details{margin-top:6px}#devBox summary{cursor:pointer;color:var(--mute);font-size:.9rem}
 .prow{flex-wrap:wrap}.pdev{flex-basis:100%;display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.85rem;color:var(--mute);padding-inline-start:20px}.pdev span{font-weight:500}.pdev .bad{color:var(--warn,#B4442C)}
 .advdone{background:color-mix(in srgb,var(--good) 12%,transparent);border-radius:12px;padding:10px 12px;margin:6px 0 10px}.advdone ul{margin:6px 0 0;padding-inline-start:18px}.advgrp{margin:14px 0 4px;font-size:1rem}
 .sentl{list-style:none;margin:6px 0 0;padding:0}.sentl li{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)}.sentl .sx{flex:none;width:18px;font-weight:700;color:var(--mute)}.sentl li.ok .sx{color:var(--good)}.sentl li.ok .st{text-decoration:line-through;text-decoration-thickness:1px;color:var(--mute)}.sentl small{margin-inline-start:auto;color:var(--mute);font-size:.8rem}
@@ -539,6 +548,13 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
   <button id="btnCreate" class="btn quiet" type="button">זה הטלפון הראשון: ליצור משפחה חדשה</button>
 </section>
 
+<section id="s-wait" class="screen" hidden>
+  <h1>yaya</h1>
+  <p class="lead">הטלפון הזה מחכה לאישור של אבא או אמא.</p>
+  <p class="date">אבא או אמא מאשרים בלשונית "הבית", בכרטיס "טלפונים במשפחה". אחרי האישור האפליקציה תיפתח כאן לבד.</p>
+  <button id="btnWaitBack" class="btn quiet" type="button">חזרה להקלדת הקוד</button>
+</section>
+
 <section id="s-who" class="screen" hidden>
   <h2>בחרו את הפרופיל שלכם</h2>
   <div id="whoGrid" class="who"></div>
@@ -583,6 +599,8 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
         <div><label for="jDate">תאריך</label><input id="jDate" type="date"></div>
         <div><label for="jTime">שעה לצלצול</label><input id="jTime" type="time"></div>
       </div>
+      <label for="jPts">כמה נקודות שווה? (נכנס לפודיום)</label>
+      <select id="jPts"><option value="0">בלי נקודות</option><option value="5">5 נקודות</option><option value="10" selected>10 נקודות</option><option value="20">20 נקודות</option></select>
       <label for="jRep">חוזרת?</label>
       <select id="jRep"><option value="">פעם אחת</option><option value="d">כל יום</option><option value="w">כל שבוע, באותו יום</option></select>
       <button id="jAdd" class="btn pri" type="button">הוספת המשימה</button>
@@ -598,7 +616,7 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
   </div>
 
   <div id="tab-shop" hidden>
-    <h2 class="sec">רשימת קניות</h2>
+    <h2 class="sec ty ty-shop">🛒 רשימת קניות</h2>
     <div class="shopadd">
       <input id="shopIn" class="field" maxlength="200" autocomplete="off" placeholder="למשל: חלב, עגבניות, במבה" aria-label="מוצר להוספה">
       <button id="shopAdd" class="btn pri" type="button">הוספה</button>
@@ -609,7 +627,7 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
   </div>
 
   <div id="tab-taxi" hidden>
-    <h2 class="sec">מונית</h2>
+    <h2 class="sec ty ty-ride">🚕 מונית</h2>
     <div id="taxiDays" class="tdays" role="group" aria-label="בחירת יום"></div>
     <p id="taxiProg" class="progress"></p>
     <div id="taxiBox"></div>
@@ -639,7 +657,7 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
 
   <div id="tab-cal" hidden>
     <div class="calhead">
-      <h2 class="sec">לוח משפחתי</h2>
+      <h2 class="sec ty ty-cal">📅 לוח משפחתי</h2>
       <div class="seg" role="group" aria-label="תצוגה"><button id="cvW" type="button" class="chip" aria-pressed="true">שבוע</button><button id="cvM" type="button" class="chip" aria-pressed="false">חודש</button></div>
     </div>
     <div id="calFilt" class="cfilt" role="group" aria-label="סינון לפי בן משפחה" hidden></div>
@@ -670,6 +688,8 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
   <div id="tab-home" hidden>
     <div id="advCard" class="card" hidden><h3 id="advH">המלצות צוות היועצים</h3><p class="date">כל המלצה נכנסת לאפליקציה רק אם תלחצו "מקבל". המלצה שנבנתה, או שלא התקבלה לפני יותר מיום, עוברת לארכיון, ושם אפשר לראות ולשנות אותה.</p><div id="advBox"></div></div>
     <div id="weekCard" class="card rep" hidden></div>
+    <div id="hlCard" class="card hl" hidden></div>
+    <div id="devCard" class="card" hidden><h3 id="devH">טלפונים במשפחה</h3><div id="devBox"></div></div>
     <div class="card"><h3>מצב הטלפונים</h3><div id="presence"></div></div>
   </div>
 
@@ -693,6 +713,8 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
       <h3>גיבוי</h3>
       <button id="bkSave" class="btn pri" type="button">הורדת גיבוי</button>
       <button id="bkLoad" class="btn quiet" type="button">שחזור מקובץ גיבוי</button>
+      <button id="bkNight" class="btn quiet" type="button">שחזור מגיבוי לילי</button>
+      <div id="bkList"></div>
       <input id="bkFile" type="file" accept="application/json,.json" hidden>
       <p id="bkMsg" class="msg" role="status"></p>
     </div>
@@ -856,7 +878,7 @@ async function enterCode(create){
     }
     LS.set('tff.code',code);
     say(msg,'');
-    startFamily();
+    if(await ensureDev(create))startFamily();else waitApproval();
   }catch(e){
     code=prev;
     say(msg,'לא הצלחתי להתחבר. ודאו שבפרויקט ב-Firebase הופעלה כניסה אנונימית (Anonymous).');
@@ -975,7 +997,7 @@ function paintProgress(el,st,empty){
   else if(d===f){el.textContent='כל הכבוד, הכול הושלם להיום';el.className='progress all';}
   else el.textContent='הושלמו '+d+' מתוך '+f;
 }
-function progress(){paintProgress($('progress'),work,'הוסיפו את המשימות החשובות להיום');}
+function progress(){paintProgress($('progress'),work,'הוסיפו את המשימות החשובות להיום');appBadge();}
 function save(){
   dirty=true;clearTimeout(saveT);
   saveT=setTimeout(()=>{
@@ -1020,6 +1042,26 @@ $('remSave').onclick=()=>{
 $('remDel').onclick=()=>{remSet(0);toast('התזכורת הוסרה');};
 $('remCancel').onclick=closeRem;
 
+/* החלקה על משימה (r5_swipe): ימינה = בוצע, שמאלה = מחיקה (צריך ללחוץ "למחוק?" לאישור) */
+function swipe(li,right,left){
+  let x0=0,y0=0,dx=0,on=false,dead=false;
+  li.addEventListener('touchstart',e=>{if(e.touches.length!==1)return;x0=e.touches[0].clientX;y0=e.touches[0].clientY;dx=0;on=false;dead=false;},{passive:true});
+  li.addEventListener('touchmove',e=>{
+    if(dead)return;
+    const mx=e.touches[0].clientX-x0,my=e.touches[0].clientY-y0;
+    if(!on){if(Math.abs(my)>12&&Math.abs(my)>Math.abs(mx)){dead=true;return;}if(Math.abs(mx)>16){on=true;li.classList.add('swp');}else return;}
+    dx=Math.max(-110,Math.min(110,mx));
+    li.style.transform='translateX('+dx+'px)';
+    li.dataset.sw=dx>0?'r':'l';li.classList.toggle('swgo',Math.abs(dx)>70);
+  },{passive:true});
+  const end=()=>{
+    if(!on)return;
+    li.style.transform='';li.classList.remove('swp','swgo');delete li.dataset.sw;
+    const go=Math.abs(dx)>70;on=false;
+    if(go){try{navigator.vibrate&&navigator.vibrate(15);}catch(e){}const a=document.activeElement;if(a&&li.contains(a))a.blur();setTimeout(dx>0?right:left,0);}
+  };
+  li.addEventListener('touchend',end);li.addEventListener('touchcancel',end);
+}
 function renderList(ul,st,onSave,onProg,label,focusAt){
   ul.innerHTML='';
   if(!st.rm)st.rm=st.tasks.map(()=>0);
@@ -1056,7 +1098,7 @@ function renderList(ul,st,onSave,onProg,label,focusAt){
       const v=!st.done[i];
       if(hasSubs(st,i)){const e=blockEnd(st,i);for(let k=i;k<e;k++)if(st.tasks[k].trim())setDone(k,v);}
       else{setDone(i,v);if(sub)syncMain(mainOf(st,i));}
-      onSave();rer();
+      onSave();rer();if(v)setTimeout(()=>partyCheck(),400);
     };
     inp.oninput=()=>{
       st.tasks[i]=inp.value;
@@ -1113,6 +1155,7 @@ function renderList(ul,st,onSave,onProg,label,focusAt){
       li.append(add);
     }
     li.append(del);
+    if(t.trim())swipe(li,()=>b.click(),()=>{if(del.dataset.arm==='1')return;del.dataset.arm='1';del.textContent=hasSubs(st,i)?'למחוק הכול?':'למחוק?';del.classList.add('arm');});
     ul.append(li);
   });
   /* שורה להוספת משימה ראשית חדשה */
@@ -1498,8 +1541,109 @@ function weekPop(){
   if(LS.get(k))return;LS.set(k,'1');
   toast('סיכום השבוע מחכה בלשונית "הבית"');
 }
+/* ---------- רישום טלפונים (r5_rules) ----------
+   כל טלפון נרשם במשפחה. טלפון חדש מחכה עד שאבא או אמא מאשרים אותו.
+   הכללים בשרת (firestore.rules) חוסמים כל טלפון שלא אושר. */
+const devCol=()=>collection(db,'families',code,'dev');
+const devRef=uid=>doc(db,'families',code,'dev',uid);
+let devs={},devUnsub=null,myUid=null,waitUnsub=null;
+function devKind(){const u=navigator.userAgent;return /iPhone/.test(u)?'אייפון':/iPad/.test(u)?'אייפד':/Android/.test(u)?'אנדרואיד':'מחשב';}
+async function ensureDev(grand){
+  myUid=auth.currentUser&&auth.currentUser.uid;if(!myUid)return true;
+  let d;
+  try{d=await getDoc(devRef(myUid));}catch(e){return true;}
+  if(d.exists())return d.data().ok===true;
+  const base={at:Date.now(),kind:devKind(),pid:me||''};
+  /* טלפון שכבר היה מחובר לפני הנעילה נרשם כמאושר. אחרי שהכללים בשרת מופעלים, זה נדחה ונשאר "מחכה לאישור" */
+  if(grand){try{await setDoc(devRef(myUid),{...base,ok:true});return true;}catch(e){}}
+  try{await setDoc(devRef(myUid),{...base,ok:false});}catch(e){}
+  return false;
+}
+function waitApproval(){
+  show('s-wait');
+  if(waitUnsub)waitUnsub();
+  waitUnsub=onSnapshot(devRef(myUid),sn=>{
+    if(sn.exists()&&sn.data().ok===true){waitUnsub();waitUnsub=null;startFamily();}
+  },()=>{});
+}
+$('btnWaitBack').onclick=()=>{if(waitUnsub){waitUnsub();waitUnsub=null;}LS.del('tff.code');code=null;show('s-setup');};
+function subDevs(){
+  if(devUnsub||!isAdult(me))return;
+  devUnsub=onSnapshot(devCol(),sn=>{devs={};sn.docs.forEach(d=>devs[d.id]=d.data());paintDevs();},()=>{});
+}
+function paintDevs(){
+  const card=$('devCard');if(!card)return;
+  card.hidden=!isAdult(me);if(card.hidden)return;
+  const box=$('devBox');box.innerHTML='';
+  const ids=Object.keys(devs),pend=ids.filter(i=>devs[i].ok!==true).sort((a,b)=>(devs[b].at||0)-(devs[a].at||0));
+  $('devH').textContent='טלפונים במשפחה'+(pend.length?' ('+pend.length+' מחכים לאישור)':'');
+  const nm=d=>d.pid==='server'?'שרת ההתראות':byId[d.pid]?byId[d.pid].name:'';
+  pend.forEach(id=>{
+    const d=devs[id],row=h('div','prow');
+    row.append(h('i','dot'),h('span',null,'🆕 '+(d.kind||'טלפון')+(nm(d)?' · '+nm(d):'')),h('small',null,'ביקש '+ago(Date.now()-(d.at||Date.now()))));
+    const acts=h('div','acts');
+    const ok=h('button','btn sm',me==='mom'?'מאשרת':'מאשר');ok.type='button';
+    ok.onclick=()=>setDoc(devRef(id),{ok:true,by:me,okAt:Date.now()},{merge:true}).then(()=>toast('הטלפון אושר')).catch(()=>toast('האישור נכשל. בדקו חיבור.'));
+    const no=h('button','btn sm quiet','דחייה');no.type='button';
+    no.onclick=()=>{if(confirm('לדחות את הטלפון הזה? הוא לא יוכל להיכנס למשפחה.'))deleteDoc(devRef(id)).catch(()=>toast('הדחייה נכשלה.'));};
+    acts.append(ok,no);row.append(acts);box.append(row);
+  });
+  const okIds=ids.filter(i=>devs[i].ok===true);
+  const per={};okIds.forEach(i=>{const k=devs[i].pid||'?';(per[k]=per[k]||[]).push(i);});
+  const missing=PEOPLE.filter(p=>!per[p.id]).map(p=>p.name);
+  box.append(h('p','date','✓ '+okIds.length+' טלפונים מאושרים'+(per.server?', כולל שרת ההתראות':'')+'.'+(missing.length?' עוד לא נרשמו: '+missing.join(', ')+'.':' כל בני המשפחה רשומים.')));
+  const more=h('details');more.append(h('summary',null,'רשימת הטלפונים המאושרים'));
+  okIds.sort((a,b)=>String(devs[a].pid).localeCompare(String(devs[b].pid))).forEach(id=>{
+    const d=devs[id],row=h('div','prow');
+    row.append(h('span',null,(nm(d)||'לא בחר פרופיל')+' · '+(d.kind||'')),h('small',null,d.seen?'נראה '+ago(Date.now()-d.seen):''));
+    if(id!==myUid){const x=h('button','btn sm quiet','הסרה');x.type='button';
+      x.onclick=()=>{if(confirm('להסיר את הטלפון הזה? כדי לחזור הוא יצטרך אישור חדש.'))deleteDoc(devRef(id)).catch(()=>toast('ההסרה נכשלה.'));};
+      row.append(x);}
+    more.append(row);
+  });
+  box.append(more);
+}
+/* ---------- נורה ירוקה לשרת ההתראות (r5_health) ---------- */
+let health=null,healthUnsub=null;
+function subHealth(){
+  if(healthUnsub||!isAdult(me))return;
+  healthUnsub=onSnapshot(doc(db,'families',code,'prefs','health'),sn=>{health=sn.exists()?sn.data():null;paintHealth();},()=>{});
+}
+function paintHealth(){
+  const c=$('hlCard');if(!c)return;
+  c.hidden=!isAdult(me);if(c.hidden)return;
+  const at=health&&health.at,age=at?Date.now()-at:Infinity,ok=age<15*60e3;
+  const srvWait=Object.values(devs).some(d=>d.pid==='server'&&d.ok!==true);
+  c.innerHTML='';c.classList.toggle('bad',!ok);
+  c.append(h('div','hlrow',(ok?'🟢 שרת ההתראות עובד':'🔴 שרת ההתראות לא רץ')+(at?' · ריצה אחרונה '+ago(age):'')));
+  if(!ok)c.append(h('p','date',srvWait?'השרת מחכה לאישור. אשרו את "שרת ההתראות" בכרטיס "טלפונים במשפחה" כאן למטה.'
+    :'ההתראות כשהאפליקציה סגורה לא נשלחות. בדקו שהשירות ב-cron-job.org פעיל, ואם זה לא עוזר, כתבו לClaude "שרת ההתראות אדום".'));
+}
+/* ---------- דיווח תקלות מהטלפונים (r5_errors): רק סוג התקלה, בלי תוכן אישי ---------- */
+let errBusy=false;
+function errLog(msg){
+  try{
+    if(!db||!code||!me||errBusy)return;
+    msg=String(msg||'').replace(/https?:\/\/\S+/g,'').slice(0,120);if(!msg)return;
+    const k='yaya.err.'+msg;const last=Number(LS.get(k)||0);if(Date.now()-last<36e5)return;LS.set(k,String(Date.now()));
+    errBusy=true;
+    const ref=doc(db,'families',code,'errs',me);
+    getDoc(ref).then(sn=>{
+      const l=((sn.exists()&&sn.data().l)||[]).filter(x=>Date.now()-x.at<7*864e5).slice(-9);
+      l.push({at:Date.now(),m:msg,v:APP_VER});
+      return setDoc(ref,{l:l});
+    }).catch(()=>{}).finally(()=>{errBusy=false;});
+  }catch(e){}
+}
+window.addEventListener('error',e=>errLog('תקלה בקוד: '+(e.message||'')+(e.lineno?' (שורה '+e.lineno+')':'')));
+window.addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&/offline|unavailable|network/i.test(String(r.code||r.message||'')))return;errLog('פעולה נכשלה: '+String((r&&(r.code||r.message))||r||'').slice(0,80));});
+let errs={},errsUnsub=null;
+function subErrs(){
+  if(errsUnsub||!isAdult(me))return;
+  errsUnsub=onSnapshot(collection(db,'families',code,'errs'),sn=>{errs={};sn.docs.forEach(d=>errs[d.id]=d.data().l||[]);if(!$('tab-home').hidden)paintHome();},()=>{});
+}
 function paintHome(){
-  paintAdvice();paintWeekSum();
+  paintAdvice();paintWeekSum();subDevs();paintDevs();subHealth();paintHealth();subErrs();
   const box=$('presence');if(!box)return;
   box.innerHTML='';
   const now=Date.now();
@@ -1519,6 +1663,12 @@ function paintHome(){
       st.append(h('span',old?'bad':null,old?'⚠️ גרסה ישנה, צריך לסגור ולפתוח':'✓ גרסה עדכנית'),h('span',dv.push==='on'?null:'bad',PUSHTX[dv.push]||'🔕 התראות לא ידועות'));
       if(dv.push!=='web')st.append(h('span',null,dv.app?'📱 מהאייקון':'🌐 מהדפדפן'));
       row.append(st);
+    }
+    const el=(errs[p.id]||[]).filter(x=>now-x.at<3*864e5);
+    if(isAdult(me)&&el.length){
+      const er=h('div','perr');
+      el.slice(-3).reverse().forEach(x=>{const d=new Date(x.at);er.append(h('div',null,'⚠️ '+x.m+' · '+(dshort(fmt(d)))+' ב-'+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')));});
+      row.append(er);
     }
     box.append(row);
   });
@@ -1540,6 +1690,7 @@ async function beat(){
   pushSt=await pushState();
   const app=navigator.standalone===true||matchMedia('(display-mode: standalone)').matches;
   setDoc(pdoc(me),{name:byId[me].name,seen:Date.now(),dev:{ver:APP_VER,push:pushSt,app:app,at:Date.now()}},{merge:true}).catch(()=>{});
+  if(myUid)setDoc(devRef(myUid),{pid:me,seen:Date.now(),kind:devKind()},{merge:true}).catch(()=>{});
 }
 const PUSHTX={on:'🔔 התראות פעילות',off:'🔕 התראות כבויות',blocked:'🚫 התראות חסומות בטלפון',web:'🔕 נפתח מהדפדפן, לא מהאייקון',no:'🔕 הטלפון לא תומך בהתראות'};
 function startBeat(){clearInterval(hb);hb=setInterval(beat,120000);beat();}
@@ -1560,7 +1711,7 @@ function tab(n){
   if(n==='jobs'||n==='today')paintJobs();
   if(n==='jobs')paintSent();
   if(n==='today'){paintTodayCal();tmLoad(false);paintMyNotes();}
-  if(n==='shop')paintShop();
+  if(n==='shop'){shopLive();paintShop();}
   if(n==='taxi')paintTaxi();
   if(n==='food')paintFood(true);
   if(n==='cal'){paintCal();tmLoad(false);}
@@ -1589,6 +1740,29 @@ $('bkFile').onchange=async()=>{
   const m=$('bkMsg'),f=$('bkFile').files[0];$('bkFile').value='';if(!f)return;
   let j;try{j=JSON.parse(await f.text());}catch(e){say(m,'הקובץ הזה לא נקרא. בחרו קובץ גיבוי של yaya.');return;}
   if(!j||j.app!=='yaya'||!j.data){say(m,'זה לא קובץ גיבוי של yaya.');return;}
+  bkRestore(j);
+};
+/* גיבוי לילי: השרת שומר כל לילה אחרי 03:00, 14 לילות אחרונים */
+$('bkNight').onclick=async()=>{
+  const m=$('bkMsg'),box=$('bkList');
+  if(box.childElementCount){box.innerHTML='';return;}
+  say(m,'טוען את הגיבויים...',true);
+  try{
+    const sn=await getDocs(collection(db,'families',code,'bk'));
+    const by={};sn.docs.forEach(d=>{const x=d.data();if(!x.date)return;(by[x.date]=by[x.date]||[]).push(x);});
+    const days=Object.keys(by).filter(k=>by[k].length===(by[k][0].parts||1)).sort().reverse();
+    if(!days.length){say(m,'עדיין אין גיבוי לילי. הראשון יישמר הלילה אחרי 03:00.');return;}
+    say(m,'בחרו מאיזה לילה לשחזר:',true);
+    days.forEach(k=>{
+      const ps=by[k].sort((a,b)=>a.part-b.part),it=ps[0].items;
+      const b=h('button','btn quiet sm',dshort(k)+(it?' · '+it+' פריטים':''));b.type='button';b.style.margin='4px';
+      b.onclick=()=>{let j;try{j=JSON.parse(ps.map(x=>x.json).join(''));}catch(e){say(m,'הגיבוי הזה פגום. בחרו לילה אחר.');return;}box.innerHTML='';bkRestore(j);};
+      box.append(b);
+    });
+  }catch(e){say(m,'לא הצלחתי לטעון. בדקו חיבור.');}
+};
+async function bkRestore(j){
+  const m=$('bkMsg');
   const when=new Date(j.at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'numeric'});
   if(!confirm('לשחזר את הגיבוי מ-'+when+'? כל מה שהיה בגיבוי יחזור למצב שלו אז. דברים שנוספו אחרי הגיבוי נשארים.'))return;
   say(m,'משחזר...',true);
@@ -1598,7 +1772,7 @@ $('bkFile').onchange=async()=>{
     for(let i=0;i<w.length;i+=40)await Promise.all(w.slice(i,i+40).map(([c,id,d])=>setDoc(doc(db,'families',code,c,id),d)));
     say(m,'השחזור הסתיים ('+w.length+' פריטים).',true);
   }catch(e){say(m,'השחזור נעצר באמצע. בדקו חיבור ונסו שוב, זה בטוח לנסות שוב.');}
-};
+}
 function paintSettings(){
   paintBackup();
   {const lk=!!lockOf()&&!isAdult(me);$('btnSwitch').hidden=lk;$('btnForget').hidden=lk;$('codeCard').hidden=!isAdult(me);}
@@ -1614,6 +1788,7 @@ function quizShow(open){
 }
 $('quizOpen').onclick=()=>quizShow(true);
 $('quizClose').onclick=()=>quizShow(false);
+let lazyT=null;
 function openMain(){
   const p=byId[me];
   document.body.style.setProperty('--pc',p.l);
@@ -1623,7 +1798,9 @@ function openMain(){
   $('mineH').textContent='המשימות של '+p.name;
   $('dateTxt').textContent=new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
   show('s-main');tab('today');renderTasks();startBeat();
-  weekStart=sunday(new Date());subWeek();subSwaps();subFam();subJobs();subRep();subAdv();subCurWk();subNextWk();paintJobForm();subShop();subTaxi();subFood();subCal();subNotes();
+  /* טעינה לפי הצורך (r5_lazy): קודם מה שמופיע ב"היום שלי", השאר אחרי שהמסך כבר מוכן, והקניות רק כשנכנסים אליהן */
+  weekStart=sunday(new Date());subWeek();subFam();subJobs();subCurWk();paintJobForm();subShop();subCal();subNotes();
+  clearTimeout(lazyT);lazyT=setTimeout(()=>{subSwaps();subRep();subAdv();subNextWk();subTaxi();subFood();},1200);
   clearInterval(homeT);homeT=setInterval(()=>{if(!$('tab-home').hidden)paintHome();checkInbox();},30000);
   syncPush();
   const qt=new URLSearchParams(location.search).get('tab');
@@ -2121,11 +2298,13 @@ function paintDog(){
       }else if(a===me){
         if(isNow)mk('הוצאתי','pri',()=>walked(wkey,key));
         if(!pend)mk('החלפה או העברה','quiet',()=>{draft=(draft===key?null:key);paintDog();});
+        if(!pend&&on('r5_cant'))mk(gx(me,'לא יכול','לא יכולה'),'quiet',()=>{draft=(draft==='c:'+key?null:'c:'+key);paintDog();});
       }else if(isNow){
         mk(gx(a,'הוצאתי במקומו','הוצאתי במקומה'),'quiet',()=>walked(wkey,key));
       }
       if(acts.childNodes.length)row.append(acts);
       if(draft===key&&a===me&&!dn)row.append(swapForm(wkey,key));
+      if(draft==='c:'+key&&a===me&&!dn)row.append(cantForm(wkey,key));
       card.append(row);
     });
     box.append(card);
@@ -2141,6 +2320,7 @@ function walked(wkey,key){
       if(wk.orig&&!o)toast('⭐ הוצאה מעבר למתוכנן: '+(PTS.walk+PTS.extra)+' נקודות!');
       else if(wk.orig&&o!==me)toast('🤝 לקחת משמרת של '+byId[o].name+': '+(PTS.walk+PTS.cover)+' נקודות!');
       else toast('🐾 כל הכבוד! +'+PTS.walk+' נקודות');
+      setTimeout(()=>partyCheck(),1200);
     })
     .catch(()=>{dogMsg='הפעולה נכשלה. בדקו חיבור.';paintDog();});
 }
@@ -2252,6 +2432,11 @@ function podScores(){
     }
     if(podHist)podHist.docs.forEach(d=>weekPoints(d,acc));
   }
+  /* נקודות על משימות מההורים (r5_taskpts): מי שסימנה "בוצע" מקבלת את הנקודות */
+  if(on('r5_taskpts')){
+    const from=podMode==='m'?addDays(sunday(new Date()),-21).getTime():sunday(new Date()).getTime();
+    jobs.forEach(j=>{const p=Number(j.pts)||0,who=j.doneBy;if(!p||!j.done||!j.doneAt||j.doneAt<from||!acc[who])return;acc[who].pts+=p;acc[who].jp=(acc[who].jp||0)+p;});
+  }
   return KIDS.map(k=>Object.assign({id:k},acc[k])).sort((a,b)=>b.pts-a.pts||b.w-a.w||b.cover-a.cover||KIDS.indexOf(a.id)-KIDS.indexOf(b.id));
 }
 function paintPodium(animate){
@@ -2262,7 +2447,7 @@ function paintPodium(animate){
   podSig=sig;
   box.innerHTML='';
   const c=h('section','card pod');
-  const hd=h('div','podhead');hd.append(h('h3',null,'🏆 מי הוציאה הכי הרבה'));
+  const hd=h('div','podhead');hd.append(h('h3',null,on('r5_taskpts')?'🏆 מי צברה הכי הרבה נקודות':'🏆 מי הוציאה הכי הרבה'));
   const ch=h('div','chips');ch.setAttribute('role','group');ch.setAttribute('aria-label','תקופה');
   [['w','השבוע'],['m','4 שבועות']].forEach(([k,t])=>ch.append(chip(t,podMode===k,()=>{podMode=k;paintPodium(true);})));
   hd.append(ch);c.append(hd);
@@ -2343,6 +2528,50 @@ async function runPoodle(stage,dog,cols,any){
   /* יורדת ויושבת שמחה ליד המנצחת */
   await go(cx(0)+36,stepH(0),420,20);
   setTimeout(()=>bub.remove(),1200);
+}
+/* "לא יכולה היום" (r5_cant): האפליקציה מחשבת מי הכי מתאימה להחליף ושולחת לה בקשה קודם */
+function cantPick(wkey,key){
+  const [d,k]=key.split('_'),dd=Number(d);
+  const load={},day={};
+  for(const x in wk.slots){const id=wk.slots[x];load[id]=(load[id]||0)+1;if(x.split('_')[0]===d)day[id]=(day[id]||0)+1;}
+  const near=(id,dir)=>{const i=SLOTS.findIndex(x=>x.k===k)+dir;const q=SLOTS[i];return q&&wk.slots[d+'_'+q.k]===id;};
+  const out=[];
+  PEOPLE.forEach(p=>{
+    const id=p.id;if(id===me)return;
+    const P=normPrefs((people[id]||{}).prefs,id);
+    const wb=new Set(((wk.cons||{})[id]||{}).b||[]);Object.keys(clsBlocks(id,wkey)).forEach(x=>wb.add(x));
+    if(P.block.includes(key)||wb.has(key))return;
+    if(swaps.some(s=>s.week===wkey&&s.slot===key&&s.to===id&&s.status==='declined'))return;
+    let c=0;const why=[];
+    if(id==='dad'){if(k!=='m'&&k!=='n')c+=40;}else if(k==='m'||k==='n')c+=6;
+    if(id==='mom'&&(load.mom||0)>=P.max)c+=150;
+    if(P.hard.includes(dd)){c+=30;}else why.push(gx(id,'פנוי','פנויה'));
+    if(P.avoid.includes(k))c+=25;
+    if(P.like.includes(k)){c-=10;why.push(gx(id,'אוהב','אוהבת')+' את השעה הזו');}
+    if(day[id]){c+=15*day[id];}
+    if(near(id,-1)||near(id,1))c+=3;
+    c+=8*(load[id]||0);
+    why.push((load[id]||0)===0?'בלי תורנויות השבוע':(load[id]===1?'תורנות אחת השבוע':load[id]+' תורנויות השבוע'));
+    out.push({id:id,c:c,why:why});
+  });
+  return out.sort((a,b)=>a.c-b.c);
+}
+function cantForm(wkey,key){
+  const f=h('div','swform');
+  const c=cantPick(wkey,key);
+  if(!c.length){f.append(h('div',null,'אין כרגע מי שפנוי להחליף. אפשר לבקש מאבא או מאמא.'));return f;}
+  const best=c[0];
+  f.append(h('div',null,'ההצעה: '+byId[best.id].name+' ('+best.why.join(', ')+'). לשלוח '+gx(best.id,'לו','לה')+' בקשה להחליף אותך ב'+slotText(wkey,key)+'?'));
+  const row=h('div');row.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
+  const send=id=>setDoc(doc(collection(db,'families',code,'swaps')),{week:wkey,slot:key,from:me,to:id,take:null,status:'pending',cant:true,at:Date.now()})
+    .then(()=>{draft=null;dogMsg='הבקשה נשלחה ל'+byId[id].name+'. אם '+gx(id,'הוא לא יכול','היא לא יכולה')+', לוחצים שוב על "'+gx(me,'לא יכול','לא יכולה')+'" והאפליקציה תציע את הבא בתור.';paintDog();})
+    .catch(()=>{dogMsg='שליחת הבקשה נכשלה. בדקו חיבור.';paintDog();});
+  const ok=h('button','btn pri sm','שליחה ל'+byId[best.id].name);ok.type='button';ok.onclick=()=>send(best.id);
+  row.append(ok);
+  if(c[1]){const o2=h('button','btn quiet sm',byId[c[1].id].name+' במקום');o2.type='button';o2.onclick=()=>send(c[1].id);row.append(o2);}
+  const no=h('button','btn quiet sm','ביטול');no.type='button';no.onclick=()=>{draft=null;paintDog();};
+  row.append(no);f.append(row);
+  return f;
 }
 function swapForm(wkey,key){
   const f=h('div','swform');
@@ -2480,7 +2709,7 @@ function chime(){
       if(ringEl.src!==ringUrl)ringEl.src=ringUrl;
       ringEl.currentTime=0;
       const pr=ringEl.play();
-      if(pr&&pr.catch)pr.catch(()=>chimeWA());
+      if(pr&&pr.catch)pr.catch(e=>{if(!document.hidden)errLog('הצלצול לא התנגן ('+(e&&e.name||'שגיאה')+')');chimeWA();});
       return;
     }catch(e){}
   }
@@ -2631,6 +2860,7 @@ const ADV_KEEP=864e5;let advOld=false;
 /* המלצות שכבר נבנו באפליקציה. מה שנבנה, או שלא התקבל לפני יותר מיום, עובר לארכיון */
 /* מתי כל המלצה יושמה באפליקציה */
 const BUILT_AT={r_dogring:'2026-11-08',r_pre10:'2026-11-08',r_approve:'2026-11-08',r_fair:'2026-11-08',r_cheer:'2026-11-08',r_push:'2026-11-08',r_week:'2026-11-08',
+  r5_autobk:'2026-11-12',r5_health:'2026-11-12',r5_60:'2026-11-12',r5_errors:'2026-11-12',r5_offline:'2026-11-12',r5_lazy:'2026-11-12',r5_badge:'2026-11-12',r5_icons:'2026-11-12',r5_swipe:'2026-11-12',r5_taskpts:'2026-11-12',r5_party:'2026-11-12',r5_cant:'2026-11-12',
   r2_today:'2026-11-10',r2_gender:'2026-11-10',r2_repeat:'2026-11-10',r2_taxi:'2026-11-10',r2_status:'2026-11-10',r2_backup:'2026-11-10',r2_study:'2026-11-10'};
 const BUILT=new Set(Object.keys(BUILT_AT));
 const builtTxt=id=>'✅ יושם באפליקציה'+(BUILT_AT[id]?' ב-'+dshort(BUILT_AT[id]):'');
@@ -2766,12 +2996,13 @@ $('jAdd').onclick=async()=>{
   const ds=$('jDate').value,ts=$('jTime').value;
   const to0=$('jTo').value;
   const rp=$('jRep').value;
+  const pts=Number($('jPts').value)||0;
   if(rp){
     let from=ds||today();
     if(from===today()&&ts){const [hh,mi]=ts.split(':').map(Number);const t=new Date();t.setHours(hh,mi,0,0);if(t.getTime()<Date.now())from=dkey(addDays(new Date(),1));}
     const dow=k2d(ds||today()).getDay();
     try{
-      await Promise.all(lines.map((t,i)=>setDoc(doc(repCol()),{text:t.slice(0,120),to:to0,rep:rp,dow:dow,time:ts||'',from:from,by:me,at:Date.now()+i})));
+      await Promise.all(lines.map((t,i)=>setDoc(doc(repCol()),{text:t.slice(0,120),to:to0,rep:rp,dow:dow,time:ts||'',from:from,by:me,at:Date.now()+i,pts:pts})));
       $('jText').value='';$('jTime').value='';$('jRep').value='';
       say(m,(lines.length>1?'נוספו '+lines.length+' משימות חוזרות':'נוספה משימה חוזרת')+(rp==='d'?', כל יום.':', כל יום '+DAYN[dow]+'.')+' היא נפתחת לבד ביום שלה.',true);
       genRep(true);
@@ -2803,7 +3034,7 @@ $('jAdd').onclick=async()=>{
     return;
   }
   try{
-    const base=(t,i)=>({text:t.slice(0,120),due:due,hasT:hasT,by:me,at:Date.now()+i,claim:null,done:false,ok:false});
+    const base=(t,i)=>({text:t.slice(0,120),due:due,hasT:hasT,by:me,at:Date.now()+i,claim:null,done:false,ok:false,pts:pts});
     const w=[];
     lines.forEach((t,i)=>{
       if(to==='each'){const grp='g'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -2831,7 +3062,7 @@ async function genRep(force){
     let due=null,hasT=false;const a=td.split('-').map(Number);
     if(r.time){const [hh,mi]=r.time.split(':').map(Number);due=new Date(a[0],a[1]-1,a[2],hh,mi).getTime();hasT=true;}
     else due=new Date(a[0],a[1]-1,a[2],23,59).getTime();
-    const base={text:r.text,due:due,hasT:hasT,by:r.by||'dad',at:Date.now(),claim:null,done:false,ok:false,rep:r.id};
+    const base={text:r.text,due:due,hasT:hasT,by:r.by||'dad',at:Date.now(),claim:null,done:false,ok:false,rep:r.id,pts:Number(r.pts)||0};
     const targets=r.to==='each'?KIDS.map(k=>[k,'rep-'+r.id+'-'+td+'-'+k]):[[r.to,'rep-'+r.id+'-'+td]];
     for(const [to,id] of targets){
       try{
@@ -2882,7 +3113,33 @@ function doneOpen(j){
 function markDone(j,v){
   const upd=v?{done:true,doneBy:me,doneAt:Date.now(),ok:!on('r_approve')||isAdult(me)}:{done:false,doneBy:null,doneAt:null,ok:false};
   setDoc(jobRef(j.id),upd,{merge:true}).catch(()=>toast('הפעולה נכשלה. בדקו חיבור.'));
-  if(v&&on('r_cheer')){const L=G(CHEER_M,CHEER);toast(L[Math.floor(Math.random()*L.length)]);}
+  if(v&&on('r5_taskpts')&&Number(j.pts)&&KIDS.includes(me))toast('⭐ +'+j.pts+' נקודות!');
+  else if(v&&on('r_cheer')){const L=G(CHEER_M,CHEER);toast(L[Math.floor(Math.random()*L.length)]);}
+  if(v)setTimeout(()=>partyCheck(j.id),400);
+}
+/* חגיגה כשמסיימים את כל היום (r5_party): פעם אחת ביום */
+function dayLeft(skipJob){
+  const st=work||{tasks:[],done:[],lv:[]};let n=0,all=0;
+  (st.tasks||[]).forEach((t,i)=>{if(String(t||'').trim()&&!hasSubs(st,i)){all++;if(!st.done[i])n++;}});
+  const td=today();
+  jobs.forEach(j=>{if(resp(j)!==me)return;const dd=j.due?fmt(new Date(j.due)):null;if(dd&&dd>td)return;if(!j.done&&j.id===skipJob)return;all++;if(!j.done&&j.id!==skipJob)n++;});
+  const dw=new Date().getDay();SLOTS.forEach(x=>{const k=dw+'_'+x.k;if(curWk.slots[k]===me){all++;if(!curWk.done[k])n++;}});
+  return {n:n,all:all};
+}
+function partyCheck(skipJob){
+  if(!on('r5_party')||!me||isAdult(me))return;
+  const k='yaya.party.'+today();if(LS.get(k))return;
+  const r=dayLeft(skipJob);if(r.all<2||r.n>0)return;
+  LS.set(k,'1');party();
+}
+function party(){
+  try{navigator.vibrate&&navigator.vibrate([60,40,60,40,120]);}catch(e){}
+  const w=h('div','party');w.setAttribute('aria-hidden','true');
+  const C=['#F59E0B','#EC4899','#3B82F6','#10B981','#8B5CF6','#EF4444'];
+  for(let i=0;i<70;i++){const c=h('i');c.style.cssText='left:'+(Math.random()*100)+'%;background:'+C[i%C.length]+';animation-delay:'+(Math.random()*.6)+'s;animation-duration:'+(1.6+Math.random()*1.4)+'s;transform:rotate('+(Math.random()*360)+'deg)';w.append(c);}
+  const d=h('div','pdog');d.innerHTML=POODLE;w.append(d);
+  const t=h('div','ptxt',G('סיימת את כל היום! 🎉','סיימת את כל היום! 🎉'));w.append(t);
+  document.body.append(w);setTimeout(()=>w.remove(),3800);w.onclick=()=>w.remove();
 }
 function jobItem(j){
   const li=h('li','job');const r=resp(j),adult=isAdult(me);
@@ -2954,8 +3211,11 @@ function grpItem(list){
   acts.append(x);b.append(acts);
   li.append(b);return li;
 }
+/* סמל וצבע קבועים לכל סוג פריט (r5_icons): ✅ משימה אישית, 📋 משימה מההורים, 📅 לוח, 🐾 לוני, 🚕 מונית, 🍽️ אוכל, 🛒 קניות */
+const TY={task:'✅',job:'📋',cal:'📅',dog:'🐾',ride:'🚕',food:'🍽️',shop:'🛒'};
+function tyHead(tag,ty,title){const e=h(tag,'sec ty ty-'+ty,(/^\p{Extended_Pictographic}/u.test(title)?'':TY[ty]+' ')+title);return e;}
 function sectionGrp(box,title,list,empty){
-  box.append(h('h2','sec',title));
+  box.append(tyHead('h2','job',title));
   const singles=list.filter(j=>!j.grp),gids=[...new Set(list.filter(j=>j.grp).map(j=>j.grp))];
   if(!singles.length&&!gids.length){if(empty)box.append(h('p','date',empty));return;}
   const items=singles.map(j=>({k:j,el:()=>jobItem(j)}));
@@ -2963,7 +3223,7 @@ function sectionGrp(box,title,list,empty){
   const ul=h('ul','jobs');items.sort((a,c)=>jobSort(a.k,c.k)).forEach(i=>ul.append(i.el()));box.append(ul);
 }
 function section(box,title,list,empty,quick){
-  if(title)box.append(h('h2','sec',title));
+  if(title)box.append(tyHead('h2','job',title));
   if(quick&&me&&!isAdult(me)){
     const c=h('div','kc kme');const p=byId[me];
     if(p){c.style.setProperty('--kc',p.l);c.style.setProperty('--kc-d',p.d);}
@@ -3073,7 +3333,21 @@ function badgeCount(){
   if(isAdult(me))return (on('r_approve')?jobs.filter(waiting).length:0)+jobs.filter(j=>!j.done&&j.to==='fam').length;
   return jobs.filter(j=>!j.done&&(resp(j)===me||j.to==='fam'||(j.to==='all'&&!j.claim))).length;
 }
+/* מספר על האייקון של האפליקציה (r5_badge): משימות שלי שלא בוצעו + משימות מההורים + תורנויות של לוני להיום */
+let appBadgeN=-1;
+function appBadge(){
+  try{
+    if(!me||!('setAppBadge' in navigator))return;
+    const st=work||{tasks:[],done:[],lv:[]};
+    let n=0;(st.tasks||[]).forEach((t,i)=>{if(String(t||'').trim()&&!st.done[i]&&!hasSubs(st,i))n++;});
+    n+=jobs.filter(j=>!j.done&&(resp(j)===me||j.to==='fam')).length;
+    const dw=new Date().getDay();SLOTS.forEach(x=>{const k=dw+'_'+x.k;if(curWk.slots[k]===me&&!curWk.done[k])n++;});
+    if(n===appBadgeN)return;appBadgeN=n;
+    (n?navigator.setAppBadge(n):navigator.clearAppBadge()).catch(()=>{});
+  }catch(e){}
+}
 function paintBadge(){
+  appBadge();
   const b=$('jobBadge');if(!b)return;
   const c=badgeCount();b.hidden=!c;b.textContent=c;
   $('nv-jobs').setAttribute('aria-label','משימות'+(c?', '+c+' חדשות':''));
@@ -3083,7 +3357,7 @@ function paintBadge(){
 let curWk={slots:{},done:{}},curUnsub=null;
 function subCurWk(){
   if(curUnsub)curUnsub();
-  curUnsub=onSnapshot(wkRef(fmt(sunday(new Date()))),s=>{const d=s.exists()?s.data():{};curWk={slots:d.slots||{},done:d.done||{},orig:d.orig||null};checkRem();paintPodium(false);paintKidsTab();},()=>{});
+  curUnsub=onSnapshot(wkRef(fmt(sunday(new Date()))),s=>{const d=s.exists()?s.data():{};curWk={slots:d.slots||{},done:d.done||{},orig:d.orig||null};checkRem();appBadge();paintPodium(false);paintKidsTab();},()=>{});
 }
 const DOGT={l:[12,30],a:[17,30],b:[20,0],n:[22,0]};
 function remTargets(j){if(j.done)return [];if(j.to==='fam')return PEOPLE.map(p=>p.id);if(j.claim&&j.to==='all')return [j.claim];if(j.to!=='all')return [j.to];return KIDS;}
@@ -3234,7 +3508,13 @@ function subShop(){
   /* מונית והבית (סיכום שבועי, מצב הטלפונים, יועצים) רק להורים */
   $('nv-taxi').hidden=!adult;$('nv-home').hidden=!adult;
   if(!adult&&(!$('tab-taxi').hidden||!$('tab-home').hidden))tab('today');
+  shopOn=false;
   if(!adult){shop=[];return;}
+  if(!$('tab-shop').hidden)shopLive();
+}
+let shopOn=false;
+function shopLive(){
+  if(shopOn||!isAdult(me))return;shopOn=true;
   shopUnsub=onSnapshot(shopCol(),snap=>{shop=snap.docs.map(d=>Object.assign({id:d.id},d.data()));paintShop();},()=>{});
   learnUnsub=onSnapshot(learnDoc(),snap=>{shopLearn=snap.exists()?snap.data():{};},()=>{});
 }
@@ -3648,7 +3928,7 @@ function paintTodayCal(){
   const ex=calItemsAll(tm,tm).filter(it=>it.ev.kind==='exam'&&!it.ev.fam);
   box.hidden=!now.length&&!ex.length;if(box.hidden)return;
   if(now.length){
-    box.append(h('h3',null,'📅 היום בלוח'));
+    box.append(h('h3','ty ty-cal','📅 היום בלוח'));
     now.forEach(it=>{box.append(evRow(it,true));const sb=studyBtn(it.ev,it.day);if(sb)box.append(sb);});
   }
   ex.forEach(it=>{
@@ -4657,7 +4937,7 @@ $('pushTest').onclick=()=>{
   try{initFirebase();}
   catch(e){show('s-setup');say($('setupMsg'),'לא הצלחתי לטעון את Firebase. בדקו אינטרנט ורעננו.');return;}
   if(!code){show('s-setup');return;}
-  try{await authed();startFamily();}
+  try{await authed();if(await ensureDev(true))startFamily();else waitApproval();}
   catch(e){show('s-setup');say($('setupMsg'),'לא הצלחתי להתחבר. בדקו אינטרנט, ושכניסה אנונימית (Anonymous) מופעלת ב-Firebase.');}
 })();
 

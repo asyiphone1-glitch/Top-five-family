@@ -1,8 +1,35 @@
 rules_version = '2';
+// yaya: רק טלפונים שאבא או אמא אישרו יכולים לקרוא ולכתוב (r5_rules, שלב 1).
+// מדביקים את הקובץ הזה ב-Firebase: Firestore Database > Rules > Publish.
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /families/{code}/{document=**} {
-      allow read, write: if request.auth != null;
+    function devPath(code) {
+      return /databases/$(database)/documents/families/$(code)/dev/$(request.auth.uid);
+    }
+    function member(code) {
+      return request.auth != null && exists(devPath(code)) && get(devPath(code)).data.ok == true;
+    }
+
+    // אי אפשר לקבל רשימה של משפחות
+    match /families/{code} {
+      allow read, write: if false;
+    }
+
+    // בדיקה שהקוד המשפחתי קיים, בזמן הצטרפות
+    match /families/{code}/prefs/meta {
+      allow get: if request.auth != null;
+    }
+
+    // טלפון חדש רושם את עצמו כ"מחכה לאישור", ורואה רק את הרישום של עצמו
+    match /families/{code}/dev/{uid} {
+      allow get: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.ok == false;
+    }
+
+    // כל השאר: רק טלפון מאושר
+    match /families/{code}/{col}/{rest=**} {
+      allow read, write: if member(code);
     }
   }
 }
