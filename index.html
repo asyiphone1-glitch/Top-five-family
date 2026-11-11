@@ -689,11 +689,11 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
     <button id="nv-kids" type="button" hidden><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.2"/><circle cx="16" cy="8" r="3.2"/><path d="M2.5 20c.6-3.5 2.8-5.5 5.5-5.5s4.9 2 5.5 5.5M10.5 20c.6-3.5 2.8-5.5 5.5-5.5s4.9 2 5.5 5.5"/></svg>הבנות</button>
     <button id="nv-jobs" type="button"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>משימות<span id="jobBadge" class="nb" hidden></span></button>
     <button id="nv-shop" type="button" hidden><svg viewBox="0 0 24 24"><path d="M3 4h2l2.4 11h11l2-8H6.2"/><circle cx="9" cy="19.5" r="1.5"/><circle cx="17" cy="19.5" r="1.5"/></svg>קניות</button>
-    <button id="nv-taxi" type="button"><svg viewBox="0 0 24 24"><path d="M5 17h14v-5l-2-5H7l-2 5z"/><path d="M5 12h14M9 4h6"/><circle cx="8" cy="17.5" r="1.5"/><circle cx="16" cy="17.5" r="1.5"/></svg>מונית<span id="taxiBadge" class="nb" hidden></span></button>
+    <button id="nv-taxi" type="button" hidden><svg viewBox="0 0 24 24"><path d="M5 17h14v-5l-2-5H7l-2 5z"/><path d="M5 12h14M9 4h6"/><circle cx="8" cy="17.5" r="1.5"/><circle cx="16" cy="17.5" r="1.5"/></svg>מונית<span id="taxiBadge" class="nb" hidden></span></button>
     <button id="nv-food" type="button"><svg viewBox="0 0 24 24"><path d="M7 3v18M4.5 3v5a2.5 2.5 0 0 0 5 0V3"/><path d="M17 21V3c-2.2 1.3-3.5 4-3.5 7.5V14H17"/></svg>אוכל<span id="foodBadge" class="nb" hidden></span></button>
     <button id="nv-cal" type="button"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17.2h.01M12 17.2h.01"/></svg>לוח</button>
     <button id="nv-dog" type="button"><svg viewBox="0 0 24 24"><path d="M4 9l2-4 3 2h6l3-2 2 4v4a8 8 0 0 1-16 0z"/><path d="M9.5 12.5h.01M14.5 12.5h.01M10.5 16c1 .8 2 .8 3 0"/></svg>לוני</button>
-    <button id="nv-home" type="button"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>הבית</button>
+    <button id="nv-home" type="button" hidden><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>הבית</button>
     <button id="nv-set" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>הגדרות</button>
   </nav>
 </section>
@@ -1564,6 +1564,7 @@ function openMain(){
   syncPush();
   const qt=new URLSearchParams(location.search).get('tab');
   if(qt&&$('tab-'+qt)){tab(qt);if(qt==='food')foodFromPush();history.replaceState(null,'',location.pathname);}
+  else if(location.search)history.replaceState(null,'',location.pathname);
 }
 function onPeople(snap){
   if(!$('s-who').hidden)paintWho();
@@ -4440,7 +4441,8 @@ async function checkUpdate(){
     const a=document.activeElement,busy=a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA')&&a.value;
     const openPop=[...document.querySelectorAll('.pop')].some(p=>!p.hidden);
     if(busy||openPop){updAt=0;return;}
-    location.reload();
+    /* כתובת חדשה עוקפת את הזיכרון של הטלפון, כדי שהגרסה החדשה באמת תיטען */
+    location.replace(location.pathname+'?v='+Date.now());
   }catch(e){}
 }
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(checkUpdate,800);});
