@@ -285,6 +285,12 @@ input{font:inherit;color:var(--ink)}
 .fbt{width:100%;box-sizing:border-box;font:inherit;font-size:1rem;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--bg,transparent);color:inherit;resize:vertical;margin:4px 0 6px}
 .fbs{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-top:1px solid var(--line)}
 .fbs small{color:var(--mute);font-size:.78rem}
+.fbh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fbh .kg{margin-inline-end:auto}
+.fbcnt{font-size:.85rem;font-weight:700;color:var(--warn)}
+.btn.fbmed{background:var(--warn-soft);border-color:transparent;font-weight:700;margin-top:6px}
+.fbs.med{background:var(--warn-soft);border-radius:12px;padding:8px 10px;border-top:0;margin-top:6px}
+.fbmbig{font-size:2.4rem;line-height:1}
 .fbs .btn{align-self:flex-start;margin-top:4px}
 .fbc{margin-bottom:12px}.fbc .fbs.new span{font-weight:700}
 .kc .none{color:var(--mute);font-size:.92rem;padding:4px 0}
@@ -1319,7 +1325,19 @@ function subNotes(){
 }
 function fbBox(id){
   const w=h('div','fbw');
-  w.append(h('div','kg','פידבק ל'+byId[id].name));
+  /* כותרת + כפתור צל״ש 🏅. אם כתוב משהו בתיבה, הוא נשלח יחד עם הצל״ש */
+  const hd=h('div','fbh');hd.append(h('div','kg','פידבק ל'+byId[id].name));
+  const ws=sunday(new Date()).getTime(),nm=notes.filter(n=>n.to===id&&n.medal&&(n.at||0)>=ws).length;
+  if(nm)hd.append(h('span','fbcnt','השבוע: '+'🏅'.repeat(Math.min(nm,5))+(nm>5?' '+nm:'')));
+  const md=h('button','btn sm fbmed','🏅 צל״ש');md.type='button';md.setAttribute('aria-label','לתת צל״ש ל'+byId[id].name);
+  md.onclick=()=>{
+    const t=(fbDraft[id]||'').trim();
+    md.disabled=true;
+    setDoc(doc(notesCol()),{to:id,by:me,t:t,medal:true,at:Date.now(),seen:false})
+      .then(()=>{fbDraft[id]='';toast('🏅 צל״ש נשלח ל'+byId[id].name);})
+      .catch(()=>{md.disabled=false;toast('השליחה נכשלה. בדקו חיבור.');});
+  };
+  hd.append(md);w.append(hd);
   const ta=document.createElement('textarea');ta.className='fbt';ta.rows=2;ta.maxLength=600;
   ta.placeholder='מה היה טוב היום, ומה אפשר לשפר';ta.value=fbDraft[id]||'';
   ta.oninput=()=>{fbDraft[id]=ta.value;};
@@ -1332,8 +1350,8 @@ function fbBox(id){
   };
   w.append(ta,b);
   notes.filter(n=>n.to===id).slice(0,3).forEach(n=>{
-    const r=h('div','fbs');
-    r.append(h('span',null,n.t));
+    const r=h('div','fbs'+(n.medal?' med':''));
+    r.append(h('span',null,n.medal?'🏅 צל״ש'+(n.t?': '+n.t:''):n.t));
     r.append(h('small',null,(byId[n.by]?byId[n.by].name+' · ':'')+dshort(fmt(new Date(n.at)))+' · '+(n.seen?'נקרא ✓':'עוד לא נקרא')));
     w.append(r);
   });
@@ -1345,8 +1363,9 @@ function paintMyNotes(){
   c.hidden=!mine.length;c.innerHTML='';if(c.hidden)return;
   c.append(h('h3',null,'פידבק מההורים'));
   mine.forEach(n=>{
-    const r=h('div','fbs'+(n.seen?'':' new'));
-    r.append(h('span',null,n.t));
+    const r=h('div','fbs'+(n.seen?'':' new')+(n.medal?' med':''));
+    if(n.medal){r.append(h('span','fbmbig','🏅'),h('b',null,'קיבלת צל״ש מ'+(byId[n.by]?byId[n.by].name:'ההורים')+'!'));if(n.t)r.append(h('span',null,n.t));}
+    else r.append(h('span',null,n.t));
     r.append(h('small',null,(byId[n.by]?'מ'+byId[n.by].name+' · ':'')+dshort(fmt(new Date(n.at)))));
     if(!n.seen){const b=h('button','btn quiet sm','קראתי');b.type='button';b.onclick=()=>setDoc(doc(notesCol(),n.id),{seen:true,seenAt:Date.now()},{merge:true}).catch(()=>{});r.append(b);}
     c.append(r);

@@ -167,7 +167,9 @@ async function main() {
     for (const n of nts) {
       const at = Number(n.at) || 0;
       if (!n.to || n.seen || !at || now - at > 6 * 3600e3) continue;
-      const t = String(n.t || '').trim(); if (!t) continue;
+      const t = String(n.t || '').trim();
+      if (n.medal) { out.push({ key: `n_${n.id}`, who: [n.to], tab: 'today', body: `🏅 קיבלת צל״ש מ${n.by === 'mom' ? 'אמא' : 'אבא'}!` + (t ? ' ' + (t.length > 80 ? t.slice(0, 80) + '…' : t) : '') }); continue; }
+      if (!t) continue;
       out.push({ key: `n_${n.id}`, who: [n.to], tab: 'today', body: (n.by === 'mom' ? 'פידבק מאמא: ' : 'פידבק מאבא: ') + (t.length > 90 ? t.slice(0, 90) + '…' : t) });
     }
   }
