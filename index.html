@@ -410,6 +410,20 @@ input{font:inherit;color:var(--ink)}
 .chip.fed{border-style:dashed}
 .fask{color:var(--bad);font-weight:700}
 p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:10px 0 0}
+/* סיכום הזמנה לבת: ארוחות עם ציורים, ושעת השכמה גדולה למטה */
+.fsumk{display:flex;flex-direction:column;gap:14px;margin-top:6px}
+.fsumk .fok{font-size:1.1rem;margin:0}
+.fsec h4{margin:0 0 8px;font:700 1.05rem var(--display);color:var(--mute)}
+.mtile{display:flex;align-items:center;gap:14px;padding:14px;border-radius:18px;background:var(--warn-soft);margin-top:10px}
+.mtile.lunch{background:color-mix(in srgb,var(--good) 14%,var(--surface))}
+.mtile .mpic{flex:none;width:76px;height:76px;border-radius:16px;background:var(--surface);display:grid;place-items:center;font-size:2.2rem;line-height:1;letter-spacing:-.15em;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.mtile .mpic.n2{font-size:1.8rem}.mtile .mpic.n3{font-size:1.45rem}
+.mtile .mlb{font-size:.9rem;font-weight:700;color:var(--mute)}
+.mtile .mtx{font:700 1.4rem/1.3 var(--display);word-break:break-word}
+.wbig{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-radius:18px;background:color-mix(in srgb,var(--act) 13%,var(--surface));border:2px solid color-mix(in srgb,var(--act) 35%,transparent)}
+.wbig .wl{font:700 1.15rem var(--display)}
+.wbig .wl small{display:block;font:500 .85rem var(--body);color:var(--mute);margin-top:2px}
+.wbig .wt{font:800 3rem/1 var(--display);color:var(--act);direction:ltr;font-variant-numeric:tabular-nums}
 .fplanbox{background:var(--warn-soft);border-radius:14px;padding:10px 12px;margin-top:8px}
 .fplanbox .fline{margin-top:4px}
 .fsub{margin:10px 0 0;color:var(--mute);font-size:.95rem}
@@ -3852,6 +3866,37 @@ function planOf(k,id){const p=((foodDays[k]||{}).plans||{})[id];return p&&p.at&&
 function effOf(k,id){const p=planOf(k,id);return p&&(p.st==='wait'||p.st==='alt')?p:orderOf(k,id);}
 const planned=by=>by==='mom'?'אמא תכננה':'אבא תכנן';
 function mealLines(host,o,cls){MEALS.forEach(([mk,name,ic])=>{const ln=h('p','fline'+(cls?' '+cls:''));ln.append(h('span','fml',ic+' '+name+': '),document.createTextNode(mealTxt(o,mk)||'—'));host.append(ln);});}
+/* ציורים לאוכל לפי מילים בטקסט */
+const FOOD_PICS=[['תפוח אדמה','🥔'],['תפו"א','🥔'],['טוסט','🥪'],['כריך','🥪'],['סנדוויץ','🥪'],['פיתה','🫓'],['לחמני','🥯'],['לחם','🍞'],['בייגל','🥯'],['קרואסון','🥐'],['בורקס','🥐'],
+['גבינ','🧀'],['חביתה','🍳'],['ביצ','🥚'],['שקשוקה','🍳'],['פיצה','🍕'],['פסטה','🍝'],['ספגטי','🍝'],['מקרוני','🍝'],['נודלס','🍜'],['אטריות','🍜'],['אורז','🍚'],['סושי','🍣'],
+['שניצל','🍗'],['עוף','🍗'],['פרגית','🍗'],['המבורגר','🍔'],['קציצ','🧆'],['פלאפל','🧆'],['חומוס','🧆'],['נקניק','🌭'],['בשר','🥩'],['דג','🐟'],['טונה','🐟'],['צ׳יפס','🍟'],["צ'יפס",'🍟'],['ציפס','🍟'],
+['מרק','🍲'],['סלט','🥗'],['ירקות','🥗'],['מלפפון','🥒'],['עגבני','🍅'],['גזר','🥕'],['תירס','🌽'],['אבוקדו','🥑'],['תפוח','🍎'],['בננה','🍌'],['ענבים','🍇'],['אבטיח','🍉'],['תות','🍓'],['תפוז','🍊'],['פירות','🍉'],['פרי','🍎'],
+['יוגורט','🥛'],['מעדן','🍮'],['חלב','🥛'],['קורנפלקס','🥣'],['דגני','🥣'],['גרנולה','🥣'],['פנקייק','🥞'],['וופל','🧇'],['עוגיות','🍪'],['עוגה','🍰'],['שוקולד','🍫'],['במבה','🥜'],['ממרח','🥜']];
+function foodPics(txt,def){
+  const t=(txt||'').replace(/\s+/g,' ');let rest=t;const found=[];
+  FOOD_PICS.forEach(([w,e])=>{const i=rest.indexOf(w);if(i>=0){found.push([t.indexOf(w)>=0?t.indexOf(w):i,e]);rest=rest.split(w).join(' ');}});
+  const out=[];found.sort((a,b)=>a[0]-b[0]).forEach(([,e])=>{if(!out.includes(e))out.push(e);});
+  return out.length?out.slice(0,3):[def];
+}
+/* סיכום יפה לבת: למעלה הארוחות עם ציורים, למטה ההשכמה בגדול */
+function kidSummary(host,o,w,status,dayTxt){
+  const box=h('div','fsumk');
+  if(status)box.append(status);
+  const fs=h('div','fsec');fs.append(h('h4',null,'🍽️ הארוחות '+(dayTxt||'למחר')));
+  MEALS.forEach(([mk,name,ic])=>{
+    const tx=mealTxt(o,mk),pics=foodPics(tx,ic);
+    const t=h('div','mtile '+mk),pic=h('div','mpic n'+pics.length,pics.join(''));pic.setAttribute('aria-hidden','true');
+    const tb=h('div');tb.append(h('div','mlb',name),h('div','mtx',tx||'—'));
+    t.append(pic,tb);fs.append(t);
+  });
+  box.append(fs);
+  if(w){
+    const wb=h('div','wbig'),wl=h('div','wl','⏰ השכמה');
+    if(w.src==='p')wl.append(h('small',null,wakeSrcTxt(w)));
+    wb.append(wl,h('div','wt',w.t));box.append(wb);
+  }
+  host.append(box);
+}
 function mealsOf(o){return {ten:(o.ten||[]).slice(),tenX:o.tenX||'',lunch:(o.lunch||[]).slice(),lunchX:o.lunchX||''};}
 function setLocal(k,f,id,v){foodDays[k]=Object.assign({},foodDays[k]);foodDays[k][f]=Object.assign({},foodDays[k][f],{[id]:v});}
 function mealTxt(o,mk){if(!o)return '';const a=(o[mk]||[]).slice();if(o[mk+'X'])a.push(o[mk+'X']);return a.join(', ');}
@@ -3991,17 +4036,13 @@ function planView(host,inPop,pl){
   if(pl.st==='altok'||pl.st==='kept'){
     const ok=pl.st==='altok';
     const dm=(pl.dby||pl.by)==='mom',dn=dm?'אמא':'אבא';
-    box.append(h('p','fok',ok?'✓ '+dn+(dm?' אישרה':' אישר')+' את הבקשה שלך':'📝 '+dn+(dm?' השאירה':' השאיר')+' את מה ש'+planned(pl.by)));
-    mealLines(box,ok?pl.alt||{}:pl);
-    const w=kidWakeInfo(k,me);if(w)box.append(h('p','fline','⏰ השכמה: '+w.t+(w.src==='p'?' ('+wakeSrcTxt(w)+')':'')));
-    host.append(box);altBtn(host,inPop,'✋ לבקש משהו אחר');return;
+    const st=h('p','fok',ok?'✓ '+dn+(dm?' אישרה':' אישר')+' את הבקשה שלך':'📝 '+dn+(dm?' השאירה':' השאיר')+' את מה ש'+planned(pl.by));
+    kidSummary(host,ok?pl.alt||{}:pl,kidWakeInfo(k,me),st);
+    altBtn(host,inPop,'✋ לבקש משהו אחר');return;
   }
   /* חלק 1: האוכל. מאשרת או מבקשת משהו אחר */
-  const fs=h('div','fmeal');fs.append(h('h4',null,'🍽️ האוכל'));
-  box.append(h('p','fml','📝 '+planned(pl.by)+' לך:'));
-  mealLines(box,pl);
-  if(pl.st==='ok')box.append(h('p','fok','✓ אישרת.'));
-  fs.append(box);
+  const fs=h('div','fmeal');
+  kidSummary(fs,pl,null,h('p',pl.st==='ok'?'fok':'fml',pl.st==='ok'?'✓ אישרת את מה ש'+planned(pl.by):'📝 '+planned(pl.by)+' לך:'));
   const fmsg=h('p','msg');fmsg.setAttribute('role','status');
   const no=h('button','btn','✋ לא מתאים לי, לבקש משהו אחר');no.type='button';
   no.onclick=()=>{foodAlt=true;kidFood(host,inPop);};
@@ -4127,8 +4168,7 @@ function paintFoodKid(box){
   const t=orderOf(today(),me);
   if(t){
     const c2=h('div','card');c2.append(h('h3',null,'מה הזמנתי להיום'));
-    MEALS.forEach(([mk,name,ic])=>c2.append(h('p','fline',ic+' '+name+': '+(mealTxt(t,mk)||'—'))));
-    {const w=kidWakeInfo(today(),me);if(w&&w.src!=='f')c2.append(h('p','fline','⏰ השכמה: '+w.t));}
+    {const w=kidWakeInfo(today(),me);kidSummary(c2,t,w&&w.src!=='f'?w:null,null,'להיום');}
     box.append(c2);
   }
 }
