@@ -2622,7 +2622,10 @@ const advDoc=()=>doc(db,'families',code,'prefs','advice');
 /* החלטות שאבא קיבל בשיחה (8/11/2026). החלטה שנשמרת באפליקציה גוברת עליהן */
 const ADV0={r_dogring:'yes',r_pre10:'yes',r_limit2:'no',r_release:'no',r_approve:'yes',r_fair:'yes',r_cheer:'yes',r_push:'yes',r_week:'yes'};
 const ADV0_AT=new Date(2026,10,8,11,0).getTime();
-function decision(id){if(id==='r_approve')return {s:'no',by:'dad',at:0};return adv[id]||(ADV0[id]?{s:ADV0[id],by:'dad',at:ADV0_AT}:null);}
+/* החלטות של אבא על סבב 5, מהשיחה (12/11/2026) */
+const ADV5={r5_rules:'yes',r5_pin:'no',r5_private:'no',r5_badge:'yes',r5_swipe:'yes',r5_icons:'yes',r5_taskpts:'yes',r5_teamgoal:'no',r5_party:'yes',r5_cant:'yes',r5_why:'no',r5_driver:'no',r5_offline:'yes',r5_lazy:'yes',r5_health:'yes',r5_60:'yes',r5_autobk:'yes',r5_errors:'yes'};
+const ADV5_AT=new Date(2026,10,12,0,5).getTime();
+function decision(id){if(id==='r_approve')return {s:'no',by:'dad',at:0};return adv[id]||(ADV0[id]?{s:ADV0[id],by:'dad',at:ADV0_AT}:ADV5[id]?{s:ADV5[id],by:'dad',at:ADV5_AT}:null);}
 /* המלצה שהוחלט עליה נעלמת מהמסך יום אחרי ההחלטה */
 const ADV_KEEP=864e5;let advOld=false;
 /* המלצות שכבר נבנו באפליקציה. מה שנבנה, או שלא התקבל לפני יותר מיום, עובר לארכיון */
