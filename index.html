@@ -3882,7 +3882,7 @@ function kidFood(host,inPop){
   const k=tmrKey(),pl=planOf(k,me);
   if(inPop)$('foodPopH').textContent=pl&&pl.st==='wait'&&!foodAlt?'🍽️ '+planned(pl.by)+' לך ל'+foodDayTxt(k):'🍽️ מה להכין לך ל'+foodDayTxt(k)+'?';
   if(!pl)return foodForm(host,inPop);
-  if(foodAlt&&(pl.st==='wait'||pl.st==='ok'))return foodForm(host,inPop,'a');
+  if(foodAlt)return foodForm(host,inPop,'a');
   planView(host,inPop,pl);
 }
 /* הכנה של הטיוטה: o = הזמנה רגילה, a = בקשה חלופית, p = אישור תכנון (רק שעת השכמה) */
@@ -3891,7 +3891,7 @@ function fEnsure(k,mode){
   if(fdraftDay===key&&fdraft)return;
   const prev=fdraft&&fdraftDay.startsWith(k+'|')?fdraft:null;
   const pl=planOf(k,me),ow=orderOf(k,me),wf=wakeDef[me]||'';
-  const o=mode==='a'?(pl&&pl.alt)||pl:mode==='o'?ow:null;
+  const o=mode==='a'?(pl&&pl.st!=='kept'&&pl.alt)||pl:mode==='o'?ow:null;
   const ew=kidWakeInfo(k,me),pw=pWake(k,me);
   const wk=prev&&prev.wTouch?prev.wake:(ew&&ew.src!=='f'?ew.t:'')||(o&&o.wake)||(ow&&ow.wake)||wf;
   fdraft={ten:new Set(o?o.ten||[]:[]),tenX:o?o.tenX||'':'',lunch:new Set(o?o.lunch||[]:[]),lunchX:o?o.lunchX||'':'',
@@ -3959,7 +3959,7 @@ function planView(host,inPop,pl){
     box.append(h('p','fwait','✋ ביקשת משהו אחר. מחכה לתשובה מ'+who+'.'));
     box.append(h('p','fml','מה ביקשת:'));mealLines(box,pl.alt||{},'fx2');
     box.append(h('p','fml','מה '+planned(pl.by)+':'));mealLines(box,pl);
-    host.append(box);return;
+    host.append(box);altBtn(host,inPop,'✏️ לשנות את הבקשה');return;
   }
   if(pl.st==='altok'||pl.st==='kept'){
     const ok=pl.st==='altok';
@@ -3967,7 +3967,7 @@ function planView(host,inPop,pl){
     box.append(h('p','fok',ok?'✓ '+dn+(dm?' אישרה':' אישר')+' את הבקשה שלך':'📝 '+dn+(dm?' השאירה':' השאיר')+' את מה ש'+planned(pl.by)));
     mealLines(box,ok?pl.alt||{}:pl);
     const w=kidWakeInfo(k,me);if(w)box.append(h('p','fline','⏰ השכמה: '+w.t+(w.src==='p'?' ('+wakeSrcTxt(w)+')':'')));
-    host.append(box);return;
+    host.append(box);altBtn(host,inPop,'✋ לבקש משהו אחר');return;
   }
   box.append(h('p','fml','📝 '+planned(pl.by)+' לך:'));
   mealLines(box,pl);
@@ -3989,6 +3989,12 @@ function planView(host,inPop,pl){
     host.append(later);
   }
   host.append(msg);
+}
+/* כפתור לשינוי הבקשה אחרי ששלחה, או לבקשה חדשה אחרי שאבא/אמא החליטו */
+function altBtn(host,inPop,txt){
+  const b=h('button','btn',txt);b.type='button';
+  b.onclick=()=>{foodAlt=true;kidFood(host,inPop);};
+  host.append(b);
 }
 /* השכמה למחר: שעה, ואפשרות לקבוע אותה לכל יום */
 function wakeSec(){
