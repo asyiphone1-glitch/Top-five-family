@@ -21,12 +21,13 @@
   --bg:#EEF2F9; --surface:#FFFFFF; --ink:#12254A; --mute:#5E6B85; --line:#D5DCEA;
   --soft:#E6ECF8; --good:#1F9D74; --bad:#B93A2B; --warn:#9A5208; --warn-soft:#FBEBD3;
   --display:'Rubik','Heebo',Arial,sans-serif; --body:'Heebo',Arial,sans-serif;
+  --act:#2563EB; --act-d:#1D4ED8; --ok:#16A34A;
   color-scheme:light;
 }
 body{--accent:var(--pc,#2F5BFF)}
 @media (prefers-color-scheme:dark){
   :root{--bg:#0E1626; --surface:#17233A; --ink:#EAF0FF; --mute:#9AA8C4; --line:#2A3A59;
-    --soft:#1D2C48; --good:#38C595; --bad:#FF8A7A; --warn:#F0B35E; --warn-soft:#3A2D17; color-scheme:dark}
+    --soft:#1D2C48; --good:#38C595; --bad:#FF8A7A; --warn:#F0B35E; --warn-soft:#3A2D17; --act:#3B6FF5; --act-d:#2554D6; --ok:#1FA855; color-scheme:dark}
   body{--accent:var(--pc-d,#6F90FF)}
 }
 *{box-sizing:border-box}
@@ -44,10 +45,16 @@ input{font:inherit;color:var(--ink)}
 .field{width:100%;padding:14px;border:2px solid var(--line);border-radius:14px;background:var(--surface);font-size:1.15rem}
 .field:focus-visible,.btn:focus-visible,.who-btn:focus-visible,.chk:focus-visible,.nav button:focus-visible,.task:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 .btn{display:block;width:100%;min-height:54px;margin-top:12px;padding:12px 16px;border-radius:14px;border:2px solid var(--accent);background:transparent;color:var(--accent);font:700 1.05rem var(--body);cursor:pointer}
-.btn.pri{background:var(--accent);color:#fff}
+.btn.pri{background:var(--act);border-color:var(--act);color:#fff;box-shadow:0 3px 0 var(--act-d),0 6px 14px rgba(37,99,235,.28);transition:transform .08s,box-shadow .08s,background .15s}
+.btn.pri:active{background:var(--act-d);transform:translateY(3px) scale(.97);box-shadow:0 0 0 var(--act-d),0 2px 6px rgba(37,99,235,.2)}
+.btn.ok,.btn.pri.ok{background:var(--ok);border-color:var(--ok);color:#fff;box-shadow:0 3px 0 #11803A;animation:okpop .35s ease-out}
+.btn.busy{opacity:.7;pointer-events:none}
+.btn:disabled:not(.ok){opacity:.45;cursor:default;box-shadow:none}
+@keyframes okpop{0%{transform:scale(.9)}60%{transform:scale(1.06)}100%{transform:scale(1)}}
 .btn.quiet{border-color:var(--line);color:var(--ink)}
 .btn.danger{border-color:var(--bad);color:var(--bad)}
-.btn:active{transform:scale(.99)}
+.btn{transition:transform .08s,background .15s}
+.btn:active{transform:scale(.96)}
 .msg{min-height:1.6em;margin:10px 0 0;color:var(--bad);font-weight:500}
 .msg.ok{color:var(--good)}
 .hint{color:var(--mute);font-size:.92rem;margin-top:18px}
@@ -1367,20 +1374,23 @@ function fbBox(id){
     const t=(fbDraft[id]||'').trim();
     md.disabled=true;
     setDoc(doc(notesCol()),{to:id,by:me,t:t,medal:true,at:Date.now(),seen:false})
-      .then(()=>{fbDraft[id]='';toast('🏅 צל״ש נשלח ל'+byId[id].name);})
+      .then(()=>{fbDraft[id]='';md.disabled=false;markOk(md,'md'+id,'נשלח');toast('🏅 צל״ש נשלח ל'+byId[id].name);})
       .catch(()=>{md.disabled=false;toast('השליחה נכשלה. בדקו חיבור.');});
   };
+  okBtn(md,'md'+id,'נשלח');
   hd.append(md);w.append(hd);
   const ta=document.createElement('textarea');ta.className='fbt';ta.rows=2;ta.maxLength=600;
   ta.placeholder='מה היה טוב היום, ומה אפשר לשפר';ta.value=fbDraft[id]||'';
   ta.oninput=()=>{fbDraft[id]=ta.value;};
   const b=h('button','btn pri sm','שליחה');b.type='button';
   b.onclick=()=>{
-    const t=ta.value.trim();if(!t)return;
+    const t=ta.value.trim();if(!t){toast('כתבו משהו בתיבה ואז שליחה');ta.focus();return;}
+    b.classList.add('busy');
     setDoc(doc(notesCol()),{to:id,by:me,t:t,at:Date.now(),seen:false})
-      .then(()=>{fbDraft[id]='';toast('הפידבק נשלח ל'+byId[id].name);})
-      .catch(()=>toast('השליחה נכשלה. בדקו חיבור.'));
+      .then(()=>{b.classList.remove('busy');fbDraft[id]='';ta.value='';markOk(b,'fb'+id,'נשלח');toast('הפידבק נשלח ל'+byId[id].name);})
+      .catch(()=>{b.classList.remove('busy');toast('השליחה נכשלה. בדקו חיבור.');});
   };
+  okBtn(b,'fb'+id,'נשלח');
   w.append(ta,b);
   notes.filter(n=>n.to===id).slice(0,3).forEach(n=>{
     const r=h('div','fbs'+(n.medal?' med':''));
@@ -2442,6 +2452,15 @@ function remind(lines,goTab){
 }
 $('popOk').onclick=()=>{$('pop').hidden=true;};
 let toastT=null;
+/* אישור ויזואלי על כפתור: ירוק עם ✓ לשנייה וחצי, שורד רינדור מחדש לפי מפתח */
+const okUntil={};
+function okBtn(b,key,label){
+  if(!b||!((okUntil[key]||0)>Date.now()))return;
+  if(!b.dataset.lbl)b.dataset.lbl=b.textContent;
+  b.classList.add('ok');b.textContent='✓ '+label;
+  setTimeout(()=>{if(b.isConnected){b.classList.remove('ok');b.textContent=b.dataset.lbl;}},Math.max(0,okUntil[key]-Date.now()));
+}
+function markOk(b,key,label){okUntil[key]=Date.now()+1600;okBtn(b,key,label);}
 function toast(t){const el=$('toast');el.textContent=t;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>el.hidden=true,2600);}
 $('ringTest').onclick=()=>{ringPrime();setTimeout(chime,150);toast('ככה נשמע הצלצול');};
 
