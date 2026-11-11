@@ -1625,7 +1625,7 @@ function normPrefs(r,id){
   r=r||{};
   return {hard:(r.hard||[]).slice(),like:(r.like||[]).slice(),avoid:(r.avoid||[]).slice(),
           block:(r.block||[]).slice(),once:[],
-          max:r.max||(id==='dad'?10:id==='mom'?2:5),wb:[]};
+          max:(id==='dad'?10:id==='mom'?2:5),wb:[]};
 }
 function loadPrefs(){return normPrefs((people[me]||{}).prefs,me);}
 const SHORT={m:'בוקר',s:'אחרי ביה"ס',a:'17:30',b:'20:00',n:'22:00'};
@@ -1681,11 +1681,6 @@ function paintQuiz(){
   add('באילו ימים עמוס לי, ועדיף שלא?',chipRow(days,qz.hard,'ימים עמוסים'),'זו בקשה ולא איסור. השיבוץ ינסה להימנע.');
   add('באילו שעות נוח לי להוציא?',chipRow(sl,qz.like,'שעות נוחות'));
   add('באילו שעות הכי קשה לי?',chipRow(sl,qz.avoid,'שעות קשות'));
-  const l=h('label',null,me==='mom'?'כמה תורנויות בשבוע אני לוקחת?':G('כמה תורנויות בשבוע אני מוכן לקחת, לכל היותר?','כמה תורנויות בשבוע אני מוכנה לקחת, לכל היותר?'));l.setAttribute('for','qmax');
-  const sel=h('select','qsel');sel.id='qmax';
-  for(let i=1;i<=14;i++){const o=h('option',null,String(i));o.value=i;if(i===qz.max)o.selected=true;sel.append(o);}
-  sel.onchange=()=>{qz.max=+sel.value;};
-  q.append(l,sel);
 }
 $('quizSave').onclick=()=>{
   if(!qz)return;
