@@ -188,11 +188,11 @@ async function main() {
     }
   }
 
-  // יום רביעי: 18:00 תזכורת למי שעוד לא מילא אילוצים לשבוע הבא. 22:00 המועד נסגר והאפליקציה משבצת את כל המשמרות
+  // יום חמישי: 18:00 תזכורת למי שעוד לא מילא אילוצים לשבוע הבא. 22:00 המועד נסגר והאפליקציה משבצת את כל המשמרות
   {
     const p = parts(now);
-    if (p.wd === 3) {
-      const nx = new Date(Date.UTC(p.y, p.m - 1, p.d) + 4 * 864e5);
+    if (p.wd === 4) {
+      const nx = new Date(Date.UTC(p.y, p.m - 1, p.d) + 3 * 864e5);
       const nk = ymd(nx.getUTCFullYear(), nx.getUTCMonth() + 1, nx.getUTCDate());
       const t18 = localToUtc(p.y, p.m, p.d, 18, 0), t22 = localToUtc(p.y, p.m, p.d, 22, 0);
       const in18 = t18 <= now && now - t18 <= WINDOW, in22 = t22 <= now && now - t22 <= WINDOW;
