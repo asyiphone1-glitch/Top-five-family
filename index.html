@@ -1976,8 +1976,10 @@ function paintDog(){
   const bp=h('button','btn quiet sm','שבוע קודם');bp.type='button';
   bp.onclick=()=>{weekStart=addDays(weekStart,-7);draft=null;confirmGen=false;subWeek();};
   const e=addDays(weekStart,6);
-  const lab=h('b',null,(wkey===cur?'השבוע: ':'שבוע ')+weekStart.getDate()+'/'+(weekStart.getMonth()+1)+' עד '+e.getDate()+'/'+(e.getMonth()+1));
-  nav.append(bp,lab,bn);box.append(nav);
+  const st=wkey===cur?new Date():weekStart;
+  const lab=h('b',null,(wkey===cur?'מהיום: ':'שבוע ')+st.getDate()+'/'+(st.getMonth()+1)+' עד '+e.getDate()+'/'+(e.getMonth()+1));
+  /* לא חוזרים לשבועות שעברו: רק התוכנית קדימה */
+  nav.append(wkey>cur?bp:h('span'),lab,bn);box.append(nav);
   if(wkey!==cur){const g=h('button','btn quiet sm','חזרה להשבוע');g.type='button';g.style.marginBottom='8px';
     g.onclick=()=>{weekStart=sunday(new Date());draft=null;subWeek();};box.append(g);}
 
@@ -2062,6 +2064,8 @@ function paintDog(){
   const todayK=fmt(new Date());
   for(let d=0;d<7;d++){
     const date=addDays(weekStart,d),dk=fmt(date),isNow=dk===todayK,isPast=dk<todayK;
+    /* ימים שעברו לא מוצגים: רק מהיום ועד שבת */
+    if(isPast)continue;
     const card=h('section','day'+(isNow?' now':''));
     card.append(h('h3',null,'יום '+DAYN[d]+' '+date.getDate()+'/'+(date.getMonth()+1)));
     SLOTS.forEach(sl=>{
