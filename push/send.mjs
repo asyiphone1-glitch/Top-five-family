@@ -250,6 +250,12 @@ async function main() {
     ks.forEach((k, i) => {
       const pls = (docs[i] && docs[i].plans) || {};
       const when = i ? 'מחר' : 'היום';
+      // שעת השכמה שאבא או אמא קבעו לבת
+      const wks = (docs[i] && docs[i].wakes) || {}, wb = (docs[i] && docs[i].wakeBy) || {};
+      for (const id of KIDS) {
+        const b = wb[id], t = wks[id];
+        if (t && b && fresh(b.at)) out.push({ key: `fwk_${k}_${id}_${b.at}`, who: [id], tab: 'food', body: `⏰ ${b.by === 'mom' ? 'אמא קבעה' : 'אבא קבע'} לך השכמה ל${when} ב-${t}` });
+      }
       for (const id of KIDS) {
         const x = pls[id]; if (!x || !x.at || !x.st) continue;
         const pm = x.by === 'mom';
