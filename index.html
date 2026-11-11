@@ -610,8 +610,6 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
   </div>
 
   <div id="tab-food" hidden>
-    <h2 class="sec">אוכל</h2>
-    <p class="date">ארוחת עשר, צהרון ושעת השכמה. הבנות בוחרות מהתפריט שההורים מכניסים, ואפשר להוסיף משהו במילים.</p>
     <div id="foodBox"></div>
   </div>
 
@@ -4033,26 +4031,33 @@ function planView(host,inPop,pl){
     const w=kidWakeInfo(k,me);if(w)box.append(h('p','fline','⏰ השכמה: '+w.t+(w.src==='p'?' ('+wakeSrcTxt(w)+')':'')));
     host.append(box);altBtn(host,inPop,'✋ לבקש משהו אחר');return;
   }
+  /* חלק 1: האוכל. מאשרת או מבקשת משהו אחר */
+  const fs=h('div','fmeal');fs.append(h('h4',null,'🍽️ האוכל'));
   box.append(h('p','fml','📝 '+planned(pl.by)+' לך:'));
   mealLines(box,pl);
-  if(pl.st==='ok')box.append(h('p','fok','✓ אישרת. אפשר עדיין לבקש משהו אחר.'));
-  host.append(box);
+  if(pl.st==='ok')box.append(h('p','fok','✓ אישרת.'));
+  fs.append(box);
+  const fmsg=h('p','msg');fmsg.setAttribute('role','status');
+  const no=h('button','btn','✋ לא מתאים לי, לבקש משהו אחר');no.type='button';
+  no.onclick=()=>{foodAlt=true;kidFood(host,inPop);};
+  if(pl.st!=='ok'){const ok=h('button','btn pri','✓ מאשרת');ok.type='button';ok.onclick=()=>approvePlan(fmsg);fs.append(ok);}
+  fs.append(no,fmsg);host.append(fs);
+  /* חלק 2: ההשכמה. מעדכנת שעה, או פותחת בחירה של שעה אחרת */
   fEnsure(k,'p');
   if(!fdraft.wTouch&&wakeDef[me]&&fdraft.wake!==wakeDef[me]){fdraft.wake=wakeDef[me];fdraft.wakeFix=true;}
   syncPWake(k);
-  host.append(wakeSec());
-  const msg=h('p','msg');msg.setAttribute('role','status');
-  const ok=h('button','btn pri',pl.st==='ok'?'עדכון שעת ההשכמה':'✓ מאשרת');ok.type='button';
-  ok.onclick=()=>approvePlan(msg);
-  const no=h('button','btn','✋ לא מתאים לי, לבקש משהו אחר');no.type='button';
-  no.onclick=()=>{foodAlt=true;kidFood(host,inPop);};
-  host.append(ok,no);
+  const ws=wakeSec();
+  const wmsg=h('p','msg');wmsg.setAttribute('role','status');
+  const up=h('button','btn pri','עדכון שעת ההשכמה');up.type='button';
+  up.onclick=()=>saveWake(wmsg,inPop);
+  const wno=h('button','btn','✋ לא מתאים לי, לבקש משהו אחר');wno.type='button';
+  wno.onclick=()=>{const ti=ws.querySelector('input[type=time]');if(!ti)return;ti.focus();try{ti.showPicker();}catch(e){}};
+  ws.append(up,wno,wmsg);host.append(ws);
   if(inPop){
     const later=h('button','btn quiet','אחר כך');later.type='button';
     later.onclick=()=>{closeFoodPop(true);toast('אזכיר שוב בעוד רבע שעה');};
     host.append(later);
   }
-  host.append(msg);
 }
 /* כפתור לשינוי הבקשה אחרי ששלחה, או לבקשה חדשה אחרי שאבא/אמא החליטו */
 function altBtn(host,inPop,txt){
@@ -4103,12 +4108,23 @@ function sendFood(msg){
 /* הבת מאשרת את התכנון: הוא נהיה ההזמנה שלה */
 function approvePlan(msg){
   const k=tmrKey(),pl=planOf(k,me);if(!pl)return;
-  if(!draftOk(msg,false))return;
-  const now=Date.now(),o=Object.assign(mealsOf(pl),{wake:fdraft.wake,at:now,src:'plan'});
+  const now=Date.now(),w=kidWakeInfo(k,me),o=Object.assign(mealsOf(pl),{at:now,src:'plan'});
+  if(w&&w.src==='k')o.wake=w.t;
   setDoc(foodRef(k),{orders:{[me]:o},plans:{[me]:{st:'ok',dt:now}}},{merge:true}).catch(failSave);
-  saveWakeFix();setLocal(k,'orders',me,o);setLocal(k,'plans',me,Object.assign({},pl,{st:'ok',dt:now}));
+  setLocal(k,'orders',me,o);setLocal(k,'plans',me,Object.assign({},pl,{st:'ok',dt:now}));
   closeFoodPop(false);
-  toast(pl.st==='ok'?'שעת ההשכמה עודכנה':'תודה! '+(pl.by==='mom'?'אמא':'אבא')+' יראו שאישרת');
+  toast('תודה! '+(pl.by==='mom'?'אמא':'אבא')+' יראו שאישרת');
+  paintFood(true);paintFoodBadge();
+}
+/* הבת מעדכנת רק את שעת ההשכמה, בלי לגעת באוכל */
+function saveWake(msg,inPop){
+  const k=tmrKey();
+  if(!draftOk(msg,false))return;
+  const now=Date.now(),o=Object.assign({},orderOf(k,me)||{},{wake:fdraft.wake,at:now});
+  setDoc(foodRef(k),{orders:{[me]:{wake:fdraft.wake,at:now}}},{merge:true}).catch(failSave);
+  saveWakeFix();setLocal(k,'orders',me,o);
+  toast('שעת ההשכמה עודכנה');
+  if(inPop)kidFood($('foodPopForm'),true);
   paintFood(true);paintFoodBadge();
 }
 /* הבת מבקשת משהו אחר במקום התכנון. ההורה מאשר או משאיר את התכנון */
