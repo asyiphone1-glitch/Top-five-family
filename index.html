@@ -265,6 +265,7 @@ input{font:inherit;color:var(--ink)}
 .kc .kh2 small.all{color:var(--good)}
 .kbar{height:6px;border-radius:99px;background:var(--soft);margin:8px 0 4px;overflow:hidden}
 .kbar i{display:block;height:100%;background:var(--good);border-radius:99px}
+.clsn{background:var(--soft);border-radius:12px;padding:10px 12px;margin-top:10px}.clsn ul{margin:6px 0 0;padding-inline-start:18px}.clsn li{margin:2px 0}.clsn .hint{margin:6px 0 0}
 .kg{font-size:.8rem;font-weight:700;color:var(--mute);margin:10px 0 2px}
 .kr{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
 .kg+.kr{border-top:0}
@@ -668,7 +669,7 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
     </div>
     <button id="btnSwitch" class="btn quiet" type="button">החלפת פרופיל</button>
     <button id="btnForget" class="btn danger" type="button">ניתוק הטלפון הזה מהמשפחה</button>
-    <p class="hint">גרסה: שלב 4, כולל מסך הבנות, אילוצים שבועיים עד חמישי 22:00 ושיבוץ אוטומטי, דו״ח הוגנות, ניקוד בונוס ופודיום עם לוני, צלצול משופר,  פעמון תזכורת לכל משימה ותת־משימה, צבע לכל קטגוריה, כיווץ תתי־משימות, מסך נפרד למשימות משפחתיות, התראות כשהאפליקציה סגורה, רשימת קניות, מונית, לוח משפחתי (שבועי וחודשי, עם הבחינות מ-teach-me ותזכורות), אוכל (ארוחת עשר, צהרון ושעת השכמה לכל המשפחה עם שאלה לבנות כל ערב ב-20:00, אבא ואמא קובעים השכמה לכל בת, וסיכום של כולם במבט אחד), משימות ותתי־משימות בלי הגבלה, משימות מההורים עם צלצול, משימות חוזרות, הלוח ב"היום שלי" של הבנות, כפתור ללמוד לבחינה ב-teach-me, הצעות מונית מהחוגים, מצב הטלפונים, גיבוי, משימות פתוחות, שיבוץ התורנויות של לוני עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
+    <p class="hint">גרסה: שלב 4, כולל מסך הבנות, אילוצים שבועיים עד חמישי 22:00 (חוגים מהלוח נחסמים לבד) ושיבוץ אוטומטי, דו״ח הוגנות, ניקוד בונוס ופודיום עם לוני, צלצול משופר,  פעמון תזכורת לכל משימה ותת־משימה, צבע לכל קטגוריה, כיווץ תתי־משימות, מסך נפרד למשימות משפחתיות, התראות כשהאפליקציה סגורה, רשימת קניות, מונית, לוח משפחתי (שבועי וחודשי, עם הבחינות מ-teach-me ותזכורות), אוכל (ארוחת עשר, צהרון ושעת השכמה לכל המשפחה עם שאלה לבנות כל ערב ב-20:00, אבא ואמא קובעים השכמה לכל בת, וסיכום של כולם במבט אחד), משימות ותתי־משימות בלי הגבלה, משימות מההורים עם צלצול, משימות חוזרות, הלוח ב"היום שלי" של הבנות, כפתור ללמוד לבחינה ב-teach-me, הצעות מונית מהחוגים, מצב הטלפונים, גיבוי, משימות פתוחות, שיבוץ התורנויות של לוני עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
   </div>
 
   <nav class="nav" aria-label="ניווט">
@@ -1768,7 +1769,11 @@ async function runPlan(wkey,auto){
     const P={};PEOPLE.forEach(p=>P[p.id]=normPrefs((people[p.id]||{}).prefs,p.id));
     const cur=await getDoc(wkRef(wkey));const cd=cur.exists()?cur.data():{};
     if(auto&&(cd.gen||Object.keys(cd.slots||{}).length))return;
-    const cons=cd.cons||{};PEOPLE.forEach(p=>P[p.id].wb=((cons[p.id]||{}).b||[]).slice());
+    const cons=cd.cons||{};PEOPLE.forEach(p=>{
+      const wb=new Set((cons[p.id]||{}).b||[]);
+      Object.keys(clsBlocks(p.id,wkey)).forEach(k=>wb.add(k));
+      P[p.id].wb=[...wb];
+    });
     const HI={n:{},s:{}};let hurt={};
     for(let i=1;i<=3;i++){
       try{
@@ -1812,6 +1817,29 @@ async function autoPlan(){
 }
 setInterval(autoPlan,60000);
 let consDraft=null,consKey='',consMsg='';
+/* חוגים מהלוח: משבצת של לוני שנופלת מחצי שעה לפני החוג ועד חצי שעה אחרי שהוא נגמר נחסמת אוטומטית לבת.
+   נכנסים: אירוע מסוג "חוג", או כל אירוע עם שעה שחוזר כל שבוע, של הבת עצמה (לא "כל המשפחה").
+   בוקר = 07:00, אחרי בית הספר = 14:00. חוג בלי שעת סיום נחשב שעה */
+const SLOT_MIN={m:420,s:840,a:1050,b:1200,n:1320},CLS_PAD=30,CLS_DUR=60;
+const hmMin=t=>{const a=String(t||'').split(':');return (+a[0])*60+(+a[1]||0);};
+function clsBlocks(id,wkey){
+  const out={};if(isAdult(id)||typeof cal==='undefined')return out;
+  const a=wkey,b=fmt(addDays(parseKey(wkey),6)),w0=parseKey(wkey);
+  cal.forEach(ev=>{
+    if(!ev.time||ev.fam||!(ev.who||[]).includes(id))return;
+    if(!(ev.kind==='cls'||ev.rep==='w'))return;
+    const st=hmMin(ev.time),en=ev.end?hmMin(ev.end):st+CLS_DUR;
+    occIn(ev,a,b).forEach(day=>{
+      const d=Math.round((parseKey(day)-w0)/864e5);
+      SLOTS.forEach(sl=>{
+        if(!hasSlot(d,sl.k))return;
+        const t=SLOT_MIN[sl.k];
+        if(t>=st-CLS_PAD&&t<=en+CLS_PAD){const key=d+'_'+sl.k;if(!out[key])out[key]=(ev.title||'חוג')+' '+ev.time;}
+      });
+    });
+  });
+  return out;
+}
 function fixedBlock(id,wkey,key){
   const r=normPrefs((people[id]||{}).prefs,id),a=key.split('_');
   const date=fmt(addDays(parseKey(wkey),+a[0]));
@@ -1828,21 +1856,29 @@ function consCard(wkey){
   c.append(sts);
   if(late&&!isAdult(me)){
     c.append(h('p','date',mine?'האילוצים שלך נשמרו ('+((mine.b||[]).length?mine.b.length+' משבצות':'בלי אילוצים')+').':'לא נשלחו אילוצים. השיבוץ ישתמש בשאלון הקבוע שלך.'));
-    return c;
   }
+  /* חוגים מהלוח שחוסמים משבצות אוטומטית */
+  {const ids=isAdult(me)?PEOPLE.filter(p=>!isAdult(p.id)).map(p=>p.id):[me];
+    const lines=[];
+    ids.forEach(id=>{const cb=clsBlocks(id,wkey);Object.keys(cb).sort().forEach(k=>lines.push((isAdult(me)?byId[id].name+': ':'')+slotText(wkey,k)+' ('+cb[k]+')'));});
+    if(lines.length){const n=h('div','clsn');n.append(h('b',null,'🎨 נחסם אוטומטית בגלל חוגים מהלוח'));
+      const ul=h('ul');lines.forEach(t=>ul.append(h('li',null,t)));n.append(ul);
+      n.append(h('p','hint','חצי שעה לפני החוג ועד חצי שעה אחרי. לא צריך לסמן את זה.'));c.append(n);}}
+  if(late&&!isAdult(me))return c;
   if(consKey!==wkey){consKey=wkey;consDraft=new Set(mine?mine.b||[]:[]);consMsg='';}
   c.append(h('label',null,G('מתי אני לא יכול בשבוע הזה?','מתי אני לא יכולה בשבוע הזה?')));
   c.append(h('div','hint','לוחצים על המשבצות שבהן אין אפשרות. משבצות באדום חיוור כבר חסומות מהשאלון הקבוע.'));
+  const myCls=clsBlocks(me,wkey);
   for(let d=0;d<7;d++){
     const date=addDays(parseKey(wkey),d);
     const row=h('div','brow');row.append(h('b',null,'יום '+DAYN[d]+' '+date.getDate()+'/'+(date.getMonth()+1)));
     const chips=h('div','chips');chips.setAttribute('role','group');chips.setAttribute('aria-label','אילוצים ביום '+DAYN[d]);
     SLOTS.forEach(sl=>{
       if(!hasSlot(d,sl.k))return;
-      const key=d+'_'+sl.k,fx=fixedBlock(me,wkey,key);
-      const b=h('button','chip blk'+(fx?' fixed':''),SHORT[sl.k]);b.type='button';
+      const key=d+'_'+sl.k,ck=myCls[key],fx=fixedBlock(me,wkey,key)||!!ck;
+      const b=h('button','chip blk'+(fx?' fixed':''),SHORT[sl.k]+(ck?' 🎨':''));b.type='button';
       b.setAttribute('aria-pressed',fx||consDraft.has(key)?'true':'false');
-      if(fx){b.title='חסום קבוע מהשאלון';b.setAttribute('aria-disabled','true');}
+      if(fx){b.title=ck?'חסום בגלל חוג: '+ck:'חסום קבוע מהשאלון';b.setAttribute('aria-disabled','true');}
       else b.onclick=()=>{if(consDraft.has(key))consDraft.delete(key);else consDraft.add(key);b.setAttribute('aria-pressed',consDraft.has(key)?'true':'false');};
       chips.append(b);
     });
