@@ -642,6 +642,16 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
   <div id="tab-dog" hidden>
     <div id="podBox"></div>
     <div id="dogBox"></div>
+    <div class="card" id="quizCard">
+      <h3>השאלון שלי לתורנויות</h3>
+      <button id="quizOpen" class="btn pri" type="button" aria-expanded="false" aria-controls="quizBody">מילוי השאלון</button>
+      <div id="quizBody" hidden>
+        <div id="quiz"></div>
+        <button id="quizSave" class="btn pri" type="button">שמירת השאלון</button>
+        <button id="quizClose" class="btn quiet" type="button">סגירה</button>
+      </div>
+      <p id="quizMsg" class="msg" role="status"></p>
+    </div>
   </div>
 
   <div id="tab-kids" hidden>
@@ -656,12 +666,6 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
   </div>
 
   <div id="tab-set" hidden>
-    <div class="card">
-      <h3>השאלון שלי לתורנויות של לוני</h3>
-      <div id="quiz"></div>
-      <button id="quizSave" class="btn pri" type="button">שמירת השאלון</button>
-      <p id="quizMsg" class="msg" role="status"></p>
-    </div>
     <div class="card">
       <h3>התראות כשהאפליקציה סגורה</h3>
       <button id="pushOn" class="btn pri" type="button">הפעלת התראות בטלפון הזה</button>
@@ -1511,7 +1515,7 @@ function tab(n){
   });
   if(n==='home')paintHome();
   if(n==='set'){paintSettings();paintPush();}
-  if(n==='dog'){paintDog();paintPodium(true);}
+  if(n==='dog'){paintDog();paintPodium(true);quizShow(false);}
   if(n==='kids')paintKidsTab();
   if(n==='jobs'||n==='today')paintJobs();
   if(n==='jobs')paintSent();
@@ -1559,9 +1563,17 @@ function paintSettings(){
   paintBackup();
   {const lk=!!lockOf()&&!isAdult(me);$('btnSwitch').hidden=lk;$('btnForget').hidden=lk;$('codeCard').hidden=!isAdult(me);}
   $('pinState').textContent=(people[me]||{}).pin?'לפרופיל שלך מוגדר קוד אישי.':'אין קוד אישי לפרופיל שלך.';
-  if(!qz)qz=loadPrefs();
-  paintQuiz();
 }
+/* השאלון של לוני: רק בלשונית לוני, סגור עד שלוחצים על הכפתור */
+function quizShow(open){
+  const b=$('quizBody'),o=$('quizOpen');if(!b||!o)return;
+  if(open){qz=loadPrefs();paintQuiz();say($('quizMsg'),'');}
+  b.hidden=!open;o.hidden=open;o.setAttribute('aria-expanded',open?'true':'false');
+  o.textContent=(people[me]||{}).prefsDone?'עריכת השאלון':'מילוי השאלון';
+  if(open)$('quizCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+$('quizOpen').onclick=()=>quizShow(true);
+$('quizClose').onclick=()=>quizShow(false);
 function openMain(){
   const p=byId[me];
   document.body.style.setProperty('--pc',p.l);
@@ -1700,7 +1712,7 @@ $('quizSave').onclick=()=>{
   if(!qz)return;
   qz.hard.sort();qz.like.sort();qz.avoid.sort();qz.block.sort();qz.once=[];
   setDoc(pdoc(me),{prefs:qz,prefsDone:true},{merge:true})
-    .then(()=>say($('quizMsg'),'השאלון נשמר.',true))
+    .then(()=>{quizShow(false);say($('quizMsg'),'השאלון נשמר.',true);})
     .catch(()=>say($('quizMsg'),'השמירה נכשלה. בדקו חיבור.'));
 };
 
@@ -1962,7 +1974,7 @@ function paintDog(){
     const n=h('div','note');
     n.append(h('div',null,'עוד לא מילאת את השאלון. בלעדיו השיבוץ לא יודע מה קשה לך.'));
     const b=h('button','btn pri sm','מילוי השאלון');b.type='button';b.style.marginTop='8px';
-    b.onclick=()=>tab('set');n.append(b);box.append(n);
+    b.onclick=()=>quizShow(true);n.append(b);box.append(n);
   }
 
   /* בקשות החלפה אלי */
