@@ -1596,12 +1596,13 @@ function onPeople(snap){
 const SLOTS=[
   {k:'m',n:'בוקר',t:'לפני בית הספר'},
   {k:'s',n:'אחרי בית הספר',t:'כשחוזרים'},
+  {k:'l',n:'12:30',t:''},
   {k:'a',n:'17:30',t:''},
   {k:'b',n:'20:00',t:''},
   {k:'n',n:'22:00',t:''}
 ];
 const DAYN=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
-const hasSlot=(d,k)=>k!=='s'||d<=4;
+const hasSlot=(d,k)=>k==='s'?d<=4:k==='l'?d>=5:true;
 const slotName=k=>SLOTS.find(x=>x.k===k).n;
 const isAdult=id=>id==='dad'||id==='mom';
 function sunday(d0){const d=new Date(d0.getFullYear(),d0.getMonth(),d0.getDate());d.setDate(d.getDate()-d.getDay());return d;}
@@ -1641,7 +1642,7 @@ function normPrefs(r,id){
           max:(id==='dad'?10:id==='mom'?2:5),wb:[]};
 }
 function loadPrefs(){return normPrefs((people[me]||{}).prefs,me);}
-const SHORT={m:'בוקר',s:'אחרי ביה"ס',a:'17:30',b:'20:00',n:'22:00'};
+const SHORT={m:'בוקר',s:'אחרי ביה"ס',l:'12:30',a:'17:30',b:'20:00',n:'22:00'};
 const G=(m,f)=>(byId[me]&&byId[me].g==='m')?m:f;
 function chipRow(list,arr,label,cls){
   const row=h('div','chips');
@@ -1722,7 +1723,7 @@ function planWeek(ws,P,hurt,HI){
   const elig=slots.map(x=>ids.filter(id=>!blocked(id,x)));
   const W={};ids.forEach(id=>W[id]=hurt[id]?1.6:1);
   function cost(a){
-    let c=0;const load={},dc={},sc={};ids.forEach(i=>{load[i]=0;sc[i]={m:0,s:0,a:0,b:0,n:0};});
+    let c=0;const load={},dc={},sc={};ids.forEach(i=>{load[i]=0;sc[i]={m:0,s:0,l:0,a:0,b:0,n:0};});
     for(let i=0;i<a.length;i++){
       const id=a[i];if(!id)continue;
       const x=slots[i],r=P[id],w=W[id];
@@ -2110,7 +2111,7 @@ function reportCard(wkey){
   const who=wk.auto?'שובץ אוטומטית ביום חמישי ב-22:00':(byId[wk.by]?'שובץ על ידי '+byId[wk.by].name:'');
   if(who)c.append(h('p','date',who+(wk.gen?', '+new Date(wk.gen).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'}):'')+'.'));
   const cnt={},per={},walks={};
-  PEOPLE.forEach(p=>{cnt[p.id]=0;per[p.id]={m:0,s:0,a:0,b:0,n:0};walks[p.id]=0;});
+  PEOPLE.forEach(p=>{cnt[p.id]=0;per[p.id]={m:0,s:0,l:0,a:0,b:0,n:0};walks[p.id]=0;});
   for(const k in wk.slots){const id=wk.slots[k];if(!cnt.hasOwnProperty(id))continue;cnt[id]++;per[id][k.split('_')[1]]++;}
   for(const k in wk.done){const d=wk.done[k];if(d&&walks.hasOwnProperty(d.by))walks[d.by]++;}
   const kc=KIDS.map(k=>cnt[k]),mn=Math.min(...kc),mx=Math.max(...kc);
@@ -3004,7 +3005,7 @@ function subCurWk(){
   if(curUnsub)curUnsub();
   curUnsub=onSnapshot(wkRef(fmt(sunday(new Date()))),s=>{const d=s.exists()?s.data():{};curWk={slots:d.slots||{},done:d.done||{},orig:d.orig||null};checkRem();paintPodium(false);paintKidsTab();},()=>{});
 }
-const DOGT={a:[17,30],b:[20,0],n:[22,0]};
+const DOGT={l:[12,30],a:[17,30],b:[20,0],n:[22,0]};
 function remTargets(j){if(j.done)return [];if(j.to==='fam')return PEOPLE.map(p=>p.id);if(j.claim&&j.to==='all')return [j.claim];if(j.to!=='all')return [j.to];return KIDS;}
 function checkRem(){
   if(!me||!code||!db)return;

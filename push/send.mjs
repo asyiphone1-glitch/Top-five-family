@@ -10,7 +10,7 @@ const SITE = 'https://asyiphone1-glitch.github.io/Top-five-family/';
 const TZ = 'Asia/Jerusalem';
 const WINDOW = 45 * 60e3;          // שולחים עד 45 דקות אחרי הזמן (GitHub מתעכב לפעמים)
 const KIDS = ['ziv', 'roni', 'hili', 'aviv'];
-const DOGT = { a: [17, 30, '17:30'], b: [20, 0, '20:00'], n: [22, 0, '22:00'] };
+const DOGT = { l: [12, 30, '12:30'], a: [17, 30, '17:30'], b: [20, 0, '20:00'], n: [22, 0, '22:00'] };
 const ADV0 = { r_dogring: 'yes', r_pre10: 'yes' };
 const STATE = '.state/rt';
 const DRY = process.env.DRY_RUN === '1';
