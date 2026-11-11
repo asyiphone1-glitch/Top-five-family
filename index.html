@@ -508,7 +508,6 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
   <p id="setupMsg" class="msg" role="status"></p>
   <button id="btnJoin" class="btn pri" type="button">הצטרפות עם הקוד</button>
   <button id="btnCreate" class="btn quiet" type="button">זה הטלפון הראשון: ליצור משפחה חדשה</button>
-  <p class="hint">בטלפון הראשון בוחרים קוד ארוך (8 תווים לפחות, אותיות ומספרים) שרק בני הבית מכירים. הוא ההגנה על הנתונים: מי שיודע אותו יכול לראות ולשנות הכול.</p>
 </section>
 
 <section id="s-who" class="screen" hidden>
@@ -565,19 +564,16 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
     <div id="jobsBox"></div>
     <div id="ringCard" class="card">
       <h3>צלצול תזכורת</h3>
-      <p class="date">כשמגיעה שעת משימה והאפליקציה פתוחה, הטלפון מצלצל כמה שניות ומציג הודעה. עוצמת הצלצול נקבעת לפי עוצמת המדיה בטלפון (הכפתורים בצד כשמתנגן משהו). כשהאפליקציה סגורה מגיעה התראה רגילה של הטלפון, עם הצליל שלו.</p>
       <button id="ringTest" class="btn quiet" type="button">בדיקת צלצול</button>
     </div>
   </div>
 
   <div id="tab-shop" hidden>
     <h2 class="sec">רשימת קניות</h2>
-    <p class="date">משותפת לאבא ולאמא. כל מוצר נכנס לבד למחלקה שלו בסופר.</p>
     <div class="shopadd">
       <input id="shopIn" class="field" maxlength="200" autocomplete="off" placeholder="למשל: חלב, עגבניות, במבה" aria-label="מוצר להוספה">
       <button id="shopAdd" class="btn pri" type="button">הוספה</button>
     </div>
-    <p class="hint" style="margin-top:6px">אפשר לרשום כמה מוצרים בבת אחת, מופרדים בפסיק. אם מוצר נכנס למחלקה לא נכונה, לוחצים ⇄ ובוחרים מחלקה, והאפליקציה תזכור לפעם הבאה.</p>
     <p id="shopProg" class="progress"></p>
     <div id="shopBox"></div>
     <button id="shopClear" class="btn quiet" type="button" hidden></button>
@@ -585,7 +581,6 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
 
   <div id="tab-taxi" hidden>
     <h2 class="sec">מונית</h2>
-    <p class="date">מי צריך הסעה, מתי ולאן. בוחרים יום, ורואים את כל הנסיעות שלו לפי השעה.</p>
     <div id="taxiDays" class="tdays" role="group" aria-label="בחירת יום"></div>
     <p id="taxiProg" class="progress"></p>
     <div id="taxiBox"></div>
@@ -642,14 +637,12 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
   <div id="tab-set" hidden>
     <div class="card">
       <h3>השאלון שלי לתורנויות של לוני</h3>
-      <p class="date">השיבוץ השבועי נבנה לפי התשובות כאן.</p>
       <div id="quiz"></div>
       <button id="quizSave" class="btn pri" type="button">שמירת השאלון</button>
       <p id="quizMsg" class="msg" role="status"></p>
     </div>
     <div class="card">
       <h3>התראות כשהאפליקציה סגורה</h3>
-      <p class="date">ההודעה תקפוץ גם כשאתם באפליקציה אחרת או שהמסך כבוי. היא יכולה להגיע עד כרבע שעה אחרי הזמן, כי השליחה עוברת דרך שירות חינמי.</p>
       <button id="pushOn" class="btn pri" type="button">הפעלת התראות בטלפון הזה</button>
       <button id="pushTest" class="btn quiet" type="button" hidden>שליחת התראת ניסיון</button>
       <p id="pushMsg" class="msg" role="status"></p>
@@ -665,7 +658,6 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
     </div>
     <div id="bkCard" class="card" hidden>
       <h3>גיבוי</h3>
-      <p class="date">שומר את כל הנתונים (משימות, לוח, שיבוצים, קניות, מונית, אוכל, החלטות) בקובץ בטלפון. כדאי לגבות פעם בשבוע.</p>
       <button id="bkSave" class="btn pri" type="button">הורדת גיבוי</button>
       <button id="bkLoad" class="btn quiet" type="button">שחזור מקובץ גיבוי</button>
       <input id="bkFile" type="file" accept="application/json,.json" hidden>
@@ -673,13 +665,11 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
     </div>
     <div id="codeCard" class="card">
       <h3>הקוד המשפחתי</h3>
-      <p class="date">צריך אותו כדי לחבר טלפון חדש.</p>
       <button id="codeShow" class="btn quiet" type="button">הצגת הקוד</button>
       <p id="codeOut" class="msg ok" dir="ltr" style="font-size:1.3rem;user-select:all;-webkit-user-select:all" hidden></p>
     </div>
     <button id="btnSwitch" class="btn quiet" type="button">החלפת פרופיל</button>
     <button id="btnForget" class="btn danger" type="button">ניתוק הטלפון הזה מהמשפחה</button>
-    <p class="hint">גרסה: שלב 4, כולל מסך הבנות (עם שורה פנויה להוספה מהירה של משימה לכל בת), אילוצים שבועיים עד חמישי 22:00 (חוגים מהלוח נחסמים לבד) ושיבוץ אוטומטי, דו״ח הוגנות, ניקוד בונוס ופודיום עם לוני, צלצול משופר,  פעמון תזכורת לכל משימה ותת־משימה, צבע לכל קטגוריה, כיווץ תתי־משימות, מסך נפרד למשימות משפחתיות, התראות כשהאפליקציה סגורה, רשימת קניות, מונית, לוח משפחתי (שבועי וחודשי, עם הבחינות מ-teach-me ותזכורות), אוכל (ארוחת עשר, צהרון ושעת השכמה לכל המשפחה עם שאלה לבנות כל ערב ב-20:00, אבא ואמא קובעים השכמה לכל בת, וסיכום של כולם במבט אחד), משימות ותתי־משימות בלי הגבלה, משימות מההורים עם צלצול, משימות חוזרות, הלוח ב"היום שלי" של הבנות, כפתור ללמוד לבחינה ב-teach-me, הצעות מונית מהחוגים, מצב הטלפונים, גיבוי, משימות פתוחות, שיבוץ התורנויות של לוני עם אילוצים והמלצות היועצים. הקוד האישי הוא נעילה קלה בין בני הבית, לא הגנה מפני מי שיודע את הקוד המשפחתי.</p>
   </div>
 
   <nav class="nav" aria-label="ניווט">
@@ -1433,7 +1423,6 @@ function paintWeekSum(){
     r.append(avatar(p.id,32),h('span',null,p.name+': '+(parts.length?parts.join(', '):'עוד אין פעילות השבוע')));
     c.append(r);
   });
-  c.append(h('p','hint','הסיכום מתאפס בכל יום ראשון.'));
 }
 function weekPop(){
   if(!on('r_week')||new Date().getDay()!==5||!me||!isAdult(me))return;
@@ -1676,7 +1665,7 @@ function paintQuiz(){
   const q=$('quiz');q.innerHTML='';
   const days=DAYN.map((n,i)=>({n:n,v:i}));
   const sl=SLOTS.map(x=>({n:x.n==='בוקר'||x.n==='אחרי בית הספר'?x.n:'שעה '+x.n,v:x.k}));
-  const add=(t,node,sub)=>{const l=h('label',null,t);q.append(l);if(sub)q.append(h('div','hint',sub));q.append(node);};
+  const add=(t,node,sub)=>{const l=h('label',null,t);q.append(l);q.append(node);};
   add(G('מתי אני לא יכול בכלל, כל שבוע?','מתי אני לא יכולה בכלל, כל שבוע?'),blockGrid(),'חוג קבוע, אימון וכדומה. השיבוץ לעולם לא ישים אותך בזמן מסומן באדום.');
   add('באילו ימים עמוס לי, ועדיף שלא?',chipRow(days,qz.hard,'ימים עמוסים'),'זו בקשה ולא איסור. השיבוץ ינסה להימנע.');
   add('באילו שעות נוח לי להוציא?',chipRow(sl,qz.like,'שעות נוחות'));
@@ -1866,11 +1855,10 @@ function consCard(wkey){
     ids.forEach(id=>{const cb=clsBlocks(id,wkey);Object.keys(cb).sort().forEach(k=>lines.push((isAdult(me)?byId[id].name+': ':'')+slotText(wkey,k)+' ('+cb[k]+')'));});
     if(lines.length){const n=h('div','clsn');n.append(h('b',null,'🎨 נחסם אוטומטית בגלל חוגים מהלוח'));
       const ul=h('ul');lines.forEach(t=>ul.append(h('li',null,t)));n.append(ul);
-      n.append(h('p','hint','חצי שעה לפני החוג ועד חצי שעה אחרי. לא צריך לסמן את זה.'));c.append(n);}}
+      c.append(n);}}
   if(late&&!isAdult(me))return c;
   if(consKey!==wkey){consKey=wkey;consDraft=new Set(mine?mine.b||[]:[]);consMsg='';}
   c.append(h('label',null,G('מתי אני לא יכול בשבוע הזה?','מתי אני לא יכולה בשבוע הזה?')));
-  c.append(h('div','hint','לוחצים על המשבצות שבהן אין אפשרות. משבצות באדום חיוור כבר חסומות מהשאלון הקבוע.'));
   const myCls=clsBlocks(me,wkey);
   for(let d=0;d<7;d++){
     const date=addDays(parseKey(wkey),d);
@@ -1894,7 +1882,7 @@ function consCard(wkey){
       .then(()=>{consMsg=b.length?'נשמר. '+b.length+' משבצות חסומות.':'נשמר: אין אילוצים השבוע.';paintDog();})
       .catch(()=>{consMsg='השמירה נכשלה. בדקו חיבור.';paintDog();});
   };
-  c.append(btn,h('p','hint','אם אין אילוצים, פשוט לוחצים שליחה, כדי שידעו שמילאת.'));
+  c.append(btn);
   if(consMsg){const m=h('p','msg ok',consMsg);m.setAttribute('role','status');c.append(m);}
   return c;
 }
@@ -1996,7 +1984,6 @@ function paintDog(){
       x.title='תורנויות / הוצאות';c.append(x);
     });
     box.append(c);
-    box.append(h('p','hint','המספרים: כמה תורנויות שובצו / כמה הוצאו בפועל.'));
   }
 
   /* שיבוץ */
@@ -2158,7 +2145,6 @@ function reportCard(wkey){
   });
   c.append(det);
   if(wk.empty&&wk.empty.length)c.append(h('div','bad','אין אף אחד פנוי ב: '+wk.empty.map(k=>slotText(wkey,k)).join(' · ')+'. כולם חסומים שם. אפשר לקחת ידנית.'));
-  c.append(h('p','hint','השיבוץ לא שובר אף פעם אילוץ. הוא מחלק שווה בין הבנות גם בסך הכול וגם לפי שעות היום, ומתחשב במה שכל אחת קיבלה בשלושת השבועות הקודמים.'));
   return c;
 }
 
@@ -2227,7 +2213,6 @@ function paintPodium(animate){
   const again=h('button','btn quiet sm','🐩 עוד פעם');again.type='button';again.style.marginTop='8px';
   again.onclick=()=>runPoodle(stage,dog,cols,any);
   c.append(again);
-  c.append(h('p','hint','הוצאה = '+PTS.walk+' נק׳ · לקחת משמרת של מישהו אחר = '+PTS.cover+' בונוס · הוצאה שלא תוכננה לאף אחד = '+PTS.extra+' בונוס'));
   box.append(c);
   requestAnimationFrame(()=>runPoodle(stage,dog,cols,any));
 }
@@ -3647,7 +3632,6 @@ function paintCalForm(){
     const p=h('div','cview');
     p.append(h('p','cvt',kindOf('exam')[2]+' '+ev.title),h('p',null,byId[ev.who[0]].name+' · '+dlong(ev.date)));
     if(ev.sub)p.append(h('p','date',ev.sub));
-    p.append(h('p','hint','הבחינה והתאריך מגיעים מ-\u2068teach-me\u2069. כדי לשנות תאריך, משנים שם. כאן אפשר להוסיף שעה ותזכורת.'));
     f.append(p);
     {const sb=studyBtn(ev,cf.day);if(sb){sb.style.margin='0 0 10px';f.append(sb);}}
     f.append(lbl('cfTime','שעה (לא חובה)'));const ti=h('input','field');ti.type='time';ti.id='cfTime';ti.value=ev.time||'';f.append(ti);
@@ -3694,7 +3678,6 @@ function paintCalForm(){
       f.append(cb);
     }
   }else{
-    f.append(h('p','hint cme','האירוע יירשם אצלך, וגם אבא ואמא יראו אותו.'));
   }
   const r2=h('div','row2');
   const dd=h('div');dd.append(lbl('cfDate','תאריך'));const di=h('input','field');di.type='date';di.id='cfDate';di.value=cf.isNew?ev.date:(cf.rep?ev.date:cf.day);dd.append(di);
