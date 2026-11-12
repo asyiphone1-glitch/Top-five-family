@@ -120,6 +120,64 @@ async function nightly(F, now) {
   console.log('גיבוי לילי נשמר:', day, cnt, 'פריטים');
 }
 
+// ---- בחינות מ-teach-me (קריאה בלבד). אם הקריאה נכשלת, משתמשים בעותק שהאפליקציה שומרת ב-prefs/tmex ----
+const TM_KEY = 'AIzaSyAkpMP6QkJZS67fOvVwP3yeuz-gMu1150Q', TM_PROJECT = 'teach-me-cd228', TM_STATE = '.state/tmrt';
+const TMSUBJ = { math: 'חשבון', torah: 'תורה', lit: 'ספרות', eng: 'אנגלית', hist: 'היסטוריה', heb: 'הבעה', dict: 'הכתבה באנגלית', kesher: 'קשרים לוגיים' };
+const tmPid = id => /^dict-base-/.test(id) ? id.slice(10) : id.replace(/^up-/, '').split('-')[0];
+async function tmExams() {
+  let tk = null, rt = null;
+  try { rt = fs.readFileSync(TM_STATE, 'utf8').trim(); } catch (e) {}
+  const keep = r => { try { fs.mkdirSync('.state', { recursive: true }); fs.writeFileSync(TM_STATE, r); } catch (e) {} };
+  if (rt) {
+    const r = await fetch(`https://securetoken.googleapis.com/v1/token?key=${TM_KEY}`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(rt) });
+    if (r.ok) { const j = await r.json(); tk = j.id_token; keep(j.refresh_token); }
+  }
+  if (!tk) {
+    const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${TM_KEY}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"returnSecureToken":true}' });
+    if (!r.ok) throw new Error('teach-me sign-in ' + r.status);
+    const j = await r.json(); tk = j.idToken; keep(j.refreshToken);
+  }
+  const TB = `https://firestore.googleapis.com/v1/projects/${TM_PROJECT}/databases/(default)/documents`;
+  const un = x => { if (x && typeof x.j === 'string') { try { return JSON.parse(x.j); } catch (e) {} } return x || {}; };
+  const r = await fetch(`${TB}/meta/examDates`, { headers: { Authorization: 'Bearer ' + tk } });
+  if (!r.ok) throw new Error('teach-me examDates ' + r.status);
+  const dates = un(obj((await r.json()).fields)).dates || {};
+  const info = {};
+  try {
+    let pt = '';
+    for (let i = 0; i < 20; i++) {
+      const u = await fetch(`${TB}/uploads?pageSize=300${pt ? '&pageToken=' + encodeURIComponent(pt) : ''}`, { headers: { Authorization: 'Bearer ' + tk } });
+      if (!u.ok) break;
+      const j = await u.json();
+      for (const d of j.documents || []) { const x = un(obj(d.fields)), ne = x && x.newExam; if (ne && ne.id) info[ne.id] = { pid: x.pid, subj: ne.subj, hide: !!x.hide }; }
+      if (!j.nextPageToken) break; pt = j.nextPageToken;
+    }
+  } catch (e) {}
+  const out = [];
+  for (const id in dates) {
+    const v = dates[id]; if (!v || !/^\d{4}-\d\d-\d\d$/.test(v)) continue;
+    const u = info[id]; if (u && u.hide) continue;
+    const pid = (u && u.pid) || tmPid(id); if (!KIDS.includes(pid)) continue;
+    const subj = (u && u.subj) || (/^dict-/.test(id) ? 'dict' : /^up-/.test(id) ? '' : (id.split('-')[1] || ''));
+    out.push({ id, pid, date: v, subj });
+  }
+  return out;
+}
+
+// תזכורת לבחינה: יומיים לפני, ב-16:00, פונה לבת בשמה. נוסח אחר בכל פעם
+const EXAM_MSG = [
+  (n, x, d) => `${n} יקרה, תזכרי שעוד יומיים, ${d}, יש לך ${x}. אין לנו ספק שאת מתכוננת אליה. אם צריך עזרה או כל דבר אחר, אבא ואמא פה בשבילך 💛`,
+  (n, x, d) => `היי ${n} 🌟 ${d} מחכה לך ${x}. יש לך עוד יומיים להתכונן, ואנחנו בטוחים שתצליחי. צריכה עזרה? אבא ואמא כאן.`,
+  (n, x, d) => `${n} שלנו, עוד יומיים (${d}) ${x}. את חרוצה ואנחנו גאים בך. אם בא לך לעבור על החומר ביחד, רק תגידי 📚`,
+  (n, x, d) => `${n} מתוקה, רק להזכיר: ${d} יש לך ${x}. קצת חזרה כל יום ואת שם 💪 אבא ואמא פה לכל שאלה.`,
+  (n, x, d) => `${n} יקרה ✨ בעוד יומיים, ${d}, ${x}. אנחנו מאמינים בך! אם משהו לא ברור, אבא ואמא ישמחו לעזור.`,
+  (n, x, d) => `${n}, אלופה שלנו 🏅 ${d} מתקרבת ${x}. נשארו יומיים להתכונן בנחת. ואם צריך יד, אבא ואמא פה בשבילך.`,
+  (n, x, d) => `${n} ☀️ תזכורת קטנה: ${d} יש לך ${x}. אין לנו ספק שאת מתכוננת יפה. צריכה משהו? אבא ואמא פה.`,
+  (n, x, d) => `${n} יקרה, עוד יומיים ${x} (${d}). זמן מצוין לחזרה רגועה. אבא ואמא תמיד כאן אם צריך עזרה או סתם חיבוק 🤗`
+];
+const DAYN = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+const examWord = t => /בחינ|מבחן|בוחן|הכתבה|מבדק/.test(t) ? t : (/^ב/.test(t) ? 'בחינה ' : 'בחינה ב') + t;
+
 async function main() {
   await signIn();
   const now = Date.now();
@@ -224,23 +282,28 @@ async function main() {
     }
   }
 
-  // יום חמישי: 18:00 תזכורת למי שעוד לא מילא אילוצים לשבוע הבא. 22:00 המועד נסגר והאפליקציה משבצת את כל המשמרות
+  // השאלון של לוני לשבוע הבא (נסגר בחמישי 22:00). רק למי שעוד לא מילאה:
+  // רביעי 18:00, רביעי 20:00, חמישי 20:00. בחמישי 20:30 אבא מקבל את רשימת מי שעוד לא מילאה. 22:00 השיבוץ
   {
     const p = parts(now);
-    if (p.wd === 4) {
-      const nx = new Date(Date.UTC(p.y, p.m - 1, p.d) + 3 * 864e5);
+    if (p.wd === 3 || p.wd === 4) {
+      const nx = new Date(Date.UTC(p.y, p.m - 1, p.d) + (7 - p.wd) * 864e5);
       const nk = ymd(nx.getUTCFullYear(), nx.getUTCMonth() + 1, nx.getUTCDate());
-      const t18 = localToUtc(p.y, p.m, p.d, 18, 0), t22 = localToUtc(p.y, p.m, p.d, 22, 0);
-      const in18 = t18 <= now && now - t18 <= WINDOW, in22 = t22 <= now && now - t22 <= WINDOW;
-      if (in18 || in22) {
+      const at = (h, mi) => { const t = localToUtc(p.y, p.m, p.d, h, mi); return t <= now && now - t <= WINDOW; };
+      const KM = p.wd === 3
+        ? [[18, 0, 'w18', '🐾 עוד לא מילאת את השאלון של לוני לשבוע הבא. ממלאים עד מחר (חמישי) ב-22:00, בלשונית של לוני.'],
+           [20, 0, 'w20', '🐾 תזכורת: השאלון של לוני לשבוע הבא מחכה לך. זה לוקח דקה, ועד מחר ב-22:00.']]
+        : [[20, 0, 't20', '🐾 תזכורת אחרונה: עד 22:00 הערב ממלאים את השאלון של לוני. ב-22:00 האפליקציה משבצת את כולם.']];
+      const due = KM.filter(([h, mi]) => at(h, mi)), dad = p.wd === 4 && at(20, 30), g22 = p.wd === 4 && at(22, 0);
+      if (due.length || dad || g22) {
         const w = await getDoc(`${F}/weeks/${nk}`);
-        const cons = (w && w.cons) || {};
-        if (in18 && !(w && w.gen)) {
-          const who = [...KIDS, 'mom'].filter(id => !cons[id]);
-          if (who.length) out.push({ key: `c_${nk}`, who, tab: 'dog', body: '🐾 עד 22:00 הערב ממלאים אילוצים לשבוע הבא בלשונית של לוני. ב-22:00 האפליקציה משבצת את כולם.' });
-        }
+        const cons = (w && w.cons) || {}, open = !(w && w.gen);
+        const NM = { mom: 'אמא', ziv: 'זיו', roni: 'רוני', hili: 'הילי', aviv: 'אביב' };
+        const miss = [...KIDS, 'mom'].filter(id => !cons[id]);
+        if (open) for (const [, , k, body] of due) if (miss.length) out.push({ key: `c${k}_${nk}`, who: miss, tab: 'dog', body });
+        if (open && dad) out.push({ key: `cd_${nk}`, who: ['dad'], tab: 'dog', body: miss.length ? '🐾 עוד לא מילאו את השאלון של לוני: ' + miss.map(id => NM[id]).join(', ') + '. השיבוץ ב-22:00.' : '🐾 כולן מילאו את השאלון של לוני לשבוע הבא ✓' });
         // פתיחת האפליקציה בטלפון כלשהו מריצה את השיבוץ, אז שולחים לכולם
-        if (in22) out.push({ key: `g_${nk}`, who: ['dad', 'mom', ...KIDS], tab: 'dog', body: '🐾 השיבוץ של לוני לשבוע הבא נקבע. פותחים ורואים מתי התור שלך. אפשר להחליף דרך האפליקציה.' });
+        if (g22) out.push({ key: `g_${nk}`, who: ['dad', 'mom', ...KIDS], tab: 'dog', body: '🐾 השיבוץ של לוני לשבוע הבא נקבע. פותחים ורואים מתי התור שלך. אפשר להחליף דרך האפליקציה.' });
       }
     }
   }
@@ -274,6 +337,30 @@ async function main() {
       if (who.length) out.push({ key: `f_${nk}_${p.h}${String(q).padStart(2, '0')}`, who, tab: 'food', body: '🍽️ מה להכין לך מחר? בוחרים ארוחת עשר, צהרון ושעת השכמה' });
       const wp = KIDS.filter(id => pl(id) && pl(id).st === 'wait');
       if (wp.length) out.push({ key: `fw_${nk}_${p.h}${String(q).padStart(2, '0')}`, who: wp, tab: 'food', body: '🍽️ מחכה לך תכנון אוכל למחר. מאשרים או מבקשים משהו אחר' });
+    }
+  }
+
+  // אבא: כל יום ב-21:00 מי מהבנות עוד לא מילאה אוכל או שעת השכמה למחר.
+  // וברגע שהאחרונה סיימה למלא הכול, הודעה אחת ש"הכול מוכן למחר"
+  {
+    const p = parts(now);
+    if (p.h >= 6 && p.wd !== 5) {
+      const nx = new Date(Date.UTC(p.y, p.m - 1, p.d) + 864e5);
+      const nk = ymd(nx.getUTCFullYear(), nx.getUTCMonth() + 1, nx.getUTCDate());
+      const [fd, wdef] = await Promise.all([getDoc(`${F}/food/${nk}`), getDoc(`${F}/prefs/wake`)]);
+      const ord = (fd && fd.orders) || {}, pls = (fd && fd.plans) || {}, wks = (fd && fd.wakes) || {}, wb = (fd && fd.wakeBy) || {}, wd = wdef || {};
+      const NM = { ziv: 'זיו', roni: 'רוני', hili: 'הילי', aviv: 'אביב' };
+      const lack = id => {
+        const o = ord[id] && ord[id].at ? ord[id] : null, pl = pls[id] && pls[id].at && pls[id].st ? pls[id] : null;
+        const food = o || (pl && pl.st !== 'wait') ? '' : pl ? 'לא אישרה את תכנון האוכל' : 'אוכל';
+        const wake = (wks[id] && wb[id] && wb[id].at) || (o && o.wake) || (pl && pl.alt && pl.alt.wake) || wd[id];
+        return [food, wake ? '' : 'שעת השכמה'].filter(Boolean);
+      };
+      const miss = KIDS.map(id => [id, lack(id)]).filter(([, l]) => l.length);
+      const t21 = localToUtc(p.y, p.m, p.d, 21, 0);
+      if (miss.length && t21 <= now && now - t21 <= WINDOW)
+        out.push({ key: `fm_${nk}`, who: ['dad'], tab: 'food', body: '🍽️ עוד חסר למחר: ' + miss.map(([id, l]) => NM[id] + ' – ' + l.join(' ו')).join(' · ') });
+      if (!miss.length) out.push({ key: `fall_${nk}`, who: ['dad'], tab: 'food', body: '🍽️ הכול מוכן למחר: כל הבנות בחרו אוכל ושעת השכמה ✓' });
     }
   }
 
@@ -357,6 +444,48 @@ async function main() {
         const when = k === T0 ? 'היום' : k === T1 ? 'מחר' : k.slice(8).replace(/^0/, '') + '.' + k.slice(5, 7).replace(/^0/, '');
         out.push({ key: `e_${ev.id}_${k}_${ev.rem}_${String(ev.time || '').replace(':', '')}`, who: [...who], tab: 'cal', body: kn[1] + ' ' + (ev.title || kn[0]) + ' · ' + when + (ev.time ? ' ב-' + ev.time : '') });
       }
+    }
+
+    // בחינות: תזכורת אחת לכל בת, יומיים לפני, ב-16:00 (בלי קשר לתזכורת שהוגדרה ביומן)
+    const t16 = localToUtc(p.y, p.m, p.d, 16, 0);
+    if (t16 <= now && now - t16 <= WINDOW) {
+      const D2 = dk(2), NMK = { ziv: 'זיו', roni: 'רוני', hili: 'הילי', aviv: 'אביב' };
+      let tm = null;
+      try { tm = await tmExams(); console.log('בחינות מ-teach-me:', tm.length); }
+      catch (e) {
+        console.log('קריאה מ-teach-me נכשלה, משתמשים בעותק מהאפליקציה:', e.message || e);
+        const m = await getDoc(F + '/prefs/tmex').catch(() => null);
+        try { tm = JSON.parse((m && m.j) || '[]'); } catch (e2) { tm = []; }
+      }
+      const by = {}; // בת -> [{title, tm}]
+      const add = (id, title, fromTm, raw) => { if (KIDS.includes(id)) (by[id] = by[id] || []).push({ title, tm: fromTm, raw: raw || '' }); };
+      for (const x of tm || []) {
+        const ov = tmo.find(o => o.id === x.id);
+        if ((ov && ov.date ? ov.date : x.date) !== D2) continue;
+        add(x.pid, x.subj === 'dict' ? 'הכתבה באנגלית' : TMSUBJ[x.subj] ? 'בחינה ב' + TMSUBJ[x.subj] : 'בחינה', x.subj || '*');
+      }
+      for (const ev of evs) {
+        if (ev.kind !== 'exam' || !occ(ev).includes(D2)) continue;
+        { const raw = String(ev.title || '').trim(); for (const id of ev.fam ? KIDS : (ev.who || [])) add(id, examWord(raw || 'בחינה'), '', raw); }
+      }
+      const rot = (await getDoc(F + '/prefs/examrot').catch(() => null)) || {}, nrot = {};
+      const dd = new Date(kd(D2)), dayTxt = 'ביום ' + DAYN[dd.getUTCDay()];
+      for (const id in by) {
+        // אותה בחינה שנכתבה גם ביומן וגם ב-teach-me נספרת פעם אחת
+        const tms = by[id].filter(e => e.tm), titles = [];
+        for (const e of by[id]) {
+          const generic = !/[א-תa-z]{2}/i.test(e.raw.replace(/בחינה|מבחן|בוחן/g, ''));
+          if (!e.tm && tms.some(t => t.tm === '*' || generic || e.raw.includes(TMSUBJ[t.tm] || '@@'))) continue;
+          if (!titles.includes(e.title)) titles.push(e.title);
+        }
+        if (!titles.length) continue;
+        const x = titles.length === 1 ? titles[0] : (titles.length === 2 ? 'שתי בחינות: ' : titles.length + ' בחינות: ') + titles.join(' ו');
+        const key = `x_${id}_${D2}`, n = Number(rot[id]) || 0;
+        if (sent.has(key)) continue;
+        nrot[id] = n + 1;
+        out.push({ key, who: [id], tab: 'cal', body: '📝 ' + EXAM_MSG[n % EXAM_MSG.length](NMK[id], x, dayTxt) });
+      }
+      if (Object.keys(nrot).length) await put(F + '/prefs/examrot', Object.assign({}, rot, nrot));
     }
   }
 

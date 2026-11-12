@@ -3783,6 +3783,8 @@ async function tmLoad(force){
       out.push({id,pid,date:v,subj,sub});
     });
     tmEx=out;LS.set('yaya.tmex',JSON.stringify(out));
+    /* עותק לשרת ההתראות (תזכורת לבחינה יומיים לפני), למקרה שהוא לא מצליח לקרוא מ-teach-me */
+    {const j=JSON.stringify(out);if(j!==LS.get('yaya.tmexSent')){setDoc(doc(db,'families',code,'prefs','tmex'),{j,at:Date.now()}).then(()=>LS.set('yaya.tmexSent',j)).catch(()=>{});}}
     paintCal();tmSyncOv();
   }catch(e){console.warn('teach-me',e&&e.code||e);}
 }
