@@ -21,13 +21,13 @@
   --bg:#EEF2F9; --surface:#FFFFFF; --ink:#12254A; --mute:#5E6B85; --line:#D5DCEA;
   --soft:#E6ECF8; --good:#1F9D74; --bad:#B93A2B; --warn:#9A5208; --warn-soft:#FBEBD3;
   --display:'Rubik','Heebo',Arial,sans-serif; --body:'Heebo',Arial,sans-serif;
-  --act:#2563EB; --act-d:#1D4ED8; --ok:#16A34A;
+  --act:#2563EB; --act-d:#1D4ED8; --ok:#16A34A; --upd:#7C3AED;
   color-scheme:light;
 }
 body{--accent:var(--pc,#2F5BFF)}
 @media (prefers-color-scheme:dark){
   :root{--bg:#0E1626; --surface:#17233A; --ink:#EAF0FF; --mute:#9AA8C4; --line:#2A3A59;
-    --soft:#1D2C48; --good:#38C595; --bad:#FF8A7A; --warn:#F0B35E; --warn-soft:#3A2D17; --act:#3B6FF5; --act-d:#2554D6; --ok:#1FA855; color-scheme:dark}
+    --soft:#1D2C48; --good:#38C595; --bad:#FF8A7A; --warn:#F0B35E; --warn-soft:#3A2D17; --act:#3B6FF5; --act-d:#2554D6; --ok:#1FA855; --upd:#A78BFA; color-scheme:dark}
   body{--accent:var(--pc-d,#6F90FF)}
 }
 *{box-sizing:border-box}
@@ -198,6 +198,17 @@ body.typing .nav,body.typing .fab{display:none}
 .nav.many button{font-size:.66rem;letter-spacing:-.2px}
 .nav.many button svg{width:22px;height:22px}
 .nb{position:absolute;top:4px;inset-inline-end:calc(50% - 22px);background:var(--bad);color:#fff;border-radius:999px;font-size:.72rem;min-width:18px;line-height:18px;padding:0 5px;text-align:center}
+.ubell{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:12px;z-index:40;width:46px;height:46px;border-radius:999px;border:2px solid var(--line);background:var(--surface);font-size:1.35rem;display:grid;place-items:center;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.ubell.has{border-color:var(--upd);animation:ubp 2.4s ease-in-out infinite}
+@keyframes ubp{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--upd) 25%,transparent)}}
+.ubell .nb{top:-6px;inset-inline-end:-6px;background:var(--upd)}
+.urow{display:flex;gap:10px;align-items:center;width:100%;text-align:right;font:inherit;color:inherit;padding:10px 12px;margin:8px 0;border:0;border-radius:12px;border-inline-start:5px solid var(--upd);background:var(--soft);cursor:pointer}
+.urow .ut{flex:1;line-height:1.35}.urow .ut small{display:block;color:var(--mute)}
+.urow .uok{font-weight:800;color:var(--upd);white-space:nowrap}
+.urow.seen{border-inline-start-color:transparent;opacity:.55;cursor:default}.urow.seen .uok{color:var(--good)}
+table.fsum tr.upd td:first-child{box-shadow:inset -5px 0 0 var(--upd);cursor:pointer}
+table.fsum tr.upd .fsn b::after{content:'';display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--upd);margin-inline-start:6px;vertical-align:middle}
+#nv-food .nb.upd{background:var(--upd)}
 .pop{position:fixed;inset:0;background:rgba(8,16,34,.5);display:grid;place-items:center;z-index:60;padding:20px}
 .pop .box{background:var(--surface);color:var(--ink);border-radius:20px;padding:20px;max-width:420px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.25)}
 .pop h3{margin:0 0 8px;font:700 1.35rem var(--display);color:var(--accent)}
@@ -573,7 +584,9 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
 <section id="s-main" class="screen" hidden>
   <div id="topBar" class="top"><div><div id="hello" class="hello"></div><div id="dateTxt" class="date"></div></div></div>
 
+  <button id="updBell" class="ubell" type="button" hidden aria-label="עדכונים">🔔<span id="updN" class="nb" hidden></span></button>
   <div id="tab-today">
+    <div id="myMeet" class="card tcal" hidden></div>
     <h2 id="mineH" class="ttl">המשימות שלי</h2>
     <p id="progress" class="progress" hidden></p>
     <div id="myNotes" class="card fbc" hidden></div>
@@ -757,6 +770,13 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
     <button id="remSave" class="btn pri" type="button">שמירה</button>
     <button id="remDel" class="btn danger" type="button" hidden>הסרת התזכורת</button>
     <button id="remCancel" class="btn quiet" type="button">ביטול</button>
+  </div>
+</div>
+<div id="updPop" class="pop" hidden role="dialog" aria-modal="true" aria-labelledby="updH">
+  <div class="box"><h3 id="updH">🔔 עדכונים</h3>
+    <div id="updList"></div>
+    <button id="updAll" class="btn pri" type="button">אישרתי הכל</button>
+    <button id="updClose" class="btn quiet" type="button">סגירה</button>
   </div>
 </div>
 <div id="foodPop" class="pop fpop" hidden role="dialog" aria-modal="true" aria-labelledby="foodPopH">
@@ -1698,6 +1718,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden){beat();pa
 
 /* ---------- מסך ראשי ---------- */
 function tab(n){
+  paintUpd();
   if(me&&!isAdult(me)&&(n==='taxi'||n==='home'||n==='shop'))n='today';
   $('topBar').hidden=(n==='today'||n==='fam'||n==='kids');
   ['today','fam','kids','jobs','shop','taxi','food','cal','dog','home','set'].forEach(k=>{
@@ -3333,13 +3354,14 @@ function badgeCount(){
   if(isAdult(me))return (on('r_approve')?jobs.filter(waiting).length:0)+jobs.filter(j=>!j.done&&j.to==='fam').length;
   return jobs.filter(j=>!j.done&&(resp(j)===me||j.to==='fam'||(j.to==='all'&&!j.claim))).length;
 }
-/* מספר על האייקון של האפליקציה (r5_badge): משימות שלי שלא בוצעו + משימות מההורים + תורנויות של לוני להיום */
+/* מספר על האייקון של האפליקציה (r5_badge). אבא ואמא: רק עדכונים מהבנות שעוד לא אישרו. הבנות: משימות שלי שלא בוצעו + משימות מההורים + תורנויות של לוני להיום */
 let appBadgeN=-1;
 function appBadge(){
   try{
     if(!me||!('setAppBadge' in navigator))return;
     const st=work||{tasks:[],done:[],lv:[]};
-    let n=0;(st.tasks||[]).forEach((t,i)=>{if(String(t||'').trim()&&!st.done[i]&&!hasSubs(st,i))n++;});
+    let n=0;
+    if(isAdult(me)){n=updCount();if(n===appBadgeN)return;appBadgeN=n;(n?navigator.setAppBadge(n):navigator.clearAppBadge()).catch(()=>{});return;}(st.tasks||[]).forEach((t,i)=>{if(String(t||'').trim()&&!st.done[i]&&!hasSubs(st,i))n++;});
     n+=jobs.filter(j=>!j.done&&(resp(j)===me||j.to==='fam')).length;
     const dw=new Date().getDay();SLOTS.forEach(x=>{const k=dw+'_'+x.k;if(curWk.slots[k]===me&&!curWk.done[k])n++;});
     if(n===appBadgeN)return;appBadgeN=n;
@@ -3347,7 +3369,7 @@ function appBadge(){
   }catch(e){}
 }
 function paintBadge(){
-  appBadge();
+  paintUpd();appBadge();
   const b=$('jobBadge');if(!b)return;
   const c=badgeCount();b.hidden=!c;b.textContent=c;
   $('nv-jobs').setAttribute('aria-label','משימות'+(c?', '+c+' חדשות':''));
@@ -3921,7 +3943,18 @@ function studyBtn(ev,day){
 }
 /* --- "היום שלי" של הבנות: מה בלוח היום, ובחינה של מחר --- */
 function calItemsAll(a,b){const sv=calFilt;calFilt=new Set();try{return calItems(a,b);}finally{calFilt=sv;}}
+/* אבא ואמא: הפגישות שלי היום, למעלה לפני המשימות */
+function paintMyMeet(){
+  const box=$('myMeet');if(!box)return;
+  box.innerHTML='';
+  if(!me||!isAdult(me)){box.hidden=true;return;}
+  const td=today(),L=calItemsAll(td,td).filter(it=>it.ev.fam||evPeople(it.ev).includes(me));
+  box.hidden=!L.length;if(box.hidden)return;
+  box.append(h('h3','ty ty-cal','📅 הפגישות שלי היום'));
+  L.forEach(it=>box.append(evRow(it,true)));
+}
 function paintTodayCal(){
+  paintMyMeet();
   const box=$('todayCal');if(!box)return;
   box.innerHTML='';
   if(!me||isAdult(me)){box.hidden=true;return;}
@@ -4288,7 +4321,7 @@ function subFood(){
   if(foodSel&&!ks.includes(foodSel))foodSel='';
   foodUnsubs.push(onSnapshot(foodDefRef(),s=>{foodDef=s.exists()?s.data():null;paintFood();},()=>{}));
   foodUnsubs.push(onSnapshot(wakeRef(),s=>{wakeDef=s.exists()?s.data():{};refreshFoodPop();paintFood();},()=>{}));
-  ks.forEach(k=>foodUnsubs.push(onSnapshot(foodRef(k),s=>{foodDays[k]=s.exists()?s.data():{};paintFood();checkFood();refreshFoodPop();},()=>{})));
+  ks.forEach(k=>foodUnsubs.push(onSnapshot(foodRef(k),s=>{foodDays[k]=s.exists()?s.data():{};paintFood();checkFood();refreshFoodPop();paintUpd();},()=>{})));
   healNightFood();
 }
 /* הבנות: האם צריך עכשיו לבקש מהן למלא (מ-20:00, לא בליל שבת) */
@@ -4306,8 +4339,63 @@ function refreshFoodPop(){
   const a=document.activeElement;if(a&&pop.contains(a)&&a.tagName==='INPUT')return;
   kidFood($('foodPopForm'),true);
 }
+/* ---------- עדכונים לאבא ולאמא: מה שהבנות מילאו למחר ועוד לא אישרתם ---------- */
+const updSK=k=>'yaya.seen.'+me+'.'+k;
+function updSeen(k){try{return JSON.parse(LS.get(updSK(k))||'{}')||{};}catch(e){return {};}}
+function updList(){
+  if(!me||!isAdult(me))return [];
+  let k,seen;const out=[];
+  try{k=tmrKey();seen=updSeen(k);void foodDays;}catch(e){return [];}
+  PEOPLE.filter(p=>!isAdult(p.id)).forEach(p=>{
+    const o=orderOf(k,p.id),pl=planOf(k,p.id);
+    if(pl&&pl.st==='alt'&&pl.alt&&pl.alt.at)out.push({key:p.id+':alt',pid:p.id,at:pl.alt.at,t:'ביקשה אוכל אחר ממה שתכננתם'});
+    if(o){
+      const meal=!!(mealTxt(o,'ten')||mealTxt(o,'lunch'));
+      const t=o.src==='plan'?'אישרה את התפריט'+(o.wake?' והשכמה ב-'+o.wake:''):meal?'בחרה אוכל'+(o.wake?' והשכמה ב-'+o.wake:''):o.wake?'קבעה השכמה ב-'+o.wake:'';
+      if(t)out.push({key:p.id+':o',pid:p.id,at:o.at,t});
+    }
+  });
+  out.forEach(u=>u.seen=(seen[u.key]||0)>=u.at);
+  return out.sort((a,b)=>b.at-a.at);
+}
+const updCount=()=>updList().filter(u=>!u.seen).length;
+function updAck(keys){
+  const k=tmrKey(),s=updSeen(k);
+  updList().forEach(u=>{if(!keys||keys.includes(u.key))s[u.key]=u.at;});
+  LS.set(updSK(k),JSON.stringify(s));paintUpd();
+}
+function paintUpdList(){
+  const L=updList(),box=$('updList');box.innerHTML='';
+  $('updH').textContent='🔔 עדכונים ל'+foodDayTxt(tmrKey());
+  $('updAll').hidden=!L.some(u=>!u.seen);
+  if(!L.length){box.append(h('p','date','אין עדכונים.'));return;}
+  L.forEach(u=>{
+    const r=h('button','urow'+(u.seen?' seen':''));r.type='button';
+    const tx=h('div','ut');tx.append(h('b',null,byId[u.pid].name+' '),document.createTextNode(u.t));
+    const d=new Date(u.at);tx.append(h('small',null,String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')));
+    r.append(avatar(u.pid,32),tx,h('span','uok',u.seen?'✓':'אישרתי'));
+    r.onclick=()=>{if(!u.seen)updAck([u.key]);};
+    box.append(r);
+  });
+}
+function paintUpd(){
+  const b=$('updBell');if(!b)return;
+  const ad=!!me&&isAdult(me),n=ad?updCount():0;
+  b.hidden=!ad;b.classList.toggle('has',n>0);
+  $('updN').hidden=!n;$('updN').textContent=n;
+  b.setAttribute('aria-label',n?n+' עדכונים חדשים':'עדכונים');
+  if(!$('updPop').hidden)paintUpdList();
+  appBadge();paintFoodBadge();
+  if(ad&&!$('tab-food').hidden&&!$('foodBox').contains(document.activeElement))paintFood(true);
+}
+$('updBell').onclick=()=>{paintUpdList();$('updPop').hidden=false;};
+$('updClose').onclick=()=>{$('updPop').hidden=true;};
+$('updAll').onclick=()=>{updAck(null);$('updPop').hidden=true;toast('הכול אושר');};
+$('updPop').addEventListener('click',e=>{if(e.target===$('updPop'))$('updPop').hidden=true;});
 function paintFoodBadge(){
   const b=$('foodBadge');if(!b)return;
+  if(me&&isAdult(me)){const n=updCount();b.hidden=!n;b.textContent=n;b.classList.add('upd');$('nv-food').setAttribute('aria-label','אוכל'+(n?', '+n+' עדכונים חדשים':''));return;}
+  b.classList.remove('upd');
   const due=foodDue();b.hidden=!due;b.textContent='!';
   $('nv-food').setAttribute('aria-label','אוכל'+(due?', צריך למלא למחר':''));
 }
@@ -4742,6 +4830,8 @@ function foodSummary(k){
   const bd=h('tbody');
   rows.forEach(r=>{
     const tr=h('tr');tr.style.setProperty('--kc',r.p.l);tr.style.setProperty('--kc-d',r.p.d);
+    const uk=r.ad?[]:updList().filter(u=>!u.seen&&u.pid===r.p.id).map(u=>u.key);
+    if(uk.length){tr.classList.add('upd');tr.title='עדכון חדש. לחיצה = אישרתי';tr.onclick=()=>{updAck(uk);paintFood(true);};}
     const n=h('td','fsn');n.append(avatar(r.p.id,26),h('b',null,r.p.name));tr.append(n);
     const tt=h('td','fst');
     if(r.t){tt.append(h('b',null,r.t));if(r.w&&r.w.src==='p')tt.append(h('span','fsrc','✓'+(r.w.by==='mom'?'אמא':'אבא')));}
