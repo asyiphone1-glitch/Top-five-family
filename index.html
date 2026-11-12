@@ -699,7 +699,6 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
   </div>
 
   <div id="tab-home" hidden>
-    <div id="advCard" class="card" hidden><h3 id="advH">המלצות צוות היועצים</h3><p class="date">כל המלצה נכנסת לאפליקציה רק אם תלחצו "מקבל". המלצה שנבנתה, או שלא התקבלה לפני יותר מיום, עוברת לארכיון, ושם אפשר לראות ולשנות אותה.</p><div id="advBox"></div></div>
     <div id="weekCard" class="card rep" hidden></div>
     <div id="hlCard" class="card hl" hidden></div>
     <div id="devCard" class="card" hidden><h3 id="devH">טלפונים במשפחה</h3><div id="devBox"></div></div>
@@ -707,6 +706,10 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
   </div>
 
   <div id="tab-set" hidden>
+    <div id="advCard" class="card" hidden>
+      <button id="advOpen" class="btn quiet" type="button" aria-expanded="false" aria-controls="advIn"></button>
+      <div id="advIn" hidden><div id="advTabs" class="chips" role="group" aria-label="קטגוריות המלצות"></div><div id="advBox"></div></div>
+    </div>
     <div class="card">
       <h3>התראות כשהאפליקציה סגורה</h3>
       <button id="pushOn" class="btn pri" type="button">הפעלת התראות בטלפון הזה</button>
@@ -2886,9 +2889,9 @@ const ADV0_AT=new Date(2026,10,8,11,0).getTime();
 const ADV5={r5_rules:'yes',r5_pin:'no',r5_private:'no',r5_badge:'yes',r5_swipe:'yes',r5_icons:'yes',r5_taskpts:'yes',r5_teamgoal:'no',r5_party:'yes',r5_cant:'yes',r5_why:'no',r5_driver:'no',r5_offline:'yes',r5_lazy:'yes',r5_health:'yes',r5_60:'yes',r5_autobk:'yes',r5_errors:'yes'};
 const ADV5_AT=new Date(2026,10,12,0,5).getTime();
 function decision(id){if(id==='r_approve')return {s:'no',by:'dad',at:0};return adv[id]||(ADV0[id]?{s:ADV0[id],by:'dad',at:ADV0_AT}:ADV5[id]?{s:ADV5[id],by:'dad',at:ADV5_AT}:null);}
-/* המלצה שהוחלט עליה נעלמת מהמסך יום אחרי ההחלטה */
-const ADV_KEEP=864e5;let advOld=false;
-/* המלצות שכבר נבנו באפליקציה. מה שנבנה, או שלא התקבל לפני יותר מיום, עובר לארכיון */
+/* המלצות נמצאות בהגדרות, מאחורי כפתור. קטגוריות: חדשות, אושרו (בדרך לפיתוח), יושמו, לא אושרו.
+   המלצה שיושמה נמחקת מהמסך יום אחרי שיושמה, כדי שלא יצטבר מידע */
+let advOpen=false,advCat='new';
 /* מתי כל המלצה יושמה באפליקציה */
 const BUILT_AT={r_dogring:'2026-11-08',r_pre10:'2026-11-08',r_approve:'2026-11-08',r_fair:'2026-11-08',r_cheer:'2026-11-08',r_push:'2026-11-08',r_week:'2026-11-08',
   r5_autobk:'2026-11-12',r5_health:'2026-11-12',r5_60:'2026-11-12',r5_errors:'2026-11-12',r5_offline:'2026-11-12',r5_lazy:'2026-11-12',r5_badge:'2026-11-12',r5_icons:'2026-11-12',r5_swipe:'2026-11-12',r5_taskpts:'2026-11-12',r5_party:'2026-11-12',r5_cant:'2026-11-12',
@@ -2896,7 +2899,6 @@ const BUILT_AT={r_dogring:'2026-11-08',r_pre10:'2026-11-08',r_approve:'2026-11-0
 const BUILT=new Set(Object.keys(BUILT_AT));
 const builtTxt=id=>'✅ יושם באפליקציה'+(BUILT_AT[id]?' ב-'+dshort(BUILT_AT[id]):'');
 const isDone=r=>{const st=decision(r.id);return !!st&&st.s==='yes'&&(BUILT.has(r.id)||!r.build);};
-function advHidden(r){const st=decision(r.id);if(!st)return false;if(st.s==='yes')return BUILT.has(r.id)||!r.build;return Date.now()-(st.at||0)>ADV_KEEP;}
 const inDev=id=>!!(adv._dev&&Array.isArray(adv._dev.ids)&&adv._dev.ids.includes(id));
 const toDev=()=>RECS.filter(r=>r.build&&!BUILT.has(r.id)&&on(r.id)&&!inDev(r.id));
 /* אישור הורה בוטל לבקשת אבא (10/11/2026): "בוצע" נסגר מיד */
@@ -2906,55 +2908,61 @@ function subAdv(){
   if(advUnsub)advUnsub();
   advUnsub=onSnapshot(advDoc(),snap=>{adv=snap.exists()?snap.data():{};paintAdvice();paintJobs();},()=>{});
 }
+const builtAt=r=>BUILT_AT[r.id]?k2d(BUILT_AT[r.id]).getTime():((decision(r.id)||{}).at||0);
+function advCatOf(r){
+  const st=decision(r.id);
+  if(!st)return 'new';
+  if(st.s==='no')return 'no';
+  if(isDone(r))return Date.now()-builtAt(r)<2*864e5?'done':'gone';
+  return 'yes';
+}
 function paintAdvice(){
   const card=$('advCard');if(!card)return;
   card.hidden=!isAdult(me);if(card.hidden)return;
-  const box=$('advBox');box.innerHTML='';
-  const pend=RECS.filter(r=>!decision(r.id)).length;
-  $('advH').textContent='המלצות צוות היועצים'+(pend?' ('+pend+' מחכות להחלטה)':'');
+  const box=$('advBox'),tabs=$('advTabs');box.innerHTML='';tabs.innerHTML='';
   const yes=me==='mom'?'מקבלת':'מקבל',no=me==='mom'?'לא מקבלת':'לא מקבל';
-  const vis=RECS.filter(r=>advOld||!advHidden(r)),old=RECS.filter(advHidden).length;
-  card.hidden=!vis.length&&!old;if(card.hidden)return;
-  if(!vis.length)box.append(h('p','date','אין המלצות חדשות.'));
-  if(!advOld){
-    const fresh=RECS.filter(r=>isDone(r)&&BUILT_AT[r.id]&&Date.now()-k2d(BUILT_AT[r.id]).getTime()<2*864e5);
-    if(fresh.length){
-      const n=h('div','advdone');
-      n.append(h('b',null,'✅ '+(fresh.length===1?'המלצה אחת יושמה':fresh.length+' המלצות יושמו')+' ועברו לארכיון:'));
-      const ul=h('ul');fresh.forEach(r=>ul.append(h('li',null,r.t)));n.append(ul);box.append(n);
+  const by={new:[],yes:[],done:[],no:[]};
+  RECS.forEach(r=>{const c=advCatOf(r);if(by[c])by[c].push(r);});
+  const ob=$('advOpen');
+  ob.textContent=(advOpen?'▾ ':'◂ ')+'💡 המלצות צוות היועצים'+(by.new.length?' · '+by.new.length+' חדשות':'');
+  ob.setAttribute('aria-expanded',advOpen?'true':'false');
+  $('advIn').hidden=!advOpen;if(!advOpen)return;
+  [['new','💡 חדשות'],['yes','🛠️ אושרו'],['done','✅ יושמו'],['no','❌ לא אושרו']].forEach(([k,lab])=>{
+    const c=h('button','chip',lab+' ('+by[k].length+')');c.type='button';
+    c.setAttribute('aria-pressed',advCat===k?'true':'false');
+    c.onclick=()=>{advCat=k;paintAdvice();};tabs.append(c);
+  });
+  const list=by[advCat];
+  if(advCat==='yes'){
+    const dv=toDev();
+    if(dv.length){
+      const go=h('button','btn pri','🚀 צא לפיתוח ('+dv.length+')');go.type='button';
+      go.onclick=()=>{
+        const ids=[...new Set([...((adv._dev&&adv._dev.ids)||[]).filter(id=>!BUILT.has(id)),...dv.map(r=>r.id)])];
+        setDoc(advDoc(),{_dev:{at:Date.now(),by:me,ids:ids}},{merge:true})
+          .then(()=>toast('נשלח לפיתוח: '+dv.length+' המלצות'))
+          .catch(()=>toast('השליחה נכשלה. בדקו חיבור.'));
+      };
+      box.append(go);
     }
   }
-  const dv=toDev();
-  if(dv.length){
-    const go=h('button','btn pri','🚀 צא לפיתוח ('+dv.length+')');go.type='button';
-    go.onclick=()=>{
-      const ids=[...new Set([...((adv._dev&&adv._dev.ids)||[]).filter(id=>!BUILT.has(id)),...dv.map(r=>r.id)])];
-      setDoc(advDoc(),{_dev:{at:Date.now(),by:me,ids:ids}},{merge:true})
-        .then(()=>toast('נשלח לפיתוח: '+dv.length+' המלצות. כשהן ייבנו הן יעברו לארכיון.'))
-        .catch(()=>toast('השליחה נכשלה. בדקו חיבור.'));
-    };
-    box.append(h('p','date','אישרת '+dv.length+' המלצות שדורשות בנייה. הכפתור מעביר אותן לפיתוח.'),go);
-  }
-  const order=advOld?vis.slice().sort((x,y)=>(isDone(y)?1:0)-(isDone(x)?1:0)):vis;
-  let lastGrp='';
-  order.forEach(r=>{
-    if(advOld){const g=isDone(r)?'✅ יושמו':advHidden(r)?'❌ לא התקבלו':'';if(g&&g!==lastGrp){box.append(h('h4','advgrp',g));lastGrp=g;}}
+  if(!list.length){box.append(h('p','date',advCat==='new'?'אין המלצות חדשות.':advCat==='done'?'אין המלצות שיושמו ביום האחרון.':'אין כאן המלצות.'));return;}
+  list.forEach(r=>{
     const m=TEAM[r.w],st=decision(r.id);
     const row=h('div','rec');
     const a=h('span','avl');a.style.cssText='width:44px;height:44px;font-size:1rem;background:'+m.c;a.textContent=m.n.replace('ד"ר ','').split(' ').map(x=>x[0]).join('');a.setAttribute('aria-hidden','true');
     const b=h('div');
     b.append(h('div','who3',m.n+' · '+m.r));
-    const t=h('div','rt',r.t);if(r.build&&!BUILT.has(r.id))t.append(h('span','tag','דורש בנייה'));
-    b.append(t,h('div','rd',r.d));
-    let stt='ממתין להחלטה',cls='rs';
+    b.append(h('div','rt',r.t),h('div','rd',r.d));
     if(st){
       const bp=byId[st.by],who=bp?bp.name:'';
-      if(st.s==='yes'){stt=(!r.build||BUILT.has(r.id)?builtTxt(r.id):inDev(r.id)?'🛠️ בפיתוח':'אושר, מחכה ל"צא לפיתוח"')+(who?' · '+who+(bp.g==='m'?' אישר':' אישרה'):'');cls+=' yes';}
-      else{stt='לא התקבל'+(who?' · '+who:'');cls+=' no';}
+      let stt,cls='rs';
+      if(st.s==='yes'){stt=(isDone(r)?builtTxt(r.id):inDev(r.id)?'🛠️ בפיתוח':'מחכה ל"צא לפיתוח"')+(who?' · '+who:'');cls+=' yes';}
+      else{stt='לא אושר'+(who?' · '+who:'');cls+=' no';}
+      b.append(h('div',cls,stt));
     }
-    b.append(h('div',cls,stt));
-    const acts=h('div','acts');
     if(isDone(r)){row.append(a,b);box.append(row);return;}
+    const acts=h('div','acts');
     [['yes',yes],['no',no]].forEach(([v,lab])=>{
       const bt=h('button','btn sm '+(v==='yes'?'':'quiet'),lab);bt.type='button';
       bt.setAttribute('aria-pressed',st&&st.s===v?'true':'false');
@@ -2963,11 +2971,8 @@ function paintAdvice(){
     });
     row.append(a,b,acts);box.append(row);
   });
-  if(old){
-    const t=h('button','btn quiet sm',advOld?'הסתרת הארכיון':'🗄️ ארכיון ('+old+')');t.type='button';
-    t.onclick=()=>{advOld=!advOld;paintAdvice();};box.append(t);
-  }
 }
+$('advOpen').onclick=()=>{advOpen=!advOpen;paintAdvice();};
 
 /* ---------- משימות מההורים ---------- */
 const KIDS=['ziv','roni','hili','aviv'];
