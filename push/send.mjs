@@ -270,7 +270,8 @@ async function main() {
 
   if (on('r_dogring')) {
     const p = parts(now);
-    const sunMs = Date.UTC(p.y, p.m - 1, p.d) - p.wd * 864e5, s = new Date(sunMs);
+    // השבוע של לוני מתחיל ביום שישי. מפתחות המשבצות הם לפי יום בשבוע
+    const sunMs = Date.UTC(p.y, p.m - 1, p.d) - ((p.wd - 5 + 7) % 7) * 864e5, s = new Date(sunMs);
     const wk = await getDoc(`${F}/weeks/${ymd(s.getUTCFullYear(), s.getUTCMonth() + 1, s.getUTCDate())}`);
     const slots = (wk && wk.slots) || {}, done = (wk && wk.done) || {};
     for (const k in DOGT) {
@@ -287,7 +288,7 @@ async function main() {
   {
     const p = parts(now);
     if (p.wd === 3 || p.wd === 4) {
-      const nx = new Date(Date.UTC(p.y, p.m - 1, p.d) + (7 - p.wd) * 864e5);
+      const nx = new Date(Date.UTC(p.y, p.m - 1, p.d) + (5 - p.wd) * 864e5);
       const nk = ymd(nx.getUTCFullYear(), nx.getUTCMonth() + 1, nx.getUTCDate());
       const at = (h, mi) => { const t = localToUtc(p.y, p.m, p.d, h, mi); return t <= now && now - t <= WINDOW; };
       const KM = p.wd === 3

@@ -1820,7 +1820,7 @@ function openMain(){
   $('dateTxt').textContent=new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
   show('s-main');tab('today');renderTasks();startBeat();
   /* טעינה לפי הצורך (r5_lazy): קודם מה שמופיע ב"היום שלי", השאר אחרי שהמסך כבר מוכן, והקניות רק כשנכנסים אליהן */
-  weekStart=sunday(new Date());subWeek();subFam();subJobs();subCurWk();paintJobForm();subShop();subCal();subNotes();
+  weekStart=dogWk(new Date());subWeek();subFam();subJobs();subCurWk();paintJobForm();subShop();subCal();subNotes();
   clearTimeout(lazyT);lazyT=setTimeout(()=>{subSwaps();subRep();subAdv();subNextWk();subTaxi();subFood();},1200);
   clearInterval(homeT);homeT=setInterval(()=>{if(!$('tab-home').hidden)paintHome();checkInbox();},30000);
   syncPush();
@@ -1859,12 +1859,17 @@ function sunday(d0){const d=new Date(d0.getFullYear(),d0.getMonth(),d0.getDate()
 function fmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function parseKey(w){const a=w.split('-').map(Number);return new Date(a[0],a[1]-1,a[2]);}
 function addDays(d,n){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()+n);return x;}
+/* השבוע של לוני: מיום שישי עד יום חמישי. מפתח משבצת = יום בשבוע (0=ראשון)_שעה, בלי קשר ליום שבו השבוע מתחיל */
+const DOG0=5;
+function dogWk(d0){const d=new Date(d0.getFullYear(),d0.getMonth(),d0.getDate());d.setDate(d.getDate()-((d.getDay()-DOG0+7)%7));return d;}
+const wdOff=(week,wd)=>(Number(wd)-parseKey(week).getDay()+7)%7;
+const slotDate=(week,wd)=>addDays(parseKey(week),wdOff(week,wd));
 function slotText(week,key){
-  const a=key.split('_');const d=addDays(parseKey(week),+a[0]);
+  const a=key.split('_');const d=slotDate(week,a[0]);
   return 'יום '+DAYN[+a[0]]+' '+d.getDate()+'/'+(d.getMonth()+1)+', '+slotName(a[1]);
 }
 const wkRef=w=>doc(db,'families',code,'weeks',w);
-let weekStart=sunday(new Date()),wk={slots:{},done:{}},wkUnsub=null,swaps=[],swUnsub=null,draft=null,confirmGen=false,dogMsg='',qz=null;
+let weekStart=dogWk(new Date()),wk={slots:{},done:{}},wkUnsub=null,swaps=[],swUnsub=null,draft=null,confirmGen=false,dogMsg='',qz=null;
 
 function subWeek(){
   if(wkUnsub)wkUnsub();
@@ -1960,9 +1965,9 @@ function planWeek(ws,P,hurt,HI){
   hurt=hurt||{};HI=HI||{n:{},s:{}};
   const ids=PEOPLE.map(p=>p.id),kids=ids.filter(i=>!isAdult(i));
   const slots=[];
-  for(let d=0;d<7;d++)SLOTS.forEach(x=>{if(hasSlot(d,x.k))slots.push({d:d,k:x.k,key:d+'_'+x.k,date:fmt(addDays(ws,d))});});
-  const idx={};slots.forEach((x,i)=>idx[x.key]=i);
-  const prevI=slots.map(x=>idx[(x.d-1)+'_'+x.k]);
+  for(let o=0;o<7;o++){const d=(ws.getDay()+o)%7;SLOTS.forEach(x=>{if(hasSlot(d,x.k))slots.push({d:d,o:o,k:x.k,key:d+'_'+x.k,date:fmt(addDays(ws,o))});});}
+  const idx={};slots.forEach((x,i)=>idx[x.o+'_'+x.k]=i);
+  const prevI=slots.map(x=>idx[(x.o-1)+'_'+x.k]);
   const blocked=(id,x)=>{const r=P[id];return r.block.includes(x.key)||(r.wb||[]).includes(x.key)||r.once.some(o=>o.d===x.date&&o.s.includes(x.k));};
   /* הוגנות לאורך זמן: מי שקיבלה יותר בשלושת השבועות הקודמים מקבלת קצת פחות עכשיו, גם בסך הכול וגם לפי שעות היום */
   const SK=SLOTS.map(x=>x.k);
@@ -2036,7 +2041,12 @@ async function runPlan(wkey,auto){
     const P={};PEOPLE.forEach(p=>P[p.id]=normPrefs((people[p.id]||{}).prefs,p.id));
     const cur=await getDoc(wkRef(wkey));const cd=cur.exists()?cur.data():{};
     if(auto&&(cd.gen||Object.keys(cd.slots||{}).length))return;
-    const cons=cd.cons||{};PEOPLE.forEach(p=>{
+    const cons=Object.assign({},cd.cons||{});
+    /* מעבר לשבוע שישי-חמישי: אילוצים שמולאו בשבוע הישן (ראשון-שבת) נכנסים לימים שחופפים */
+    try{const ws=parseKey(wkey);if(ws.getDay()!==0){const ok=fmt(addDays(ws,(7-ws.getDay())%7));const od=await getDoc(wkRef(ok));
+      if(od.exists()){const oc=od.data().cons||{},keep=new Set();for(let o=0;o<7;o++){const dt=addDays(ws,o);if(dt>=parseKey(ok))keep.add(dt.getDay());}
+        for(const id in oc)if(!cons[id])cons[id]={b:(oc[id].b||[]).filter(k=>keep.has(+k.split('_')[0])),at:oc[id].at};}}}catch(e){}
+    PEOPLE.forEach(p=>{
       const wb=new Set((cons[p.id]||{}).b||[]);
       Object.keys(clsBlocks(p.id,wkey)).forEach(k=>wb.add(k));
       P[p.id].wb=[...wb];
@@ -2064,10 +2074,10 @@ async function runPlan(wkey,auto){
   paintDog();
 }
 /* מועד אחרון לאילוצים: יום חמישי שלפני השבוע ב-22:00. אז משבצים את כל המשמרות, גם אם לא כולם מילאו */
-function deadline(wkey){const d=addDays(parseKey(wkey),-3);return new Date(d.getFullYear(),d.getMonth(),d.getDate(),22,0,0).getTime();}
+function deadline(wkey){const d=addDays(parseKey(wkey),-1);return new Date(d.getFullYear(),d.getMonth(),d.getDate(),22,0,0).getTime();}
 function dlText(wkey){const d=new Date(deadline(wkey));return 'יום חמישי '+d.getDate()+'/'+(d.getMonth()+1)+' ב-22:00';}
 let nxWk=null,nxUnsub=null,autoBusy=false;
-function nextKey(){return fmt(addDays(sunday(new Date()),7));}
+function nextKey(){return fmt(addDays(dogWk(new Date()),7));}
 function subNextWk(){
   if(nxUnsub)nxUnsub();
   const k=nextKey();nxWk=null;
@@ -2097,7 +2107,7 @@ function clsBlocks(id,wkey){
     if(!(ev.kind==='cls'||ev.rep==='w'))return;
     const st=hmMin(ev.time),en=ev.end?hmMin(ev.end):st+CLS_DUR;
     occIn(ev,a,b).forEach(day=>{
-      const d=Math.round((parseKey(day)-w0)/864e5);
+      const d=parseKey(day).getDay();
       SLOTS.forEach(sl=>{
         if(!hasSlot(d,sl.k))return;
         const t=SLOT_MIN[sl.k];
@@ -2109,7 +2119,7 @@ function clsBlocks(id,wkey){
 }
 function fixedBlock(id,wkey,key){
   const r=normPrefs((people[id]||{}).prefs,id),a=key.split('_');
-  const date=fmt(addDays(parseKey(wkey),+a[0]));
+  const date=fmt(slotDate(wkey,a[0]));
   return r.block.includes(key)||r.once.some(o=>o.d===date&&o.s.includes(a[1]));
 }
 function consCard(wkey){
@@ -2135,8 +2145,8 @@ function consCard(wkey){
   if(consKey!==wkey){consKey=wkey;consDraft=new Set(mine?mine.b||[]:[]);consMsg='';}
   c.append(h('label',null,G('מתי אני לא יכול בשבוע הזה?','מתי אני לא יכולה בשבוע הזה?')));
   const myCls=clsBlocks(me,wkey);
-  for(let d=0;d<7;d++){
-    const date=addDays(parseKey(wkey),d);
+  for(let o=0;o<7;o++){
+    const date=addDays(parseKey(wkey),o),d=date.getDay();
     const row=h('div','brow');row.append(h('b',null,'יום '+DAYN[d]+' '+date.getDate()+'/'+(date.getMonth()+1)));
     const chips=h('div','chips');chips.setAttribute('role','group');chips.setAttribute('aria-label','אילוצים ביום '+DAYN[d]);
     SLOTS.forEach(sl=>{
@@ -2189,7 +2199,7 @@ function paintDog(){
   box.innerHTML='';
   if(!me||!code)return;
   const wkey=fmt(weekStart);
-  const cur=fmt(sunday(new Date()));
+  const cur=fmt(dogWk(new Date()));
 
   /* ניווט שבועות */
   const nav=h('div','wknav');
@@ -2203,7 +2213,7 @@ function paintDog(){
   /* לא חוזרים לשבועות שעברו: רק התוכנית קדימה */
   nav.append(wkey>cur?bp:h('span'),lab,bn);box.append(nav);
   if(wkey!==cur){const g=h('button','btn quiet sm','חזרה להשבוע');g.type='button';g.style.marginBottom='8px';
-    g.onclick=()=>{weekStart=sunday(new Date());draft=null;subWeek();};box.append(g);}
+    g.onclick=()=>{weekStart=dogWk(new Date());draft=null;subWeek();};box.append(g);}
 
   if(dogMsg){const m=h('div','note ok',dogMsg);m.setAttribute('role','status');box.append(m);}
 
@@ -2283,9 +2293,9 @@ function paintDog(){
 
   /* ימים */
   const todayK=fmt(new Date());
-  for(let d=0;d<7;d++){
-    const date=addDays(weekStart,d),dk=fmt(date),isNow=dk===todayK,isPast=dk<todayK;
-    /* ימים שעברו לא מוצגים: רק מהיום ועד שבת */
+  for(let o=0;o<7;o++){
+    const date=addDays(weekStart,o),d=date.getDay(),dk=fmt(date),isNow=dk===todayK,isPast=dk<todayK;
+    /* ימים שעברו לא מוצגים: רק מהיום ועד סוף השבוע של לוני (חמישי) */
     if(isPast)continue;
     const card=h('section','day'+(isNow?' now':''));
     card.append(h('h3',null,'יום '+DAYN[d]+' '+date.getDate()+'/'+(date.getMonth()+1)));
@@ -2333,7 +2343,7 @@ function paintDog(){
 }
 
 function walked(wkey,key){
-  if(fmt(addDays(parseKey(wkey),Number(key.split('_')[0])))!==fmt(new Date())){toast('אפשר לסמן הוצאה רק ביום עצמו.');return;}
+  if(fmt(slotDate(wkey,key.split('_')[0]))!==fmt(new Date())){toast('אפשר לסמן הוצאה רק ביום עצמו.');return;}
   setDoc(wkRef(wkey),{done:{[key]:{by:me,at:Date.now()}}},{merge:true})
     .then(()=>{
       if(!KIDS.includes(me))return;
@@ -2444,10 +2454,10 @@ let podMode='w',podData=null,podSig='',podRun=0,podHist=null,podHistAt=0;
 function podScores(){
   const acc=weekPoints(curWk);
   if(podMode==='m'){
-    const ck=fmt(sunday(new Date()));
+    const ck=fmt(dogWk(new Date()));
     if(!podHist||podHist.k!==ck||Date.now()-podHistAt>300000){
       podHistAt=Date.now();
-      Promise.all([1,2,3].map(i=>getDoc(wkRef(fmt(addDays(sunday(new Date()),-7*i)))).catch(()=>null))).then(arr=>{
+      Promise.all([1,2,3].map(i=>getDoc(wkRef(fmt(addDays(dogWk(new Date()),-7*i)))).catch(()=>null))).then(arr=>{
         podHist={k:ck,docs:arr.filter(x=>x&&x.exists()).map(x=>x.data())};paintPodium(true);
       });
     }
@@ -2455,7 +2465,7 @@ function podScores(){
   }
   /* נקודות על משימות מההורים (r5_taskpts): מי שסימנה "בוצע" מקבלת את הנקודות */
   if(on('r5_taskpts')){
-    const from=podMode==='m'?addDays(sunday(new Date()),-21).getTime():sunday(new Date()).getTime();
+    const from=podMode==='m'?addDays(dogWk(new Date()),-21).getTime():dogWk(new Date()).getTime();
     jobs.forEach(j=>{const p=Number(j.pts)||0,who=j.doneBy;if(!p||!j.done||!j.doneAt||j.doneAt<from||!acc[who])return;acc[who].pts+=p;acc[who].jp=(acc[who].jp||0)+p;});
   }
   return KIDS.map(k=>Object.assign({id:k},acc[k])).sort((a,b)=>b.pts-a.pts||b.w-a.w||b.cover-a.cover||KIDS.indexOf(a.id)-KIDS.indexOf(b.id));
@@ -3379,7 +3389,7 @@ function paintBadge(){
 let curWk={slots:{},done:{}},curUnsub=null;
 function subCurWk(){
   if(curUnsub)curUnsub();
-  curUnsub=onSnapshot(wkRef(fmt(sunday(new Date()))),s=>{const d=s.exists()?s.data():{};curWk={slots:d.slots||{},done:d.done||{},orig:d.orig||null};checkRem();appBadge();paintPodium(false);paintKidsTab();},()=>{});
+  curUnsub=onSnapshot(wkRef(fmt(dogWk(new Date()))),s=>{const d=s.exists()?s.data():{};curWk={slots:d.slots||{},done:d.done||{},orig:d.orig||null};checkRem();appBadge();paintPodium(false);paintKidsTab();},()=>{});
 }
 const DOGT={l:[12,30],a:[17,30],b:[20,0],n:[22,0]};
 function remTargets(j){if(j.done)return [];if(j.to==='fam')return PEOPLE.map(p=>p.id);if(j.claim&&j.to==='all')return [j.claim];if(j.to!=='all')return [j.to];return KIDS;}
