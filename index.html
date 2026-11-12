@@ -58,7 +58,7 @@ input{font:inherit;color:var(--ink)}
 .msg{min-height:1.6em;margin:10px 0 0;color:var(--bad);font-weight:500}
 .msg.ok{color:var(--good)}
 .hint{color:var(--mute);font-size:.92rem;margin-top:18px}
-.net{position:fixed;top:calc(8px + env(safe-area-inset-top,0px));left:12px;z-index:20;display:flex;gap:8px;align-items:center;
+.net{position:fixed;top:calc(8px + env(safe-area-inset-top,0px));left:120px;z-index:20;display:flex;gap:8px;align-items:center;
   padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:.82rem;color:var(--mute);max-width:calc(100vw - 24px)}
 .net i{flex:none;width:10px;height:10px;border-radius:50%;background:var(--mute)}
 .net[data-s="ok"] i{background:var(--good)}
@@ -101,7 +101,7 @@ input{font:inherit;color:var(--ink)}
   padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));z-index:30}
 /* iOS: כשהמקלדת פתוחה הסרגל הקבוע 'נתקע' באמצע המסך, אז מסתירים אותו בזמן הקלדה */
 body.typing .nav,body.typing .fab{display:none}
-.nav button{flex:1;min-height:56px;border:0;border-radius:14px;background:transparent;color:var(--mute);font:700 .8rem var(--body);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}
+.nav button{flex:1 1 0;min-width:0;min-height:56px;border:0;border-radius:14px;background:transparent;color:var(--mute);font:700 .8rem var(--body);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}
 .nav button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .nav button.on{color:var(--accent);background:var(--soft)}
 .wknav{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:6px 0 10px}
@@ -199,6 +199,9 @@ body.typing .nav,body.typing .fab{display:none}
 .nav.many button svg{width:22px;height:22px}
 .nb{position:absolute;top:4px;inset-inline-end:calc(50% - 22px);background:var(--bad);color:#fff;border-radius:999px;font-size:.72rem;min-width:18px;line-height:18px;padding:0 5px;text-align:center}
 .ubell{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:12px;z-index:40;width:46px;height:46px;border-radius:999px;border:2px solid var(--line);background:var(--surface);font-size:1.35rem;display:grid;place-items:center;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+#updBell{left:66px}
+.ubell.gear{font-size:1.25rem}
+.ubell.gear.on{border-color:var(--accent)}
 .ubell.has{border-color:var(--upd);animation:ubp 2.4s ease-in-out infinite}
 @keyframes ubp{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--upd) 25%,transparent)}}
 .ubell .nb{top:-6px;inset-inline-end:-6px;background:var(--upd)}
@@ -584,6 +587,7 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
 <section id="s-main" class="screen" hidden>
   <div id="topBar" class="top"><div><div id="hello" class="hello"></div><div id="dateTxt" class="date"></div></div></div>
 
+  <button id="gearBtn" class="ubell gear" type="button" aria-label="הגדרות">⚙️</button>
   <button id="updBell" class="ubell" type="button" hidden aria-label="עדכונים">🔔<span id="updN" class="nb" hidden></span></button>
   <div id="tab-today">
     <div id="myMeet" class="card tcal" hidden></div>
@@ -754,7 +758,7 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
     <button id="nv-cal" type="button"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17.2h.01M12 17.2h.01"/></svg>לוח</button>
     <button id="nv-dog" type="button"><svg viewBox="0 0 24 24"><path d="M4 9l2-4 3 2h6l3-2 2 4v4a8 8 0 0 1-16 0z"/><path d="M9.5 12.5h.01M14.5 12.5h.01M10.5 16c1 .8 2 .8 3 0"/></svg>לוני</button>
     <button id="nv-home" type="button" hidden><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>הבית</button>
-    <button id="nv-set" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>הגדרות</button>
+    <button id="nv-set" type="button" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>הגדרות</button>
   </nav>
 </section>
 
@@ -1639,8 +1643,16 @@ function paintHealth(){
   const srvWait=Object.values(devs).some(d=>d.pid==='server'&&d.ok!==true);
   c.innerHTML='';c.classList.toggle('bad',!ok);
   c.append(h('div','hlrow',(ok?'🟢 שרת ההתראות עובד':'🔴 שרת ההתראות לא רץ')+(at?' · ריצה אחרונה '+ago(age):'')));
-  if(!ok)c.append(h('p','date',srvWait?'השרת מחכה לאישור. אשרו את "שרת ההתראות" בכרטיס "טלפונים במשפחה" כאן למטה.'
-    :'ההתראות כשהאפליקציה סגורה לא נשלחות. בדקו שהשירות ב-cron-job.org פעיל, ואם זה לא עוזר, כתבו לClaude "שרת ההתראות אדום".'));
+  if(ok)return;
+  if(srvWait){c.append(h('p','date','השרת מחכה לאישור. אשרו את "שרת ההתראות" בכרטיס "טלפונים במשפחה" כאן למטה.'));return;}
+  if(at){c.append(h('p','date','ההתראות כשהאפליקציה סגורה לא נשלחות. בדקו שהשירות ב-cron-job.org פעיל, ואם זה לא עוזר, כתבו לClaude "שרת ההתראות אדום".'));return;}
+  /* השרת אף פעם לא רץ על המשפחה הזו: הקוד המשפחתי שנשמר ב-GitHub שונה מהקוד בטלפונים */
+  c.append(h('p','date','השרת רץ, אבל על קוד משפחתי אחר. צריך להחליף את הקוד ששמור ב-GitHub פעם אחת:'));
+  const ol=h('ol','date');
+  ['לוחצים כאן למטה "העתק קוד משפחתי"','נכנסים ב-GitHub למאגר Top-five-family ‏> Settings ‏> Secrets and variables ‏> Actions','ליד FAMILY_CODE לוחצים על העיפרון, מדביקים ושומרים','תוך 5 דקות הנורה תהפוך לירוקה (או תבקש לאשר את השרת)'].forEach(t=>ol.append(h('li',null,t)));
+  const cp=h('button','btn sm','📋 העתק קוד משפחתי');cp.type='button';
+  cp.onclick=()=>{(navigator.clipboard?navigator.clipboard.writeText(code):Promise.reject()).then(()=>toast('הקוד הועתק')).catch(()=>prompt('העתיקו את הקוד:',code));};
+  c.append(ol,cp);
 }
 /* ---------- דיווח תקלות מהטלפונים (r5_errors): רק סוג התקלה, בלי תוכן אישי ---------- */
 let errBusy=false;
@@ -1728,6 +1740,7 @@ function tab(n){
     $('tab-'+k).hidden=(k!==n);
     $('nv-'+k).classList.toggle('on',k===n);
   });
+  $('gearBtn').classList.toggle('on',n==='set');
   if(n==='home')paintHome();
   if(n==='set'){paintSettings();paintPush();}
   if(n==='dog'){paintDog();paintPodium(true);quizShow(false);}
@@ -4955,6 +4968,7 @@ async function tryPin(){
 $('pinOk').onclick=tryPin;
 $('pinIn').addEventListener('keydown',e=>{if(e.key==='Enter')tryPin();});
 ['today','fam','kids','jobs','shop','taxi','food','cal','dog','home','set'].forEach(k=>{$('nv-'+k).onclick=()=>tab(k);});
+$('gearBtn').onclick=()=>tab('set');
 $('btnSwitch').onclick=()=>showWho();
 $('codeShow').onclick=()=>{const o=$('codeOut');o.textContent=code;o.hidden=!o.hidden;$('codeShow').textContent=o.hidden?'הצגת הקוד':'הסתרת הקוד';};
 $('pinSave').onclick=async()=>{
