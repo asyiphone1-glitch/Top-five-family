@@ -2722,19 +2722,23 @@ let actx=null;
 /* הצלצול מתנגן כקובץ קול רגיל (audio) ולא דרך Web Audio:
    באייפון Web Audio מושתק כשהמתג בצד על שקט ונעצר אחרי שהאפליקציה הייתה ברקע. */
 let ringEl=null,ringReady=false,ringWant=false;
+const SOFT=[[784,0],[1047,.22],[1319,.44],[1047,.78]];
 function ringWav(){
-  const sr=22050,n=Math.floor(sr*4.45),buf=new ArrayBuffer(44+n*2),v=new DataView(buf);
+  const sr=22050,n=Math.floor(sr*5),buf=new ArrayBuffer(44+n*2),v=new DataView(buf);
   const ws=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i));};
   ws(0,'RIFF');v.setUint32(4,36+n*2,true);ws(8,'WAVE');ws(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
   v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);ws(36,'data');v.setUint32(40,n*2,true);
-  const notes=[];for(let r=0;r<3;r++)[[988,0],[1319,.18],[1760,.36]].forEach(([f,o])=>notes.push([f,.15+r*1.35+o]));
+  /* צליל רך ונעים: פעמונים עגולים (גלי סינוס) בסולם דו מז'ור, עולה ויורד, פעמיים */
+  const notes=[];[[0,0],[2.1,.82]].forEach(([o,vol])=>SOFT.forEach(([f,d])=>notes.push([f,.12+o+d,vol])));
+  const fl=new Float32Array(n);let pk=0;
   for(let i=0;i<n;i++){
     const t=i/sr;let x=0;
-    for(const [f,st] of notes){const d=t-st;if(d<0||d>.8)continue;
-      const env=d<.012?d/.012:Math.exp(-(d-.012)*5.5);
-      const ph=(f*d)%1;x+=env*(.6*(4*Math.abs(ph-.5)-1)+.25*Math.sin(6.2832*2*f*d));}
-    x=Math.max(-1,Math.min(1,x*1.05));v.setInt16(44+i*2,Math.round(x*32767),true);
+    for(const [f,st,vol] of notes){const d=t-st;if(d<0||d>2.2)continue;
+      const env=(d<.03?d/.03:1)*Math.exp(-d*2.4);
+      x+=vol*env*(Math.sin(6.2832*f*d)+.22*Math.exp(-d*5)*Math.sin(6.2832*2*f*d)+.06*Math.exp(-d*8)*Math.sin(6.2832*3*f*d));}
+    fl[i]=x;if(Math.abs(x)>pk)pk=Math.abs(x);
   }
+  for(let i=0;i<n;i++)v.setInt16(44+i*2,Math.round(fl[i]/(pk||1)*.85*32767),true);
   return URL.createObjectURL(new Blob([buf],{type:'audio/wav'}));
 }
 /* קובץ שקט לגמרי (חצי שנייה של אפסים). מנגנים אותו בלחיצה הראשונה כדי שהטלפון יאפשר לצלצל אחר כך בלי לחיצה.
@@ -2770,7 +2774,7 @@ document.addEventListener('touchend',unlockAudio,{passive:true});
 try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
 let comp=null;
 function chime(){
-  try{navigator.vibrate&&navigator.vibrate([400,150,400,150,400]);}catch(e){}
+  try{navigator.vibrate&&navigator.vibrate([200,120,200]);}catch(e){}
   if(ringEl){
     try{
       ringWant=true;
@@ -2793,18 +2797,18 @@ function chimeWA(){
     const mg=actx.createGain();mg.gain.value=1.6;comp.connect(mg);mg.connect(actx.destination);
   }
   const t0=actx.currentTime+.03;
-  /* שלוש חזרות של צלצול בן שלושה צלילים, כ-4 שניות, בצליל חד שנשמע טוב גם ברמקול קטן */
-  for(let rep=0;rep<3;rep++){
-    const t=t0+rep*1.35;
-    [[988,0],[1319,.18],[1760,.36]].forEach(([f,o])=>{
-      [['triangle',1,.9],['square',2,.18]].forEach(([type,mul,vol])=>{
+  /* אותו צליל רך כמו בקובץ: פעמונים עגולים, פעמיים */
+  [[0,1],[2.1,.82]].forEach(([rep,rv])=>{
+    const t=t0+rep;
+    SOFT.forEach(([f,o])=>{
+      [[1,.7],[2,.15],[3,.04]].forEach(([mul,vol])=>{
         const g=actx.createGain(),os=actx.createOscillator();
-        os.type=type;os.frequency.value=f*mul;
-        g.gain.setValueAtTime(.0001,t+o);g.gain.exponentialRampToValueAtTime(vol,t+o+.015);g.gain.exponentialRampToValueAtTime(.0001,t+o+.7);
-        os.connect(g);g.connect(comp);os.start(t+o);os.stop(t+o+.75);
+        os.type='sine';os.frequency.value=f*mul;
+        g.gain.setValueAtTime(.0001,t+o);g.gain.exponentialRampToValueAtTime(vol*rv,t+o+.03);g.gain.exponentialRampToValueAtTime(.0001,t+o+(mul>1?.9:1.9));
+        os.connect(g);g.connect(comp);os.start(t+o);os.stop(t+o+2);
       });
     });
-  }
+  });
 }
 function remind(lines,goTab){
   const pop=$('pop'),ul=$('popList');
