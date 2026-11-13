@@ -141,6 +141,9 @@ body.typing .nav,body.typing .fab{display:none}
 .task.head{border-color:var(--accent)}
 .task.addrow{border-style:dashed;background:transparent}
 .task.addrow input{font-size:1rem}
+.task.cat.sub.addrow{border-style:dashed;background:transparent;min-height:0}
+.task.cat.sub.addrow input{color:var(--cc);font-weight:600}
+.task.cat.sub.addrow input::placeholder{color:var(--cc);opacity:.75}
 .tsub,.tdel{flex:none;min-width:40px;min-height:40px;border:0;background:transparent;color:var(--mute);font:700 1.3rem var(--body);cursor:pointer;border-radius:10px}
 .tsub{color:var(--accent);font-size:1.3rem}
 .tdel.arm{color:var(--bad);font-size:.85rem;white-space:nowrap}
@@ -1184,6 +1187,19 @@ function renderList(ul,st,onSave,onProg,label,focusAt){
     li.append(del);
     if(t.trim())swipe(li,()=>b.click(),()=>{if(del.dataset.arm==='1')return;del.dataset.arm='1';del.textContent=hasSubs(st,i)?'למחוק הכול?':'למחוק?';del.classList.add('arm');});
     ul.append(li);
+    /* בסוף כל קטגוריה פתוחה: שורת + להוספת עוד משימה לקטגוריה */
+    if(sub&&!st.lv[i+1]&&st.tasks.length<MAXT){
+      const m=mainOf(st,i);
+      const ar=document.createElement('li');ar.className='task cat sub addrow';
+      ar.style.setProperty('--cl',cc[0]);ar.style.setProperty('--cd',cc[1]);
+      const ai=document.createElement('input');ai.type='text';ai.maxLength=80;ai.dataset.keep='1';
+      ai.placeholder='+ הוספה ל'+(st.tasks[m]||'').trim();ai.setAttribute('aria-label','הוספת משימה לקטגוריה '+(st.tasks[m]||'').trim());
+      const go=keep=>{if(!ai.isConnected)return;const v=ai.value.trim();if(!v)return;ai.value='';const at=blockEnd(st,m);splice(at,0,[{t:v,lv:1}]);syncMain(m);onSave();rer(keep?'add'+m:null);};
+      ai.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go(true);}});
+      ai.onblur=()=>go(false);
+      ar.dataset.add='add'+m;
+      ar.append(ai);ul.append(ar);
+    }
   });
   /* שורה להוספת משימה ראשית חדשה */
   if(st.tasks.length<MAXT){
@@ -1197,7 +1213,7 @@ function renderList(ul,st,onSave,onProg,label,focusAt){
   }
   if(focusAt!=null){
     const rows=ul.querySelectorAll('li');
-    const r=focusAt===-1?rows[rows.length-1]:ul.querySelector('li[data-i="'+focusAt+'"]');
+    const r=focusAt===-1?rows[rows.length-1]:typeof focusAt==='string'?ul.querySelector('li[data-add="'+focusAt+'"]'):ul.querySelector('li[data-i="'+focusAt+'"]');
     const f=r&&r.querySelector('input');if(f)setTimeout(()=>f.focus(),0);
   }
   onProg();
