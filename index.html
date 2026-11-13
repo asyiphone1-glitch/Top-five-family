@@ -2723,13 +2723,15 @@ let actx=null;
    באייפון Web Audio מושתק כשהמתג בצד על שקט ונעצר אחרי שהאפליקציה הייתה ברקע. */
 let ringEl=null,ringReady=false,ringWant=false;
 const SOFT=[[784,0],[1047,.22],[1319,.44],[1047,.78]];
+/* ארבע חזרות, כעשר שניות */
+const SOFTREP=[[0,1],[2.1,.9],[4.2,.9],[6.3,.8]];
 function ringWav(){
-  const sr=22050,n=Math.floor(sr*5),buf=new ArrayBuffer(44+n*2),v=new DataView(buf);
+  const sr=22050,n=Math.floor(sr*9.6),buf=new ArrayBuffer(44+n*2),v=new DataView(buf);
   const ws=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i));};
   ws(0,'RIFF');v.setUint32(4,36+n*2,true);ws(8,'WAVE');ws(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
   v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);ws(36,'data');v.setUint32(40,n*2,true);
   /* צליל רך ונעים: פעמונים עגולים (גלי סינוס) בסולם דו מז'ור, עולה ויורד, פעמיים */
-  const notes=[];[[0,0],[2.1,.82]].forEach(([o,vol])=>SOFT.forEach(([f,d])=>notes.push([f,.12+o+d,vol])));
+  const notes=[];SOFTREP.forEach(([o,vol])=>SOFT.forEach(([f,d])=>notes.push([f,.12+o+d,vol])));
   const fl=new Float32Array(n);let pk=0;
   for(let i=0;i<n;i++){
     const t=i/sr;let x=0;
@@ -2774,7 +2776,7 @@ document.addEventListener('touchend',unlockAudio,{passive:true});
 try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
 let comp=null;
 function chime(){
-  try{navigator.vibrate&&navigator.vibrate([200,120,200]);}catch(e){}
+  try{navigator.vibrate&&navigator.vibrate([200,120,200,1800,200,120,200]);}catch(e){}
   if(ringEl){
     try{
       ringWant=true;
@@ -2797,8 +2799,8 @@ function chimeWA(){
     const mg=actx.createGain();mg.gain.value=1.6;comp.connect(mg);mg.connect(actx.destination);
   }
   const t0=actx.currentTime+.03;
-  /* אותו צליל רך כמו בקובץ: פעמונים עגולים, פעמיים */
-  [[0,1],[2.1,.82]].forEach(([rep,rv])=>{
+  /* אותו צליל רך כמו בקובץ: פעמונים עגולים, ארבע פעמים */
+  SOFTREP.forEach(([rep,rv])=>{
     const t=t0+rep;
     SOFT.forEach(([f,o])=>{
       [[1,.7],[2,.15],[3,.04]].forEach(([mul,vol])=>{
