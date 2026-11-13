@@ -1910,7 +1910,7 @@ function normPrefs(r,id){
   r=r||{};
   return {hard:(r.hard||[]).slice(),like:(r.like||[]).slice(),avoid:(r.avoid||[]).slice(),
           block:(r.block||[]).slice(),once:[],
-          max:(id==='mom'?2:7),wb:[]};
+          max:(id==='mom'?2:id==='dad'?12:7),wb:[]};
 }
 function loadPrefs(){return normPrefs((people[me]||{}).prefs,me);}
 const SHORT={m:'בוקר',s:'אחרי ביה"ס',l:'12:30',a:'17:30',b:'20:00',n:'22:00'};
@@ -2009,10 +2009,10 @@ function planWeek(ws,P,hurt,HI){
     for(const k in dc)if(dc[k]>1)c+=15*(dc[k]-1);
     const mt=P.mom.max;c+=150*(load.mom-mt)*(load.mom-mt);
     ids.forEach(id=>{if(id!=='mom'&&load[id]>P[id].max)c+=80*(load[id]-P[id].max);});
-    /* אבא מוציא כמו הבנות (13/11/2026): הוא בחלוקה השווה, ועדיין מקבל בעיקר בוקר ו-22:00 */
-    const eq=kids.concat(ids.includes('dad')?['dad']:[]);
-    let m=0;eq.forEach(k=>m+=load[k]);m/=eq.length;
-    eq.forEach(k=>{const v=load[k]+(off[k]||0)-m;c+=8*v*v;});
+    /* אבא מוציא 4 פעמים יותר מכל בת (13/11/2026), בעיקר בוקר ו-22:00. אמא 2 */
+    let m=0;kids.forEach(k=>m+=load[k]);m/=kids.length;
+    kids.forEach(k=>{const v=load[k]+off[k]-m;c+=8*v*v;});
+    if(ids.includes('dad')){const v=load.dad-(m+4);c+=8*v*v;}
     SK.forEach(q=>{let mq=0;kids.forEach(k=>mq+=sc[k][q]+offS[k][q]);mq/=kids.length;kids.forEach(k=>{const v=sc[k][q]+offS[k][q]-mq;c+=3*v*v;});});
     return c;
   }
