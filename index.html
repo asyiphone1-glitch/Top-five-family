@@ -141,6 +141,10 @@ body.typing .nav,body.typing .fab{display:none}
 .task.head{border-color:var(--accent)}
 .task.addrow{border-style:dashed;background:transparent}
 .task.addrow input{font-size:1rem}
+.snzli{display:flex;flex-direction:column;gap:6px}
+.snz{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.snz .chip{min-height:40px;padding:4px 12px;font-size:.9rem}
+.snzl{font-size:.85rem;color:var(--mute)}
 .task.cat.sub.addrow{border-style:dashed;background:transparent;min-height:0}
 .task.cat.sub.addrow input{color:var(--cc);font-weight:600}
 .task.cat.sub.addrow input::placeholder{color:var(--cc);opacity:.75}
@@ -2805,13 +2809,36 @@ function chimeWA(){
 function remind(lines,goTab){
   const pop=$('pop'),ul=$('popList');
   if(pop.hidden)ul.innerHTML='';
-  lines.forEach(t=>ul.append(h('li',null,t)));
+  lines.forEach(t=>{
+    if(typeof t==='string'){ul.append(h('li',null,t));return;}
+    const li=h('li','snzli');li.append(h('span',null,t.t));
+    if(t.snz){
+      const row=h('div','snz');row.append(h('span','snzl','להזכיר שוב:'));
+      SNZ.forEach(([ms,lb])=>{const b=h('button','chip',lb);b.type='button';b.onclick=()=>snooze(t.snz,ms,li);row.append(b);});
+      li.append(row);
+    }
+    ul.append(li);
+  });
   $('popGo').textContent=goTab==='cal'?'ללוח המשפחתי':goTab==='dog'?'ללוח של לוני':goTab==='today'?'למשימות שלי':goTab==='fam'?'למשימות המשפחתיות':'למשימות';
   $('popGo').onclick=()=>{pop.hidden=true;tab(goTab||'jobs');};
   pop.hidden=false;chime();
   setTimeout(()=>$('popOk').focus(),50);
 }
 $('popOk').onclick=()=>{$('pop').hidden=true;};
+/* נודניק לתזכורת: עוד 10 דקות / שעה / יום */
+const SNZ=[[600e3,'עוד 10 דק׳'],[3600e3,'עוד שעה'],[864e5,'עוד יום']];
+const snzKey=()=>'yaya.snz.'+me;
+function snzList(){try{return JSON.parse(LS.get(snzKey())||'[]');}catch(e){return [];}}
+function snooze(o,ms,li){
+  const at=Date.now()+ms;let ok=true;
+  if(o.k==='t'){
+    const i=work.tasks.findIndex((x,k)=>x===o.txt&&!work.done[k]);
+    if(i<0)ok=false;
+    else{if(!work.rm)work.rm=work.tasks.map(()=>0);work.rm[i]=at;save();renderTasks();}
+  }else{const a=snzList();a.push({at,t:o.t,tab:o.tab||'jobs'});LS.set(snzKey(),JSON.stringify(a));}
+  toast(ok?'אזכיר שוב '+remTxt(at):'המשימה כבר לא ברשימה');
+  li.remove();if(!$('popList').children.length)$('pop').hidden=true;
+}
 let toastT=null;
 /* אישור ויזואלי על כפתור: ירוק עם ✓ לשנייה וחצי, שורד רינדור מחדש לפי מפתח */
 const okUntil={};
@@ -3453,7 +3480,7 @@ function checkRem(){
       if(k==='p'&&now>=j.due)return;
       const key='yaya.rem.'+j.id+'.'+k+'.'+j.due;
       if(LS.get(key))return;LS.set(key,'1');
-      fire.push((k==='p'?'בעוד 10 דקות: ':'הגיע הזמן: ')+j.text);
+      fire.push({t:(k==='p'?'בעוד 10 דקות: ':'הגיע הזמן: ')+j.text,snz:{k:'l',t:j.text,tab:'jobs'}});
     });
   });
   const dogFire=[];
@@ -3479,9 +3506,11 @@ function checkRem(){
       const key='yaya.trem.'+tb+'.'+t+'.'+st.tasks[i];
       if(LS.get(key))return;LS.set(key,'1');
       const m=st.lv[i]?mainOf(st,i):-1;
-      tFire.push('תזכורת: '+(m>=0?st.tasks[m]+' ‹ ':'')+st.tasks[i]);if(!tTab)tTab=tb;
+      tFire.push({t:'תזכורת: '+(m>=0?st.tasks[m]+' ‹ ':'')+st.tasks[i],snz:{k:'t',txt:st.tasks[i]}});if(!tTab)tTab=tb;
     });
   });
+  /* תזכורות שנדחו (נודניק) של משימות מההורים */
+  {const a=snzList(),keep=[];a.forEach(x=>{if(x.at<=now){if(now-x.at<win)fire.push({t:'תזכורת חוזרת: '+x.t,snz:{k:'l',t:x.t,tab:x.tab}});}else keep.push(x);});if(keep.length!==a.length)LS.set(snzKey(),JSON.stringify(keep));}
   if(fire.length||dogFire.length||tFire.length)remind(tFire.concat(fire,dogFire),tFire.length?tTab:fire.length?'jobs':'dog');
 }
 setInterval(checkRem,15000);
