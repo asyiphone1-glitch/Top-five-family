@@ -2984,7 +2984,10 @@ const ADV0_AT=new Date(2026,10,8,11,0).getTime();
 /* החלטות של אבא על סבב 5, מהשיחה (12/11/2026) */
 const ADV5={r5_rules:'yes',r5_pin:'no',r5_private:'no',r5_badge:'yes',r5_swipe:'yes',r5_icons:'yes',r5_taskpts:'yes',r5_teamgoal:'no',r5_party:'yes',r5_cant:'yes',r5_why:'no',r5_driver:'no',r5_offline:'yes',r5_lazy:'yes',r5_health:'yes',r5_60:'yes',r5_autobk:'yes',r5_errors:'yes'};
 const ADV5_AT=new Date(2026,10,12,0,5).getTime();
-function decision(id){if(id==='r_approve')return {s:'no',by:'dad',at:0};return adv[id]||(ADV0[id]?{s:ADV0[id],by:'dad',at:ADV0_AT}:ADV5[id]?{s:ADV5[id],by:'dad',at:ADV5_AT}:null);}
+/* החלטות של אבא על סבב 7, מהשיחה (13/11/2026): הכול אושר */
+const ADV7={r7_week:'yes',r7_forms:'yes',r7_offline:'yes',r7_server:'yes',r7_fakeserver:'yes',r7_logs:'yes',r7_phones:'yes',r7_guard:'yes',r7_quota:'yes',r7_music:'yes',r7_theme:'yes',r7_wardrobe:'yes',r7_postcard:'yes',r7_best:'yes',r7_levels:'yes',r7_hanukkah:'yes',r7_gift:'yes',r7_secret:'yes'};
+const ADV7_AT=new Date(2026,10,13,15,0).getTime();
+function decision(id){if(id==='r_approve')return {s:'no',by:'dad',at:0};return adv[id]||(ADV0[id]?{s:ADV0[id],by:'dad',at:ADV0_AT}:ADV5[id]?{s:ADV5[id],by:'dad',at:ADV5_AT}:ADV7[id]?{s:ADV7[id],by:'dad',at:ADV7_AT}:null);}
 /* המלצות נמצאות בהגדרות, מאחורי כפתור. קטגוריות: חדשות, אושרו (בדרך לפיתוח), יושמו, לא אושרו.
    המלצה שיושמה נמחקת מהמסך יום אחרי שיושמה, כדי שלא יצטבר מידע */
 let advOpen=false,advCat='new';
