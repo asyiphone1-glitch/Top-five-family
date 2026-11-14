@@ -4287,7 +4287,7 @@ async function saveCal(){
     else await setDoc(calRef(ev.id),data,{merge:true});
     if(rem)unlockAudio();
     /* קופצים לשבוע/חודש שבו האירוע מופיע, כדי שיראו אותו מיד (גם כשהוא מתחיל בשבוע הבא) */
-    const td=today(),first=data.rep&&data.date<td?td:data.date;
+    const td=today(),first=data.rep&&data.date<td?(occIn(Object.assign({},ev,data),td,dkey(addDays(new Date(),400)))[0]||td):data.date;
     toast((cf.isNew?'נוסף ללוח':'נשמר')+' · '+DAYN[k2d(first).getDay()]+' '+dshort(first));
     calSel=first;calAnchor=first;
     closeCalPop();paintCal();
