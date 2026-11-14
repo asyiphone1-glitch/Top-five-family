@@ -1997,6 +1997,7 @@ function planWeek(ws,P,hurt,HI){
      או להעביר משבצת מבת שיש לה אחת יותר לבת שיש לה אחת פחות. כך ההוגנות לא נפגעת לעולם,
      ובתוך זה מכבדים כמה שיותר בקשות: שעות נוחות, שעות קשות, ימים עמוסים, לא פעמיים באותו יום */
   const W={};ids.forEach(id=>W[id]=hurt[id]?1.6:1);
+  const DV=6,BW=3;
   function cost(a){
     let c=0;const dc={},sc={},n={};ids.forEach(i=>{n[i]=0;sc[i]={m:0,s:0,l:0,a:0,b:0,n:0};});
     for(let i=0;i<a.length;i++){
@@ -2006,14 +2007,16 @@ function planWeek(ws,P,hurt,HI){
       if(id==='dad'){if(x.k!=='m'&&x.k!=='n')c+=40;}
       else{if(x.k==='m'||x.k==='n')c+=6;}
       if(r.hard.includes(x.d))c+=30*w;
-      if(r.avoid.includes(x.k))c+=25*w;
+      if(r.avoid.includes(x.k))c+=40*w;
       if(r.like.includes(x.k))c-=10*w;
       if(prevI[i]!=null&&a[prevI[i]]===id)c+=3;
     }
     for(const k in dc)if(dc[k]>1)c+=15*(dc[k]-1);
     /* מי שהוציאה יותר בשלושת השבועות הקודמים - עדיף שהיא תקבל את המספר הנמוך השבוע */
     kids.forEach(k=>c+=3*n[k]*hd[k]);
-    SK.forEach(q=>{let mq=0;kids.forEach(k=>mq+=sc[k][q]+offS[k][q]);mq/=kids.length;kids.forEach(k=>{const v=sc[k][q]+offS[k][q]-mq;c+=3*v*v;});});
+    /* גיוון: כל בת מקבלת שעות שונות במשך השבוע, ולא את אותה שעה שוב ושוב (גם אם היא נוחה לה) */
+    kids.forEach(k=>SK.forEach(q=>{const v=sc[k][q]-1;if(v>0)c+=DV*v*v;}));
+    SK.forEach(q=>{let mq=0;kids.forEach(k=>mq+=sc[k][q]+offS[k][q]);mq/=kids.length;kids.forEach(k=>{const v=sc[k][q]+offS[k][q]-mq;c+=BW*v*v;});});
     return c;
   }
   let best=a.slice(),bc=cost(a);
@@ -2021,8 +2024,8 @@ function planWeek(ws,P,hurt,HI){
   for(let run=0;run<3;run++){
     const b=start.slice(),cn=Object.assign({},cnt0);
     let c=cost(b),T2=40;
-    for(let it=0;it<30000;it++){
-      T2*=0.99975;
+    for(let it=0;it<60000;it++){
+      T2*=0.9998749921865233;
       const mv=rnd();
       if(mv<.2){
         const i=Math.floor(rnd()*b.length),j=Math.floor(rnd()*b.length),k=Math.floor(rnd()*b.length);
