@@ -3865,7 +3865,9 @@ const MONTHS=['ינואר','פברואר','מרץ','אפריל','מאי','יונ
 const FAMC=['#8A6400','#E8C547'];
 const DARK=window.matchMedia&&matchMedia('(prefers-color-scheme:dark)').matches;
 const pcol=id=>id==='fam'?FAMC[DARK?1:0]:(byId[id]?(DARK?byId[id].d:byId[id].l):'#888');
-let cal=[],calUnsub=null,calView=LS.get('yaya.calv')==='m'?'m':'w',calAnchor=today(),calSel=today(),calOpenDays=new Set();
+/* בשבת השבוע כבר נגמר, אז הלוח השבועי נפתח על השבוע הבא */
+function calHome(){const d=new Date();return d.getDay()===6?dkey(addDays(d,1)):today();}
+let cal=[],calUnsub=null,calView=LS.get('yaya.calv')==='m'?'m':'w',calAnchor=calHome(),calSel=today(),calOpenDays=new Set();
 let calFilt=new Set(),tmEx=[],tmOv={},tmOvUnsub=null,calEd=null;
 const calCol=()=>collection(db,'families',code,'cal');
 const calRef=id=>doc(db,'families',code,'cal',id);
@@ -4015,7 +4017,7 @@ function calNav(box,label,onPrev,onNext,isNow){
   const bn=h('button','btn quiet sm','‹');bn.type='button';bn.setAttribute('aria-label','הבא');bn.onclick=onNext;
   const lab=h('b',null,label);
   n.append(bp,lab,bn);box.append(n);
-  if(!isNow){const t=h('button','chip ctoday','חזרה להיום');t.type='button';t.onclick=()=>{calAnchor=today();calSel=today();paintCal();};box.append(t);}
+  if(!isNow){const t=h('button','chip ctoday','חזרה להיום');t.type='button';t.onclick=()=>{calAnchor=calView==='w'?calHome():today();calSel=today();paintCal();};box.append(t);}
 }
 function evRow(it,compact){
   const ev=it.ev,K=kindOf(ev.kind);
@@ -4097,7 +4099,7 @@ function dayList(host,k,items){
 function paintWeekCal(box){
   const s=sunday(k2d(calAnchor)),e=addDays(s,6),a=dkey(s),b=dkey(e);
   const lab=s.getMonth()===e.getMonth()?s.getDate()+'–'+e.getDate()+' ב'+MONTHS[s.getMonth()]:s.getDate()+'.'+(s.getMonth()+1)+' – '+e.getDate()+'.'+(e.getMonth()+1);
-  calNav(box,lab,()=>{calAnchor=dkey(addDays(s,-7));paintCal();},()=>{calAnchor=dkey(addDays(s,7));paintCal();},a<=today()&&today()<=b);
+  calNav(box,lab,()=>{calAnchor=dkey(addDays(s,-7));paintCal();},()=>{calAnchor=dkey(addDays(s,7));paintCal();},a<=calHome()&&calHome()<=b);
   const items=calItems(a,b);
   const cnt=items.length;
   box.append(h('p','progress csum',cnt?(cnt===1?'אירוע אחד השבוע':cnt+' אירועים השבוע'):'אין אירועים השבוע'));
@@ -4155,7 +4157,7 @@ let cf=null;
 function openCalPop(ev,day){
   const isNew=!ev;
   if(isNew){
-    const d=calView==='m'?calSel:(calAnchor===today()||calAnchor<today()?today():calAnchor);
+    const d=calView==='m'?calSel:(calAnchor<=calHome()?today():calAnchor);
     ev={kind:'event',title:'',date:d<today()?today():d,time:'',end:'',place:'',note:'',rep:'',until:'',rem:'',fam:false,who:isAdult(me)?[]:[me]};
   }
   cf={kindAuto:isNew,src:ev,isNew,day:day||ev.date,kind:ev.kind||'event',fam:!!ev.fam,who:new Set(ev.who||[]),multi:!ev.fam&&(ev.who||[]).length>1,rep:ev.rep||'',ro:!isNew&&!canEdit(ev)};
@@ -4304,7 +4306,7 @@ async function saveTmOv(){
     toast('נשמר');closeCalPop();
   }catch(e){say($('cfMsg'),'השמירה נכשלה. בדקו חיבור.');}
 }
-$('cvW').onclick=()=>{calView='w';LS.set('yaya.calv','w');if(calSel)calAnchor=calSel;paintCal();};
+$('cvW').onclick=()=>{calView='w';LS.set('yaya.calv','w');if(calSel)calAnchor=calSel===today()?calHome():calSel;paintCal();};
 $('cvM').onclick=()=>{calView='m';LS.set('yaya.calv','m');calSel=calAnchor;paintCal();};
 $('calAdd').onclick=()=>openCalPop(null);
 $('calPop').addEventListener('click',e=>{if(e.target===$('calPop'))closeCalPop();});
