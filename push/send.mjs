@@ -98,7 +98,7 @@ function localToUtc(y, m, d, h, mi) {
 const ymd = (y, m, d) => y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0');
 
 // ---- גיבוי לילי (r5_autobk): כל לילה אחרי 03:00, נשמר בתוך מסד הנתונים הנעול, 14 לילות אחרונים ----
-const BK_COLS = ['people', 'jobs', 'rep', 'swaps', 'weeks', 'prefs', 'shop', 'taxi', 'cal', 'caltm', 'food'];
+const BK_COLS = ['people', 'jobs', 'rep', 'swaps', 'weeks', 'prefs', 'shop', 'cal', 'caltm', 'food'];
 const BK_KEEP = 14, BK_CHUNK = 250000;
 async function nightly(F, now) {
   const p = parts(now);

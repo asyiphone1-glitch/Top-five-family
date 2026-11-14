@@ -271,18 +271,6 @@ table.fsum tr.upd .fsn b::after{content:'';display:inline-block;width:9px;height
 .tday i{position:absolute;top:4px;inset-inline-end:6px;width:7px;height:7px;border-radius:50%;background:var(--warn);font-style:normal}
 .tsec{margin-top:16px}
 .tsec h3{margin:0 0 6px;font:700 1.1rem var(--display)}
-.tride{display:flex;align-items:center;gap:12px;padding:10px 12px;border-top:1px solid var(--line)}
-.tride:first-child{border-top:0}
-.tride .tm{flex:none;font:700 1.35rem var(--display);min-width:58px;text-align:center;direction:ltr}
-.tride .st2{flex:1;min-width:0}
-.tride .tx{font:700 1.1rem/1.3 var(--body);word-break:break-word}
-.tride .pl{font-size:1rem;margin-top:2px;word-break:break-word}
-.tride .by3{font-size:.8rem;color:var(--mute);margin-top:2px}
-.tride .chk{width:46px;height:46px}
-.tride.got .chk{background:var(--good);border-color:var(--good);color:#fff}
-.tride.got .chk svg{display:block}
-.tride.got .tx,.tride.got .pl,.tride.got .tm{color:var(--mute);text-decoration:line-through}
-.tride .mv{flex:none;min-height:40px;min-width:40px;border:0;background:transparent;color:var(--mute);font:700 1.2rem var(--body);cursor:pointer;border-radius:10px}
 .tempty{color:var(--mute);padding:10px 12px}
 
 /* מסך הבנות */
@@ -650,31 +638,6 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
     <button id="shopClear" class="btn quiet" type="button" hidden></button>
   </div>
 
-  <div id="tab-taxi" hidden>
-    <h2 class="sec ty ty-ride">🚕 מונית</h2>
-    <div id="taxiDays" class="tdays" role="group" aria-label="בחירת יום"></div>
-    <p id="taxiProg" class="progress"></p>
-    <div id="taxiBox"></div>
-    <div class="card jform" id="taxiForm">
-      <h3 id="taxiFormH">נסיעה חדשה</h3>
-      <div class="chips" role="group" aria-label="סוג הנסיעה">
-        <button type="button" class="chip" id="tkGo" aria-pressed="true">🚗 לקחת</button>
-        <button type="button" class="chip" id="tkBack" aria-pressed="false">🏠 להחזיר</button>
-      </div>
-      <label>את מי</label>
-      <div class="chips" id="taxiWho" role="group" aria-label="את מי"></div>
-      <input id="taxiOther" class="field" maxlength="40" autocomplete="off" placeholder="או שם אחר, למשל חברה של רוני" aria-label="שם אחר">
-      <div class="row2" style="margin-top:10px">
-        <div><label for="taxiTime">שעה</label><input id="taxiTime" type="time"></div>
-        <div><label for="taxiPlace" id="taxiPlaceL">לאן</label><input id="taxiPlace" maxlength="80" autocomplete="off" placeholder="למשל: חוג ג׳ודו"></div>
-      </div>
-      <label style="margin-top:10px;display:block">מי נוהג (לא חובה)</label>
-      <div class="chips" id="taxiDrv" role="group" aria-label="מי נוהג"></div>
-      <button id="taxiAdd" class="btn pri" type="button">הוספת הנסיעה</button>
-      <p id="taxiMsg" class="msg" role="status"></p>
-    </div>
-  </div>
-
   <div id="tab-food" hidden>
     <div id="foodBox"></div>
   </div>
@@ -760,7 +723,6 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
     <button id="nv-kids" type="button" hidden><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.2"/><circle cx="16" cy="8" r="3.2"/><path d="M2.5 20c.6-3.5 2.8-5.5 5.5-5.5s4.9 2 5.5 5.5M10.5 20c.6-3.5 2.8-5.5 5.5-5.5s4.9 2 5.5 5.5"/></svg>הבנות</button>
     <button id="nv-jobs" type="button"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>משימות<span id="jobBadge" class="nb" hidden></span></button>
     <button id="nv-shop" type="button" hidden><svg viewBox="0 0 24 24"><path d="M3 4h2l2.4 11h11l2-8H6.2"/><circle cx="9" cy="19.5" r="1.5"/><circle cx="17" cy="19.5" r="1.5"/></svg>קניות</button>
-    <button id="nv-taxi" type="button" hidden><svg viewBox="0 0 24 24"><path d="M5 17h14v-5l-2-5H7l-2 5z"/><path d="M5 12h14M9 4h6"/><circle cx="8" cy="17.5" r="1.5"/><circle cx="16" cy="17.5" r="1.5"/></svg>מונית<span id="taxiBadge" class="nb" hidden></span></button>
     <button id="nv-food" type="button"><svg viewBox="0 0 24 24"><path d="M7 3v18M4.5 3v5a2.5 2.5 0 0 0 5 0V3"/><path d="M17 21V3c-2.2 1.3-3.5 4-3.5 7.5V14H17"/></svg>אוכל<span id="foodBadge" class="nb" hidden></span></button>
     <button id="nv-cal" type="button"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17.2h.01M12 17.2h.01"/></svg>לוח</button>
     <button id="nv-dog" type="button"><svg viewBox="0 0 24 24"><path d="M4 9l2-4 3 2h6l3-2 2 4v4a8 8 0 0 1-16 0z"/><path d="M9.5 12.5h.01M14.5 12.5h.01M10.5 16c1 .8 2 .8 3 0"/></svg>לוני</button>
@@ -1754,9 +1716,10 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden){beat();pa
 /* ---------- מסך ראשי ---------- */
 function tab(n){
   paintUpd();
-  if(me&&!isAdult(me)&&(n==='taxi'||n==='home'||n==='shop'))n='today';
+  if(n==='taxi')n='today';
+  if(me&&!isAdult(me)&&(n==='home'||n==='shop'))n='today';
   $('topBar').hidden=(n==='today'||n==='fam'||n==='kids');
-  ['today','fam','kids','jobs','shop','taxi','food','cal','dog','home','set'].forEach(k=>{
+  ['today','fam','kids','jobs','shop','food','cal','dog','home','set'].forEach(k=>{
     $('tab-'+k).hidden=(k!==n);
     $('nv-'+k).classList.toggle('on',k===n);
   });
@@ -1769,12 +1732,11 @@ function tab(n){
   if(n==='jobs')paintSent();
   if(n==='today'){paintTodayCal();tmLoad(false);paintMyNotes();}
   if(n==='shop'){shopLive();paintShop();}
-  if(n==='taxi')paintTaxi();
   if(n==='food')paintFood(true);
   if(n==='cal'){paintCal();tmLoad(false);}
 }
 /* --- גיבוי ושחזור (אבא) --- */
-const BK_COLS=['people','jobs','rep','swaps','weeks','prefs','shop','taxi','cal','caltm','food'];
+const BK_COLS=['people','jobs','rep','swaps','weeks','prefs','shop','cal','caltm','food'];
 function paintBackup(){const c=$('bkCard');if(c)c.hidden=me!=='dad';const l=LS.get('yaya.bk.last');if(me==='dad'&&l&&!$('bkMsg').textContent)say($('bkMsg'),'גיבוי אחרון מהטלפון הזה: '+new Date(Number(l)).toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'numeric'}),true);}
 $('bkSave').onclick=async()=>{
   const m=$('bkMsg');say(m,'אוסף את הנתונים...',true);
@@ -1857,7 +1819,7 @@ function openMain(){
   show('s-main');tab('today');renderTasks();startBeat();
   /* טעינה לפי הצורך (r5_lazy): קודם מה שמופיע ב"היום שלי", השאר אחרי שהמסך כבר מוכן, והקניות רק כשנכנסים אליהן */
   weekStart=dogWk(new Date());subWeek();subFam();subJobs();subCurWk();paintJobForm();subShop();subCal();subNotes();
-  clearTimeout(lazyT);lazyT=setTimeout(()=>{subSwaps();subRep();subAdv();subNextWk();subTaxi();subFood();},1200);
+  clearTimeout(lazyT);lazyT=setTimeout(()=>{subSwaps();subRep();subAdv();subNextWk();subFood();},1200);
   clearInterval(homeT);homeT=setInterval(()=>{if(!$('tab-home').hidden)paintHome();checkInbox();},30000);
   syncPush();
   const qt=new URLSearchParams(location.search).get('tab');
@@ -2917,7 +2879,6 @@ const RECS=[
   {id:'r2_dogmiss',w:'yoav',t:'תזכורת ב-21:30 למי שלא סימנה הוצאה של לוני',d:'מאז שאפשר לסמן "הוצאתי" רק ביום עצמו, מי ששכחה לסמן מפסידה את הנקודה ולא יכולה לתקן. ההצעה: ב-21:30 תגיע הודעה רק למי שהייתה לה תורנות היום ועוד לא סימנה. תורנות 22:00 מקבלת תזכורת כזו ב-23:00.',build:true},
   {id:'r2_gender',w:'shira',t:'לכתוב לכל אחד בלשון שלו, בלי לוכסנים',d:'בלוח של לוני ובבקשות ההחלפה כתוב "את/ה", "הוציא/ה", "במקומו/ה", "מבקש/ת", "ביקש/ה" ו"יכול/ה". האפליקציה כבר יודעת מי בן ומי בת (רק אבא בלשון זכר), ולכן אפשר לכתוב לכל אחד בדיוק בלשון שלו. אין חיסרון.',build:true},
   {id:'r2_repeat',w:'adi',t:'משימות שחוזרות כל יום או כל שבוע',d:'כל משימה היום היא חד-פעמית, ולכן משימות קבועות כמו "לסדר את החדר בשישי" צריך להקליד מחדש כל שבוע. ההצעה: בטופס המשימה תהיה אפשרות "חוזרת: כל יום / כל שבוע ביום מסוים", והמשימה תיפתח לבד במועד. החיסרון: עוד שדה בטופס.',build:true},
-  {id:'r2_taxi',w:'michal',t:'חוגים מהלוח מופיעים לבד במונית',d:'חוג שנרשם בלוח עם שעה ומקום (למשל ג׳ודו של רוני ב-17:00 במתנ״ס) יופיע במונית של אותו יום כהצעה: "להסיע את רוני לג׳ודו?". לחיצה אחת מוסיפה אותו. ככה לא מקלידים את אותו דבר פעמיים. החיסרון: הצעות שלא צריך מופיעות ונשארות עד שמתעלמים.',build:true},
   {id:'r2_morning',w:'yoav',t:'סיכום בוקר ב-07:00 לכל אחד',d:'הודעה אחת בבוקר לכל בן משפחה, רק עם מה ששלו להיום: משימות, אירועים ובחינות מהלוח, תורנויות של לוני ומי מסיע אותו. החיסרון: עוד הודעה ביום. מי שלא רוצה יוכל לכבות אותה אצלו בהגדרות.',build:true},
   {id:'r2_status',w:'noa',t:'מסך "מצב הטלפונים" לאבא',d:'הבעיה מאתמול, שהמשימה המשפחתית לא הופיעה אצל הבנות, נגרמה מגרסה ישנה בטלפון שלהן. ההצעה: במסך "הבית" אבא יראה לכל בן משפחה אם ההתראות מופעלות אצלו, באיזו גרסה הוא נמצא ומתי נכנס לאחרונה. ככה רואים מיד אצל מי משהו לא תקין, במקום לנחש.',build:true},
   {id:'r2_backup',w:'ran',t:'גיבוי של כל הנתונים בלחיצה',d:'כל הנתונים (משימות, לוח, שיבוצים, החלטות) נמצאים רק בענן. אם משהו נמחק בטעות, אין ממה לשחזר. ההצעה: כפתור "גיבוי" בהגדרות של אבא שמוריד קובץ לטלפון, וכפתור "שחזור" ממנו. החיסרון: צריך לזכור ללחוץ מדי פעם.',build:true},
@@ -2928,7 +2889,6 @@ const RECS=[
   {id:'r3_shabbat',w:'yoav',t:'מצב שבת וחג, לבחירה',d:'מכניסת שבת או חג ועד היציאה לא יהיו צלצולים והודעות, ומה שהצטבר יגיע במוצאי שבת בהודעה אחת. השעות מחושבות לבד לפי האזור. אם זה לא מתאים לבית, פשוט לא לקבל.',build:true},
   {id:'r3_tomorrow',w:'adi',t:'כפתור "למחר" על כל משימה',d:'משימה שלא הספקת היום עוברת בלחיצה ליום הבא, יחד עם הפעמון שלה, במקום להקליד אותה מחדש. משימה שנדחתה שלוש פעמים תקבל סימן קטן, כדי שיהיה ברור שהיא נתקעת. החיסרון: קל לדחות שוב ושוב.',build:true},
   {id:'r3_undo',w:'noa',t:'"ביטול" אחרי מחיקה',d:'אחרי מחיקה של משימה, אירוע, נסיעה במונית או פריט בקניות, תופיע ל-5 שניות הודעה עם כפתור "ביטול" שמחזיר את מה שנמחק. היום לחיצה לא נכונה מוחקת לתמיד. אין חיסרון.',build:true},
-  {id:'r3_taxiclash',w:'michal',t:'אזהרה על שתי נסיעות באותה שעה',d:'כשבאותו יום יש שתי נסיעות בהפרש של פחות מחצי שעה, המונית תסמן אותן באדום ותשאל מי לוקח מה. ככה רואים מראש ששתי בנות צריכות להגיע למקומות שונים באותו זמן. החיסרון: לפעמים תופיע אזהרה כשבאמת אפשר לאסוף את שתיהן יחד.',build:true},
   {id:'r3_foodsame',w:'uri',t:'"כמו אתמול" בחלון האוכל',d:'בחלון של 20:00 יהיה כפתור אחד שבוחר לבת את אותה ארוחת עשר ואותו צהרון כמו היום. רוב הימים הבחירה חוזרת, וככה החלון נסגר בשנייה והתזכורת כל רבע שעה מפסיקה. החיסרון: פחות גיוון אם זה נוח מדי.',build:true},
   {id:'r3_foodshop',w:'ran',t:'מהזמנות האוכל לרשימת הקניות',d:'בסיכום ההזמנות של הבנות לאבא ואמא, ליד כל פריט יהיה כפתור "חסר בבית" שמוסיף אותו לקניות, ישר למחלקה הנכונה. ככה לא מגלים בבוקר שאין לחם לכריך. אין חיסרון.',build:true},
   {id:'r3_shopfav',w:'uri',t:'מוצרים קבועים בקניות',d:'בראש רשימת הקניות תופיע שורה של 12 המוצרים שאתם קונים הכי הרבה (חלב, לחם, ביצים וכדומה), ולחיצה מוסיפה אותם. האפליקציה לומדת אותם לבד ממה שכבר נקנה. החיסרון: עוד שורה במסך.',build:true},
@@ -2961,7 +2921,6 @@ const RECS=[
   {id:'r5_party',w:'dana',t:'חגיגה כשמסיימים את כל היום',d:'כשבת מסמנת את המשימה האחרונה שלה להיום: קונפטי, רטט קצר ולוני שקופצת, כמו בפודיום. פעם אחת ביום בלבד, כדי שזה יישאר מיוחד.',build:true},
   {id:'r5_cant',w:'itai',t:'"לא יכולה היום" עם מחליפה מוצעת',d:'היום מי שחלתה או שקרה לה משהו צריכה למצוא מחליפה לבד. ההצעה: כפתור "לא יכולה" על התורנות. האפליקציה מחשבת מי הכי מתאימה (פנויה, עם הכי מעט תורנויות השבוע, ולא אחרי תורנות מאוחרת) ושולחת לה את הבקשה קודם. השיבוץ של השבוע הבא מתחשב בזה.',build:true},
   {id:'r5_why',w:'itai',t:'"למה אני?" ליד כל תורנות',d:'לחיצה על התורנות מסבירה במשפט אחד למה היא שלך, למשל: "את פנויה בשעה הזו, לרוני ולהילי יש חוג, ויש לך 3 תורנויות השבוע כמו לכולן". כשרואים שהשיבוץ הוגן, יש פחות ויכוחים.',build:true},
-  {id:'r5_driver',w:'itai',t:'הצעה מי נוהג במונית',d:'לכל נסיעה שעוד אין לה נהג, האפליקציה תציע את אבא או אמא, לפי מי פנוי בלוח באותה שעה ומי כבר נוסע לאזור קרוב. אחד לוחץ "אני" וזהו. ההצעה מבוססת רק על מה שרשום בלוח של yaya.',build:true},
   {id:'r5_offline',w:'gil',t:'שהאפליקציה תיפתח גם בלי אינטרנט',d:'בדקתי: הנתונים נשמרים בטלפון, אבל האפליקציה עצמה לא. במעלית, בחניון או עם קליטה חלשה מקבלים מסך לבן. ההצעה: לשמור את האפליקציה בטלפון, ובכל פתיחה עם אינטרנט לבדוק אם יש גרסה חדשה. ככה עדכונים ימשיכו להגיע מיד, וזו הסיבה שהשמירה הוסרה בעבר.',build:true},
   {id:'r5_lazy',w:'gil',t:'לטעון רק את מה שפותחים',d:'כשהאפליקציה נפתחת, היא מתחילה לעקוב אחרי 18 סוגי נתונים בבת אחת, גם של לשוניות שלא פותחים. ההצעה: כל לשונית תטען את הנתונים שלה רק כשנכנסים אליה. הפתיחה תהיה מהירה יותר בטלפונים ישנים, עם פחות סוללה ופחות גלישה.',build:true},
   {id:'r5_health',w:'maya',t:'נורה ירוקה לשרת ההתראות',d:'השרת אמור לרוץ כל 5 דקות. כשהוא נעצר (כמו ב-8/11, כשחסרו הסודות), מגלים את זה רק ממיילים או כשבת פספסה תורנות. ההצעה: במסך "הבית" של אבא תופיע נורה: ירוקה אם השרת רץ ב-15 הדקות האחרונות, ואדומה עם הסבר מה לעשות אם לא.',build:true},
@@ -2969,7 +2928,6 @@ const RECS=[
   {id:'r5_autobk',w:'maya',t:'גיבוי אוטומטי כל לילה',d:'היום יש גיבוי רק כשאבא לוחץ. ההצעה: כל לילה ב-03:00 השרת שומר עותק של כל הנתונים במקום פרטי, ושומר את 14 הלילות האחרונים. אם משהו נמחק, משחזרים מכל אחד מהם. גם זה אושר בבדיקת האבטחה ועדיין לא נבנה.',build:true},
   {id:'r5_errors',w:'maya',t:'דיווח תקלות מהטלפונים',d:'כשמשהו נשבר בטלפון של אחת הבנות, אף אחד לא יודע עד שהיא מספרת. ההצעה: האפליקציה תרשום תקלות, בלי תוכן אישי, ובמסך "מצב הטלפונים" אבא יראה למשל: "בטלפון של הילי הצלצול נכשל אתמול ב-17:30". ככה אפשר לתקן לפני שזה חוזר.',build:true},
   /* סבב שישי: ישיבת צוות עם 12 המלצות (13/11/2026) */,
-  {id:'r6_taxirem',w:'yoav',t:'תזכורת לנהג במונית',d:'20 דקות לפני כל נסיעה, צלצול והודעה להורה שרשום כנהג: "ב-16:40 לוקחים את רוני לחוג, כתובת...". נסיעה בלי נהג רשום מגיעה לשניכם. היום המונית היא רק רשימה, ואין שום תזכורת.',build:true},
   {id:'r6_dogesc',w:'yoav',t:'תזכורת חוזרת כשלוני לא יצאה',d:'30 דקות אחרי שעת התורנות, אם לא סומן "הוצאתי", הבת בתורנות מקבלת צלצול נוסף. אחרי שעה מגיעה הודעה לאבא. ככה לוני לא מחכה עד הבדיקה של הערב. החיסרון: עוד צלצול, אבל רק כששכחו.',build:true},
   {id:'r6_snooze',w:'uri',t:'"עוד 10 דקות" בחלון הצלצול',d:'כשמצלצלת תזכורת של משימה, אפשר ללחוץ "עוד 10 דקות" במקום לסגור, והצלצול חוזר. כמו נודניק בשעון מעורר. היום אחרי שסוגרים את החלון התזכורת נעלמת.',build:true},
   {id:'r6_voice',w:'adi',t:'הוספת משימה בקול 🎤',d:'בטופס משימה יהיה מיקרופון: לוחצים, אומרים "לקנות מתנה לדנה" והמשימה נכתבת. מהיר במיוחד בנהיגה או כשהידיים מלאות. החיסרון: באייפון זה עובד רק בחלק מהגרסאות, ושם הכפתור לא יופיע.',build:true},
@@ -3371,7 +3329,7 @@ function grpItem(list){
   acts.append(x);b.append(acts);
   li.append(b);return li;
 }
-/* סמל וצבע קבועים לכל סוג פריט (r5_icons): ✅ משימה אישית, 📋 משימה מההורים, 📅 לוח, 🐾 לוני, 🚕 מונית, 🍽️ אוכל, 🛒 קניות */
+/* סמל וצבע קבועים לכל סוג פריט (r5_icons): ✅ משימה אישית, 📋 משימה מההורים, 📅 לוח, 🐾 לוני, 🍽️ אוכל, 🛒 קניות */
 const TY={task:'✅',job:'📋',cal:'📅',dog:'🐾',ride:'🚕',food:'🍽️',shop:'🛒'};
 function tyHead(tag,ty,title){const e=h(tag,'sec ty ty-'+ty,(/^\p{Extended_Pictographic}/u.test(title)?'':TY[ty]+' ')+title);return e;}
 function sectionGrp(box,title,list,empty){
@@ -3668,9 +3626,9 @@ function subShop(){
   if(learnUnsub){learnUnsub();learnUnsub=null;}
   const adult=isAdult(me);
   $('nv-shop').hidden=!adult;
-  /* מונית והבית (סיכום שבועי, מצב הטלפונים, יועצים) רק להורים */
-  $('nv-taxi').hidden=!adult;$('nv-home').hidden=!adult;
-  if(!adult&&(!$('tab-taxi').hidden||!$('tab-home').hidden))tab('today');
+  /* הבית (סיכום שבועי, מצב הטלפונים, יועצים) רק להורים */
+  $('nv-home').hidden=!adult;
+  if(!adult&&!$('tab-home').hidden)tab('today');
   shopOn=false;
   if(!adult){shop=[];return;}
   if(!$('tab-shop').hidden)shopLive();
@@ -3751,134 +3709,7 @@ function paintShop(){
   cb.textContent=clearArm?'ללחוץ שוב כדי להסיר '+got+' מוצרים שנקנו':'הסרת מה שנקנה ('+got+')';
 }
 
-/* ---------- מונית ---------- */
-let rides=[],taxiUnsub=null,taxiDay=today(),tkKind='go',tkWho=new Set(),tkDrv='',taxiCleaned=false;
-const taxiCol=()=>collection(db,'families',code,'taxi');
-const taxiRef=id=>doc(db,'families',code,'taxi',id);
-const KIDS_T=()=>PEOPLE.filter(p=>!isAdult(p.id));
 function dkey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-function subTaxi(){
-  if(taxiUnsub){taxiUnsub();taxiUnsub=null;}
-  taxiDay=today();
-  taxiUnsub=onSnapshot(taxiCol(),snap=>{
-    rides=snap.docs.map(d=>Object.assign({id:d.id},d.data()));
-    if(!taxiCleaned&&isAdult(me)){
-      taxiCleaned=true;
-      const old=new Date();old.setDate(old.getDate()-14);const ok=dkey(old);
-      rides.filter(r=>r.day&&r.day<ok).forEach(r=>deleteDoc(taxiRef(r.id)).catch(()=>{}));
-    }
-    paintTaxiBadge();paintTaxi();
-  },()=>{});
-  paintTaxiForm();
-}
-function paintTaxiBadge(){
-  const n=rides.filter(r=>r.day===today()&&!r.done).length;
-  const b=$('taxiBadge');b.hidden=!n;b.textContent=String(n);
-}
-function rideNames(r){
-  const n=(r.who||[]).filter(id=>byId[id]).map(id=>byId[id].name);
-  if(r.other)n.push(r.other);
-  return n.join(', ')||'בלי שם';
-}
-function chip(txt,on,fn){const b=h('button','chip',txt);b.type='button';b.setAttribute('aria-pressed',on?'true':'false');b.onclick=fn;return b;}
-function paintTaxiForm(){
-  $('tkGo').setAttribute('aria-pressed',tkKind==='go'?'true':'false');
-  $('tkBack').setAttribute('aria-pressed',tkKind==='back'?'true':'false');
-  $('taxiPlaceL').textContent=tkKind==='go'?'לאן':'מאיפה';
-  $('taxiPlace').placeholder=tkKind==='go'?'למשל: חוג ג׳ודו':'למשל: בית הספר';
-  const w=$('taxiWho');w.innerHTML='';
-  KIDS_T().forEach(p=>w.append(chip(p.name,tkWho.has(p.id),()=>{tkWho.has(p.id)?tkWho.delete(p.id):tkWho.add(p.id);paintTaxiForm();})));
-  const dv=$('taxiDrv');dv.innerHTML='';
-  PEOPLE.filter(p=>isAdult(p.id)).forEach(p=>dv.append(chip(p.name,tkDrv===p.id,()=>{tkDrv=tkDrv===p.id?'':p.id;paintTaxiForm();})));
-  const d=new Date(taxiDay+'T12:00');
-  $('taxiFormH').textContent='נסיעה חדשה ל'+(taxiDay===today()?'היום':d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'}));
-}
-$('tkGo').onclick=()=>{tkKind='go';paintTaxiForm();};
-$('tkBack').onclick=()=>{tkKind='back';paintTaxiForm();};
-$('taxiAdd').onclick=async()=>{
-  const other=$('taxiOther').value.trim(),time=$('taxiTime').value,place=$('taxiPlace').value.trim();
-  const m=$('taxiMsg');
-  if(!tkWho.size&&!other){say(m,'בחרו את מי צריך '+(tkKind==='go'?'לקחת':'להחזיר')+'.');return;}
-  if(!time){say(m,'חסרה שעה.');return;}
-  if(!place){say(m,tkKind==='go'?'חסר לאן.':'חסר מאיפה.');return;}
-  try{
-    await setDoc(doc(taxiCol()),{day:taxiDay,kind:tkKind,who:[...tkWho],other:other.slice(0,40),time:time,place:place.slice(0,80),driver:tkDrv||null,by:me,at:Date.now(),done:false});
-    tkWho=new Set();tkDrv='';$('taxiOther').value='';$('taxiTime').value='';$('taxiPlace').value='';
-    say(m,'הנסיעה נוספה.',true);setTimeout(()=>say(m,''),2500);paintTaxiForm();
-  }catch(e){say(m,'השמירה נכשלה. בדקו חיבור.');}
-};
-/* חוגים מהלוח מוצעים לבד במונית של אותו יום */
-function taxiSuggest(box,list){
-  const sug=calItemsAll(taxiDay,taxiDay).filter(it=>{
-    const ev=it.ev;if(ev.kind!=='cls'||!ev.time||ev.fam)return false;
-    const kids=(ev.who||[]).filter(id=>KIDS.includes(id));if(!kids.length)return false;
-    const src=String(ev.id)+'@'+taxiDay;
-    if(list.some(r=>r.src===src))return false;
-    return !LS.get('yaya.taxi.no.'+src);
-  });
-  if(!sug.length)return;
-  const sec=h('section','tsec tsug');sec.append(h('h3',null,'💡 מהלוח'));
-  sug.forEach(it=>{
-    const ev=it.ev,kids=(ev.who||[]).filter(id=>KIDS.includes(id)),src=String(ev.id)+'@'+taxiDay;
-    const names=kids.map(id=>byId[id].name).join(' ו');
-    const row=h('div','sugrow');
-    row.append(h('div',null,ev.time+' · להסיע את '+names+' ל'+(ev.title||'חוג')+'?'));
-    if(ev.place)row.append(h('div','date','📍 '+ev.place));
-    const acts=h('div','acts');
-    const ok=h('button','btn pri sm','הוספה למונית');ok.type='button';
-    ok.onclick=()=>setDoc(doc(taxiCol()),{day:taxiDay,kind:'go',who:kids,other:'',time:ev.time,place:String(ev.place||ev.title||'חוג').slice(0,80),driver:null,by:me,at:Date.now(),done:false,src:src}).then(()=>toast('נוסף למונית')).catch(()=>toast('השמירה נכשלה. בדקו חיבור.'));
-    const no=h('button','btn quiet sm','לא צריך');no.type='button';
-    no.onclick=()=>{LS.set('yaya.taxi.no.'+src,'1');paintTaxi();};
-    acts.append(ok,no);row.append(acts);sec.append(row);
-  });
-  box.append(sec);
-}
-function paintTaxi(){
-  const box=$('taxiBox');if(!box||!me||$('tab-taxi').hidden)return;
-  const days=$('taxiDays');days.innerHTML='';
-  const base=new Date();
-  for(let i=0;i<8;i++){
-    const d=new Date(base);d.setDate(base.getDate()+i);const k=dkey(d);
-    const b=h('button','tday');b.type='button';
-    b.append(h('span',null,i===0?'היום':i===1?'מחר':d.toLocaleDateString('he-IL',{weekday:'short'})));
-    b.append(h('b',null,d.getDate()+'.'+(d.getMonth()+1)));
-    if(rides.some(r=>r.day===k&&!r.done)){const dot=h('i');dot.setAttribute('aria-hidden','true');b.append(dot);}
-    b.setAttribute('aria-pressed',k===taxiDay?'true':'false');
-    b.onclick=()=>{taxiDay=k;paintTaxi();paintTaxiForm();};
-    days.append(b);
-  }
-  if(taxiDay<today())taxiDay=today();
-  box.innerHTML='';
-  const list=rides.filter(r=>r.day===taxiDay);
-  const left=list.filter(r=>!r.done).length;
-  const pr=$('taxiProg');pr.className='progress';
-  if(!list.length)pr.textContent='אין נסיעות ביום הזה.';
-  else if(!left){pr.textContent='כל הנסיעות בוצעו';pr.className='progress all';}
-  else pr.textContent=left+(left===1?' נסיעה שנשארה':' נסיעות שנשארו');
-  taxiSuggest(box,list);
-  [['go','🚗 לקחת','לאן: '],['back','🏠 להחזיר','מאיפה: ']].forEach(([k,t,pl])=>{
-    const items=list.filter(r=>r.kind===k).sort((a,b)=>(a.time||'').localeCompare(b.time||'')||(a.at-b.at));
-    const sec=h('section','tsec');sec.append(h('h3',null,t));
-    const ul=h('ul','sitems');
-    if(!items.length)ul.append(h('li','tempty',k==='go'?'אין את מי לקחת.':'אין את מי להחזיר.'));
-    items.forEach(r=>{
-      const li=h('li','tride'+(r.done?' got':''));
-      const c=h('button','chk');c.type='button';c.innerHTML=CHECK;
-      c.setAttribute('aria-label',(r.done?'ביטול סימון: ':'סימון שבוצע: ')+rideNames(r));
-      c.onclick=()=>setDoc(taxiRef(r.id),{done:!r.done},{merge:true}).catch(()=>toast('הפעולה נכשלה.'));
-      const st=h('div','st2');
-      st.append(h('div','tx',rideNames(r)),h('div','pl',pl+r.place));
-      const meta=[];
-      if(r.driver&&byId[r.driver])meta.push(byId[r.driver].name+(byId[r.driver].g==='m'?' נוהג':' נוהגת'));
-      if(byId[r.by])meta.push('נרשם ע״י '+byId[r.by].name);
-      if(meta.length)st.append(h('div','by3',meta.join(' · ')));
-      const del=h('button','mv','×');del.type='button';del.setAttribute('aria-label','מחיקת הנסיעה: '+rideNames(r));
-      del.onclick=()=>deleteDoc(taxiRef(r.id)).catch(()=>{});
-      li.append(h('span','tm',r.time||''),st,c,del);ul.append(li);
-    });
-    sec.append(ul);box.append(sec);
-  });
-}
 
 /* ---------- לוח משפחתי: חוגים, בחינות ואירועים ---------- */
 const CALK=[['cls','חוג','🎨'],['exam','בחינה','📝'],['event','אירוע','🎉'],['bday','יום הולדת','🎂'],['appt','תור','🩺'],['other','אחר','📌']];
@@ -4019,7 +3850,7 @@ function whoTxt(ev){
 
 /* --- ציור --- */
 function paintCal(){
-  paintTodayCal();if(!$('tab-taxi').hidden)paintTaxi();
+  paintTodayCal();
   const box=$('calBox');if(!box||!me||$('tab-cal').hidden)return;
   $('cvW').setAttribute('aria-pressed',calView==='w'?'true':'false');
   $('cvM').setAttribute('aria-pressed',calView==='m'?'true':'false');
@@ -5071,7 +4902,7 @@ async function tryPin(){
 }
 $('pinOk').onclick=tryPin;
 $('pinIn').addEventListener('keydown',e=>{if(e.key==='Enter')tryPin();});
-['today','fam','kids','jobs','shop','taxi','food','cal','dog','home','set'].forEach(k=>{$('nv-'+k).onclick=()=>tab(k);});
+['today','fam','kids','jobs','shop','food','cal','dog','home','set'].forEach(k=>{$('nv-'+k).onclick=()=>tab(k);});
 $('gearBtn').onclick=()=>tab('set');
 $('btnSwitch').onclick=()=>showWho();
 $('codeShow').onclick=()=>{const o=$('codeOut');o.textContent=code;o.hidden=!o.hidden;$('codeShow').textContent=o.hidden?'הצגת הקוד':'הסתרת הקוד';};
