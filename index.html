@@ -2005,20 +2005,42 @@ function planWeek(ws,P,hurt,HI){
   const idx={};slots.forEach((x,i)=>idx[x.o+'_'+x.k]=i);
   const prevI=slots.map(x=>idx[(x.o-1)+'_'+x.k]);
   const blocked=(id,x)=>{const r=P[id];return r.block.includes(x.key)||(r.wb||[]).includes(x.key)||r.once.some(o=>o.d===x.date&&o.s.includes(x.k));};
-  /* הוגנות לאורך זמן: מי שקיבלה יותר בשלושת השבועות הקודמים מקבלת קצת פחות עכשיו, גם בסך הכול וגם לפי שעות היום */
+  const elig=slots.map(x=>ids.filter(id=>!blocked(id,x)));
+  const rnd=rngOf(weekNo(ws)*7919+13);
   const SK=SLOTS.map(x=>x.k);
   const hm=kids.reduce((a,k)=>a+(HI.n[k]||0),0)/kids.length;
-  const off={},offS={};
-  kids.forEach(k=>{off[k]=Math.max(-4,Math.min(4,.4*((HI.n[k]||0)-hm)));offS[k]={};});
+  const hd={};kids.forEach(k=>hd[k]=Math.max(-6,Math.min(6,(HI.n[k]||0)-hm)));
+  const offS={};kids.forEach(k=>offS[k]={});
   SK.forEach(q=>{const mq=kids.reduce((a,k)=>a+((HI.s[k]||{})[q]||0),0)/kids.length;kids.forEach(k=>offS[k][q]=Math.max(-2,Math.min(2,.4*(((HI.s[k]||{})[q]||0)-mq))));});
-  const elig=slots.map(x=>ids.filter(id=>!blocked(id,x)));
+  /* שלב 1 - כמה הוצאות לכל אחד. זרימה בעלות מינימלית עם עלות קמורה: כל הוצאה נוספת יקרה יותר מהקודמת,
+     ולכן מתקבלת החלוקה הכי שוויונית שהחסימות מאפשרות. בין הבנות הפער לעולם לא עולה על 1,
+     אלא אם בת חסמה כמעט הכול ואין לה יותר משבצות פנויות (ואז היא מקבלת את כל מה שהיא יכולה).
+     אבא: עד 4 יותר מכל בת. אמא: 2. משבצת נשארת ריקה רק אם אף אחד לא פנוי בה */
+  const U=1000;
+  const mb=(id,u)=>id==='mom'?(u<=2?-100*U:100*U):id==='dad'?U*(2*(u-4)-1)-1:U*(2*u-1);
+  const tie={};kids.forEach(k=>tie[k]=hd[k]*20+rnd()*10);
+  const NS=slots.length,NP=ids.length,S=0,T=NS+NP+1,N=T+1,E=[],G=Array.from({length:N},()=>[]);
+  const ae=(u,v,cap,cost)=>{G[u].push(E.length);E.push({v:v,c:cap,w:cost});G[v].push(E.length);E.push({v:u,c:0,w:-cost});};
+  slots.forEach((x,i)=>{ae(S,1+i,1,0);elig[i].forEach(id=>ae(1+i,1+NS+ids.indexOf(id),1,0));});
+  ids.forEach((id,j)=>{const av=elig.filter(e=>e.includes(id)).length;for(let u=1;u<=av;u++)ae(1+NS+j,T,1,mb(id,u)+(tie[id]||0));});
+  for(;;){
+    const dist=new Array(N).fill(Infinity),pe=new Array(N).fill(-1),inq=new Array(N).fill(false),q=[S];dist[S]=0;inq[S]=true;
+    while(q.length){const u=q.shift();inq[u]=false;for(const ei of G[u]){const e=E[ei];if(e.c>0&&dist[u]+e.w<dist[e.v]-1e-9){dist[e.v]=dist[u]+e.w;pe[e.v]=ei;if(!inq[e.v]){inq[e.v]=true;q.push(e.v);}}}}
+    if(dist[T]===Infinity)break;
+    for(let v=T;v!==S;){const ei=pe[v];E[ei].c--;E[ei^1].c++;v=E[ei^1].v;}
+  }
+  const a=slots.map((x,i)=>{for(const ei of G[1+i]){const e=E[ei];if(e.v>NS&&e.v<T&&e.c===0&&(ei%2===0))return ids[e.v-1-NS];}return null;});
+  const cnt={};ids.forEach(i=>cnt[i]=0);a.forEach(id=>{if(id)cnt[id]++;});
+  /* שלב 2 - מי מוציא מתי. המספרים משלב 1 נעולים: מותר רק להחליף משבצות בין שניים,
+     או להעביר משבצת מבת שיש לה אחת יותר לבת שיש לה אחת פחות. כך ההוגנות לא נפגעת לעולם,
+     ובתוך זה מכבדים כמה שיותר בקשות: שעות נוחות, שעות קשות, ימים עמוסים, לא פעמיים באותו יום */
   const W={};ids.forEach(id=>W[id]=hurt[id]?1.6:1);
   function cost(a){
-    let c=0;const load={},dc={},sc={};ids.forEach(i=>{load[i]=0;sc[i]={m:0,s:0,l:0,a:0,b:0,n:0};});
+    let c=0;const dc={},sc={},n={};ids.forEach(i=>{n[i]=0;sc[i]={m:0,s:0,l:0,a:0,b:0,n:0};});
     for(let i=0;i<a.length;i++){
       const id=a[i];if(!id)continue;
       const x=slots[i],r=P[id],w=W[id];
-      load[id]++;sc[id][x.k]++;const dk=id+x.d;dc[dk]=(dc[dk]||0)+1;
+      n[id]++;sc[id][x.k]++;const dk=id+x.d;dc[dk]=(dc[dk]||0)+1;
       if(id==='dad'){if(x.k!=='m'&&x.k!=='n')c+=40;}
       else{if(x.k==='m'||x.k==='n')c+=6;}
       if(r.hard.includes(x.d))c+=30*w;
@@ -2027,37 +2049,40 @@ function planWeek(ws,P,hurt,HI){
       if(prevI[i]!=null&&a[prevI[i]]===id)c+=3;
     }
     for(const k in dc)if(dc[k]>1)c+=15*(dc[k]-1);
-    const mt=P.mom.max;c+=150*(load.mom-mt)*(load.mom-mt);
-    ids.forEach(id=>{if(id!=='mom'&&load[id]>P[id].max)c+=80*(load[id]-P[id].max);});
-    /* אבא מוציא 4 פעמים יותר מכל בת (13/11/2026), בעיקר בוקר ו-22:00. אמא 2 */
-    let m=0;kids.forEach(k=>m+=load[k]);m/=kids.length;
-    kids.forEach(k=>{const v=load[k]+off[k]-m;c+=8*v*v;});
-    if(ids.includes('dad')){const v=load.dad-(m+4);c+=8*v*v;}
+    /* מי שהוציאה יותר בשלושת השבועות הקודמים - עדיף שהיא תקבל את המספר הנמוך השבוע */
+    kids.forEach(k=>c+=3*n[k]*hd[k]);
     SK.forEach(q=>{let mq=0;kids.forEach(k=>mq+=sc[k][q]+offS[k][q]);mq/=kids.length;kids.forEach(k=>{const v=sc[k][q]+offS[k][q]-mq;c+=3*v*v;});});
     return c;
   }
-  const rnd=rngOf(weekNo(ws)*7919+13);
-  let best=null,bc=1e18;
+  let best=a.slice(),bc=cost(a);
+  const start=a.slice(),cnt0=Object.assign({},cnt);
   for(let run=0;run<3;run++){
-    const a=slots.map((x,i)=>{const e=elig[i];if(!e.length)return null;
-      if((x.k==='m'||x.k==='n')&&e.includes('dad')&&rnd()<.6)return 'dad';
-      return e[Math.floor(rnd()*e.length)];});
-    let c=cost(a),T=40;
-    for(let it=0;it<25000;it++){
-      T*=0.99975;
-      if(rnd()<.7){
-        const i=Math.floor(rnd()*a.length),e=elig[i];if(e.length<2)continue;
-        const old=a[i];let nw=e[Math.floor(rnd()*e.length)];if(nw===old)continue;
-        a[i]=nw;const nc=cost(a);
-        if(nc<=c||rnd()<Math.exp((c-nc)/T))c=nc;else a[i]=old;
+    const b=start.slice(),cn=Object.assign({},cnt0);
+    let c=cost(b),T2=40;
+    for(let it=0;it<30000;it++){
+      T2*=0.99975;
+      const mv=rnd();
+      if(mv<.2){
+        const i=Math.floor(rnd()*b.length),j=Math.floor(rnd()*b.length),k=Math.floor(rnd()*b.length);
+        const A=b[i],B=b[j],C=b[k];
+        if(!A||!B||!C||A===B||B===C||A===C)continue;
+        if(!elig[i].includes(C)||!elig[j].includes(A)||!elig[k].includes(B))continue;
+        b[i]=C;b[j]=A;b[k]=B;const nc=cost(b);
+        if(nc<=c||rnd()<Math.exp((c-nc)/T2))c=nc;else{b[i]=A;b[j]=B;b[k]=C;}
+      }else if(mv<.55){
+        const i=Math.floor(rnd()*b.length),e=elig[i],old=b[i];if(!old||e.length<2)continue;
+        const nw=e[Math.floor(rnd()*e.length)];if(nw===old)continue;
+        if(mb(nw,cn[nw]+1)!==mb(old,cn[old]))continue;
+        b[i]=nw;cn[old]--;cn[nw]++;const nc=cost(b);
+        if(nc<=c||rnd()<Math.exp((c-nc)/T2))c=nc;else{b[i]=old;cn[old]++;cn[nw]--;}
       }else{
-        const i=Math.floor(rnd()*a.length),j=Math.floor(rnd()*a.length);
-        if(i===j||a[i]===a[j]||!a[i]||!a[j])continue;
-        if(!elig[i].includes(a[j])||!elig[j].includes(a[i]))continue;
-        [a[i],a[j]]=[a[j],a[i]];const nc=cost(a);
-        if(nc<=c||rnd()<Math.exp((c-nc)/T))c=nc;else [a[i],a[j]]=[a[j],a[i]];
+        const i=Math.floor(rnd()*b.length),j=Math.floor(rnd()*b.length);
+        if(i===j||b[i]===b[j]||!b[i]||!b[j])continue;
+        if(!elig[i].includes(b[j])||!elig[j].includes(b[i]))continue;
+        [b[i],b[j]]=[b[j],b[i]];const nc=cost(b);
+        if(nc<=c||rnd()<Math.exp((c-nc)/T2))c=nc;else [b[i],b[j]]=[b[j],b[i]];
       }
-      if(c<bc){bc=c;best=a.slice();}
+      if(c<bc){bc=c;best=b.slice();}
     }
   }
   const asg={},report={},empty=[];
