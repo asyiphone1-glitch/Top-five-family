@@ -1853,6 +1853,8 @@ const DAYN=['ראשון','שני','שלישי','רביעי','חמישי','שיש
 const hasSlot=(d,k)=>k==='s'?d<=4:k==='l'?d>=5:true;
 const slotName=k=>SLOTS.find(x=>x.k===k).n;
 const isAdult=id=>id==='dad'||id==='mom';
+/* כללים קבועים של אבא (14/11/2026): אביב לא מוציאה את לוני בבוקר, חוץ מבשבת */
+const ruleBlock=(id,key)=>{const a=String(key).split('_');return id==='aviv'&&a[1]==='m'&&a[0]!=='6';};
 function sunday(d0){const d=new Date(d0.getFullYear(),d0.getMonth(),d0.getDate());d.setDate(d.getDate()-d.getDay());return d;}
 function fmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function parseKey(w){const a=w.split('-').map(Number);return new Date(a[0],a[1]-1,a[2]);}
@@ -1966,7 +1968,7 @@ function planWeek(ws,P,hurt,HI){
   for(let o=0;o<7;o++){const d=(ws.getDay()+o)%7;SLOTS.forEach(x=>{if(hasSlot(d,x.k))slots.push({d:d,o:o,k:x.k,key:d+'_'+x.k,date:fmt(addDays(ws,o))});});}
   const idx={};slots.forEach((x,i)=>idx[x.o+'_'+x.k]=i);
   const prevI=slots.map(x=>idx[(x.o-1)+'_'+x.k]);
-  const blocked=(id,x)=>{const r=P[id];return r.block.includes(x.key)||(r.wb||[]).includes(x.key)||r.once.some(o=>o.d===x.date&&o.s.includes(x.k));};
+  const blocked=(id,x)=>{const r=P[id];return ruleBlock(id,x.key)||r.block.includes(x.key)||(r.wb||[]).includes(x.key)||r.once.some(o=>o.d===x.date&&o.s.includes(x.k));};
   const elig=slots.map(x=>ids.filter(id=>!blocked(id,x)));
   const rnd=rngOf(weekNo(ws)*7919+13);
   const SK=SLOTS.map(x=>x.k);
@@ -2148,7 +2150,7 @@ function clsBlocks(id,wkey){
 function fixedBlock(id,wkey,key){
   const r=normPrefs((people[id]||{}).prefs,id),a=key.split('_');
   const date=fmt(slotDate(wkey,a[0]));
-  return r.block.includes(key)||r.once.some(o=>o.d===date&&o.s.includes(a[1]));
+  return ruleBlock(id,key)||r.block.includes(key)||r.once.some(o=>o.d===date&&o.s.includes(a[1]));
 }
 function consCard(wkey){
   const c=h('div','card');
@@ -2599,7 +2601,7 @@ function cantPick(wkey,key){
     const id=p.id;if(id===me)return;
     const P=normPrefs((people[id]||{}).prefs,id);
     const wb=new Set(((wk.cons||{})[id]||{}).b||[]);Object.keys(clsBlocks(id,wkey)).forEach(x=>wb.add(x));
-    if(P.block.includes(key)||wb.has(key))return;
+    if(ruleBlock(id,key)||P.block.includes(key)||wb.has(key))return;
     if(swaps.some(s=>s.week===wkey&&s.slot===key&&s.to===id&&s.status==='declined'))return;
     let c=0;const why=[];
     if(id==='dad'){if(k!=='m'&&k!=='n')c+=40;}else if(k==='m'||k==='n')c+=6;
@@ -2636,12 +2638,12 @@ function swapForm(wkey,key){
   const f=h('div','swform');
   f.append(h('div',null,'למי להעביר את '+slotText(wkey,key)+'?'));
   const to=h('select');to.setAttribute('aria-label','למי להעביר');
-  PEOPLE.filter(p=>p.id!==me).forEach(p=>{const o=h('option',null,p.name);o.value=p.id;to.append(o);});
+  PEOPLE.filter(p=>p.id!==me&&!ruleBlock(p.id,key)).forEach(p=>{const o=h('option',null,p.name);o.value=p.id;to.append(o);});
   const take=h('select');take.setAttribute('aria-label','בתמורה לתורנות');
   const fill=()=>{
     take.innerHTML='';
     const o0=h('option',null,'בלי תמורה');o0.value='';take.append(o0);
-    Object.keys(wk.slots).filter(k=>wk.slots[k]===to.value&&!wk.done[k]).sort().forEach(k=>{
+    Object.keys(wk.slots).filter(k=>wk.slots[k]===to.value&&!wk.done[k]&&!ruleBlock(me,k)).sort().forEach(k=>{
       const o=h('option',null,'בתמורה ל'+slotText(wkey,k));o.value=k;take.append(o);
     });
   };
