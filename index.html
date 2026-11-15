@@ -5428,8 +5428,8 @@ function tvMorning(s){
   });
   s.append(tb);return true;
 }
-/* מצב לילה: 22:30 עד 06:30 רק שעון מעומעם. אם התורנות של 22:00 עוד לא סומנה, מופיעה שורה קטנה */
-const tvNight=()=>{const d=new Date(),m=d.getHours()*60+d.getMinutes();return m>=22*60+30||m<6*60+30;};
+/* מצב לילה: 00:00 עד 06:00 רק שעון מעומעם (אבא, 15/11/2026). אם התורנות של 22:00 עוד לא סומנה, מופיעה שורה קטנה */
+const tvNight=()=>{const d=new Date(),m=d.getHours()*60+d.getMinutes();return m<6*60;};
 function tvNightPaint(){
   const st=$('tvStage');st.innerHTML='';
   const s=h('div','tvs on tvnight');
