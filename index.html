@@ -101,6 +101,8 @@ input{font:inherit;color:var(--ink)}
   padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));z-index:30}
 /* iOS: כשהמקלדת פתוחה הסרגל הקבוע 'נתקע' באמצע המסך, אז מסתירים אותו בזמן הקלדה */
 body.typing .nav,body.typing .fab{display:none}
+/* iOS: אחרי סגירת המקלדת מצמידים את הסרגל לתחתית האזור הנראה בפועל */
+.nav,.fab{transform:translateY(var(--vvfix,0px))}
 .nav button{flex:1 1 0;min-width:0;min-height:56px;border:0;border-radius:14px;background:transparent;color:var(--mute);font:700 .8rem var(--body);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}
 .nav button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .nav button.on{color:var(--accent);background:var(--soft)}
@@ -5562,13 +5564,40 @@ $('tvGo').onclick=()=>{
   catch(e){show('s-setup');say($('setupMsg'),'לא הצלחתי להתחבר. בדקו אינטרנט, ושכניסה אנונימית (Anonymous) מופעלת ב-Firebase.');}
 })();
 
-/* תיקון iOS: הסתרת סרגל הניווט בזמן הקלדה והחזרתו למקום כשהמקלדת נסגרת */
+/* תיקון iOS: הסתרת סרגל הניווט בזמן הקלדה, והחזרתו לתחתית המסך כשהמקלדת נסגרת */
 (function(){
+  const root=document.documentElement,vv=window.visualViewport;
   const isField=el=>!!(el&&el.matches&&el.matches('textarea,[contenteditable="true"],input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=range]):not([type=color])'));
-  const done=()=>{if(!isField(document.activeElement)&&document.body.classList.contains('typing')){document.body.classList.remove('typing');window.scrollTo(window.scrollX,window.scrollY);}};
-  document.addEventListener('focusin',e=>{if(isField(e.target))document.body.classList.add('typing');});
+  /* מחשבים כמה הסרגל 'זז' מתחתית האזור הנראה ומתקנים בהזזה */
+  const align=()=>{
+    if(!vv||document.body.classList.contains('typing')||Math.abs(vv.scale-1)>.01){root.style.setProperty('--vvfix','0px');return;}
+    let d=Math.round(vv.offsetTop+vv.height-window.innerHeight);
+    if(Math.abs(d)<2)d=0;
+    root.style.setProperty('--vvfix',d+'px');
+  };
+  /* מכריחים את iOS לחשב מחדש את מיקום האלמנטים הקבועים */
+  const reflow=()=>{
+    document.querySelectorAll('.nav,.fab').forEach(el=>{const v=el.style.display;el.style.display='none';void el.offsetHeight;el.style.display=v;});
+    const x=window.scrollX,y=window.scrollY;window.scrollTo(x,y+1);window.scrollTo(x,y);
+    align();
+  };
+  const done=()=>{
+    if(isField(document.activeElement))return;
+    if(document.body.classList.contains('typing')){
+      document.body.classList.remove('typing');
+      /* המקלדת נסגרת באנימציה – בודקים שוב כמה פעמים עד שהיא נגמרת */
+      [0,150,400,800,1500].forEach(t=>setTimeout(reflow,t));
+    }else align();
+  };
+  document.addEventListener('focusin',e=>{if(isField(e.target)){document.body.classList.add('typing');root.style.setProperty('--vvfix','0px');}});
   document.addEventListener('focusout',()=>setTimeout(done,120));
-  if(window.visualViewport)visualViewport.addEventListener('resize',done);
+  if(vv){vv.addEventListener('resize',done);vv.addEventListener('scroll',align);}
+  window.addEventListener('scroll',align,{passive:true});
+  window.addEventListener('orientationchange',()=>setTimeout(reflow,300));
+  window.addEventListener('pageshow',()=>setTimeout(reflow,50));
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(reflow,50);});
+  /* רשת ביטחון: אם שדה הקלדה נמחק מהמסך בזמן הקלדה (למשל אחרי 'שליחה') – מחזירים את הסרגל */
+  setInterval(()=>{if(document.body.classList.contains('typing')&&!isField(document.activeElement))done();},1000);
 })();
 </script>
 </body>
