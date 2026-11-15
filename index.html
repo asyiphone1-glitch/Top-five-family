@@ -1355,16 +1355,16 @@ function paintKidsTab(){
     const p=byId[id],groups=[];
     const st=listState(people[id]);
     const own=[];
-    st.tasks.forEach((t,i)=>{if(t.trim())own.push({t:t,ok:!!st.done[i],sub:!!st.lv[i],head:hasSubs(st,i),del:{k:'own',id:id,i:i}});});
+    st.tasks.forEach((t,i)=>{if(t.trim()){const hd=hasSubs(st,i);own.push({t:t,ok:!!st.done[i],sub:!!st.lv[i],head:hd,del:{k:'own',id:id,i:i},tg:hd?null:v=>kidOwnDone(id,i,v)});}});
     if(own.length)groups.push(['משימות אישיות',own]);
     const pj=jobs.filter(j=>resp(j)===id&&(!j.done||(j.doneAt&&j.doneAt>=sod))).sort(jobSort)
-      .map(j=>({t:j.text+(j.hasT&&j.due?' · '+hhmm(new Date(j.due)):''),ok:!!j.done,tag:isLate(j)?'באיחור':'',del:{k:'job',id:j.id}}));
+      .map(j=>({t:j.text+(j.hasT&&j.due?' · '+hhmm(new Date(j.due)):''),ok:!!j.done,tag:isLate(j)?'באיחור':'',del:{k:'job',id:j.id},tg:v=>markDone(j,v)}));
     groups.push(['משימות מההורים',pj,true]);
     const dogs=[];
     SLOTS.forEach(sl=>{
       if(!hasSlot(dw,sl.k))return;
       const key=dw+'_'+sl.k,a=curWk.slots[key],dn=curWk.done[key];
-      if(a===id)dogs.push({t:'להוציא את לוני, '+sl.n,ok:!!dn,tag:dn&&dn.by!==id&&byId[dn.by]?gx(dn.by,'הוציא ','הוציאה ')+byId[dn.by].name:''});
+      if(a===id)dogs.push({t:'להוציא את לוני, '+sl.n,ok:!!dn,tag:dn&&dn.by!==id&&byId[dn.by]?gx(dn.by,'הוציא ','הוציאה ')+byId[dn.by].name:'',tg:(!dn||dn.by===id)?v=>kidWalkDone(id,key,v):null});
       else if(dn&&dn.by===id)dogs.push({t:'הוציאה את לוני, '+sl.n+(a&&byId[a]?' (במקום '+byId[a].name+')':''),ok:true});
     });
     if(dogs.length)groups.push(['לוני היום',dogs]);
@@ -1379,8 +1379,16 @@ function paintKidsTab(){
         const row=h('div','kr'+(r.ok?' ok':'')+(r.sub?' sub':'')+(r.head?' head':''));
         row.append(h('span',null,r.t));
         if(r.tag)row.append(h('span','kt',r.tag));
-        const m=h('i','km');m.innerHTML=CHECK;m.setAttribute('aria-label',r.ok?'בוצע':'עוד לא');m.setAttribute('role','img');
-        row.append(m);
+        if(r.tg){
+          /* אבא ואמא יכולים לסמן "בוצע" או לבטל, במקום הבת */
+          const m=h('button','km');m.type='button';m.innerHTML=CHECK;
+          m.setAttribute('aria-label',(r.ok?'ביטול סימון: ':'סימון כבוצע: ')+r.t);m.setAttribute('aria-pressed',r.ok?'true':'false');
+          m.onclick=()=>{row.classList.toggle('ok',!r.ok);r.tg(!r.ok);};
+          row.append(m);
+        }else{
+          const m=h('i','km');m.innerHTML=CHECK;m.setAttribute('aria-label',r.ok?'בוצע':'עוד לא');m.setAttribute('role','img');
+          row.append(m);
+        }
         if(r.del){
           const dk=r.del.k+':'+r.del.id+':'+(r.del.i==null?'':r.del.i),arm=kidDelArm===dk;
           const x=h('button','kx'+(arm?' arm':''),arm?'למחוק?':'✕');x.type='button';x.setAttribute('aria-label','מחיקת המשימה');
@@ -1423,6 +1431,19 @@ function kidQuickRow(id){
   inp.onblur=save;
   row.append(h('span','kqp','+'),inp);
   return row;
+}
+/* הורה מסמן משימה אישית של בת. תת-משימה מעדכנת גם את הכותרת שלה */
+function kidOwnDone(id,i,v){
+  const st=listState(people[id]);if(!st.tasks[i])return;
+  st.done[i]=v;
+  if(st.lv[i]){let m=i;while(m>0&&st.lv[m])m--;if(hasSubs(st,m)){const e=blockEnd(st,m);let all=true;for(let k=m+1;k<e;k++)if(st.tasks[k].trim()&&!st.done[k])all=false;st.done[m]=all;}}
+  setDoc(pdoc(id),{...packList(st),day:today()},{merge:true}).catch(()=>toast('הפעולה נכשלה. בדקו חיבור.'));
+}
+/* הורה מסמן שהבת הוציאה את לוני היום: ההוצאה נרשמת על שם הבת, כדי שהסבב ההוגן יספור אותה */
+function kidWalkDone(id,key,v){
+  const wkey=fmt(dogWk(new Date()));
+  const upd=v?{[key]:{by:id,at:Date.now(),mk:me}}:{[key]:deleteField()};
+  setDoc(wkRef(wkey),{done:upd},{merge:true}).catch(()=>toast('הפעולה נכשלה. בדקו חיבור.'));
 }
 function kidDel(d){
   if(d.k==='job'){deleteDoc(jobRef(d.id)).catch(()=>toast('המחיקה נכשלה.'));return;}
