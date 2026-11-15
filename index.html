@@ -542,6 +542,80 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
 .cview .cvt{font:700 1.25rem var(--display)}
 @media (max-width:360px){.mc{min-height:52px}.cev .ct{width:44px;font-size:.98rem}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* ---------- מסך תצוגה לטאבלט ---------- */
+body.tv{overflow:hidden}
+body.tv .pop,body.tv .toast{display:none!important}
+#tv{position:fixed;inset:0;z-index:90;background:radial-gradient(120% 90% at 50% 0%,#1E2E52 0%,#0E1628 70%);color:#F4F7FF;font-family:var(--body);overflow:hidden;user-select:none;-webkit-user-select:none}
+#tv .tvtop{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:2.4vmin 4vmin;z-index:4;pointer-events:none}
+#tv .tvclock{font:700 8vmin/1 var(--display);direction:ltr;letter-spacing:1px}
+#tv .tvdate{font:500 3.6vmin var(--body);opacity:.85}
+#tv .tvs{position:absolute;inset:0;padding:15vmin 4vmin 8vmin;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity .9s ease}
+#tv .tvs.on{opacity:1}
+#tv .tvh{font:800 6.4vmin/1.2 var(--display);margin:0 0 3.5vmin;text-align:center}
+#tv .tvdots{position:absolute;bottom:3vmin;left:0;right:0;display:flex;justify-content:center;gap:1.6vmin;z-index:4;pointer-events:none}
+#tv .tvdots i{width:1.6vmin;height:1.6vmin;border-radius:50%;background:#fff;opacity:.25;transition:opacity .4s,transform .4s}
+#tv .tvdots i.on{opacity:.95;transform:scale(1.3)}
+/* תמונות */
+#tv .tvs.pic{padding:13vmin 3vmin 8vmin}
+#tv .tvbg{position:absolute;inset:-6%;width:112%;height:112%;object-fit:cover;filter:blur(40px) brightness(.55)}
+#tv .tvph{position:relative;max-width:100%;max-height:100%;min-height:0;object-fit:contain;border-radius:3vmin;box-shadow:0 2vmin 6vmin rgba(0,0,0,.5);animation:tvzoom 10s ease-out both}
+#tv .tvcap{position:absolute;bottom:10vmin;padding:1.2vmin 4vmin;border-radius:999px;background:rgba(10,16,30,.6);font:800 5vmin var(--display);color:var(--c,#fff);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+@keyframes tvzoom{from{transform:scale(1)}to{transform:scale(1.05)}}
+/* הדמויות */
+#tv .tvfigs{display:flex;justify-content:center;align-items:flex-end;gap:3vmin;flex-wrap:nowrap;width:100%}
+#tv .tvfig{display:flex;flex-direction:column;align-items:center;animation:tvhop 2.6s ease-in-out infinite}
+#tv .tvfig .pfig{height:min(46vh,40vw)!important;width:auto!important;max-width:22vw}
+#tv .tvfig b{margin-top:1.5vmin;font:800 5vmin var(--display);color:var(--c)}
+#tv .tvdog{font-size:9vmin;align-self:flex-end;animation:tvrun 3s ease-in-out infinite}
+@keyframes tvhop{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.2vmin)}}
+@keyframes tvrun{0%,100%{transform:translateX(0) rotate(0)}50%{transform:translateX(-3vmin) rotate(-8deg)}}
+/* לוני */
+#tv .tvwk{display:flex;gap:4vmin;align-items:stretch;justify-content:center;width:100%}
+#tv .tvw{flex:0 1 44vw;background:rgba(255,255,255,.07);border:.4vmin solid rgba(255,255,255,.12);border-radius:4vmin;padding:3vmin;display:flex;flex-direction:column;align-items:center;text-align:center}
+#tv .tvw.main{border-color:var(--c);background:rgba(255,255,255,.11);box-shadow:0 0 0 .6vmin color-mix(in srgb,var(--c) 35%,transparent)}
+#tv .tvw .lbl{font:700 3.6vmin var(--body);opacity:.8}
+#tv .tvw .pfig{height:min(32vh,26vw)!important;width:auto!important;margin:1.5vmin 0}
+#tv .tvw .nm{font:800 7vmin/1.1 var(--display);color:var(--c)}
+#tv .tvw .wh{font:700 4.6vmin var(--body);margin-top:1vmin}
+#tv .tvw .wh.now{color:#FFD166}
+#tv .tvw:not(.main){opacity:.85}
+#tv .tvw:not(.main) .pfig{height:min(24vh,20vw)!important}
+#tv .tvw:not(.main) .nm{font-size:5.4vmin}
+/* הלו"ז */
+#tv .tvday{width:min(92vw,1100px);display:flex;flex-direction:column;gap:1.6vmin}
+#tv .tvday.two{display:grid;grid-template-columns:1fr 1fr;gap:1.6vmin 3vmin}
+#tv .tvr{display:flex;align-items:center;gap:2.4vmin;background:rgba(255,255,255,.07);border-radius:2.4vmin;padding:1.6vmin 2.4vmin;min-height:9vmin}
+#tv .tvr .t{font:700 4.4vmin var(--display);direction:ltr;min-width:13vmin;text-align:center}
+#tv .tvr .t small{display:block;font:600 2.6vmin var(--body);opacity:.75}
+#tv .tvr .bar{align-self:stretch;width:1vmin;border-radius:1vmin;flex:none}
+#tv .tvr .x{flex:1;min-width:0}
+#tv .tvr .x b{display:block;font:700 4.2vmin/1.25 var(--body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#tv .tvr .x span{font:600 3vmin var(--body);opacity:.85}
+#tv .tvr .av{display:flex;gap:.8vmin;flex:none}
+#tv .tvday.two .tvr{min-height:7vmin;padding:1.2vmin 2vmin}
+#tv .tvday.two .tvr .x b{font-size:3.4vmin}
+#tv .tvday.two .tvr .t{font-size:3.6vmin}
+#tv .tvfree{font:700 5vmin var(--body);opacity:.85;text-align:center}
+#tv .tvnext{margin-top:2.4vmin;font:700 3.8vmin var(--body);color:#FFD166;text-align:center}
+/* כפתורים: מופיעים בנגיעה */
+#tv .tvctl{position:absolute;inset:auto 0 0 0;display:flex;justify-content:center;gap:2vmin;padding:2vmin 2vmin calc(2vmin + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,rgba(0,0,0,.6));z-index:5}
+#tv .tvctl button{min-height:56px;padding:0 26px;border-radius:999px;border:2px solid rgba(255,255,255,.5);background:rgba(15,25,45,.85);color:#fff;font:700 1.15rem var(--body);cursor:pointer}
+@media (orientation:portrait){
+  #tv .tvwk{flex-direction:column;align-items:center}
+  #tv .tvw{flex:none;width:84vw}
+  #tv .tvw .pfig{height:20vh!important}
+  #tv .tvw:not(.main) .pfig{height:14vh!important}
+  #tv .tvr .x b{font-size:4.6vmin}
+  #tv .tvfigs{flex-wrap:wrap;gap:4vmin 6vmin}
+  #tv .tvfig .pfig{height:26vh!important;max-width:40vw}
+  #tv .tvday.two{grid-template-columns:1fr}
+}
+/* תמונות בהגדרות */
+.tvth{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.tvth figure{position:relative;margin:0;width:76px}
+.tvth img{width:76px;height:76px;object-fit:cover;border-radius:12px;display:block;border:3px solid var(--c,var(--line))}
+.tvth figcaption{font-size:.8rem;text-align:center;color:var(--mute)}
+.tvth button{position:absolute;top:-6px;left:-6px;width:28px;height:28px;border-radius:50%;border:0;background:var(--bad);color:#fff;font:700 .9rem var(--body);cursor:pointer}
 </style>
 </head>
 <body>
@@ -708,6 +782,16 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
       <input id="bkFile" type="file" accept="application/json,.json" hidden>
       <p id="bkMsg" class="msg" role="status"></p>
     </div>
+    <div id="tvCard" class="card" hidden>
+      <h3>📺 מסך תצוגה לטאבלט</h3>
+      <button id="tvGo" class="btn pri" type="button">הפעלת מסך התצוגה במכשיר הזה</button>
+      <label>תמונות לתצוגה, של מי?</label>
+      <div id="tvWho" class="chips" role="group" aria-label="של מי התמונה"></div>
+      <button id="tvAdd" class="btn quiet" type="button">הוספת תמונות</button>
+      <input id="tvFile" type="file" accept="image/*" multiple hidden>
+      <div id="tvThumbs" class="tvth"></div>
+      <p id="tvMsg" class="msg" role="status"></p>
+    </div>
     <div id="codeCard" class="card">
       <h3>הקוד המשפחתי</h3>
       <button id="codeShow" class="btn quiet" type="button">הצגת הקוד</button>
@@ -766,6 +850,17 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
   </div>
 </div>
 <div id="toast" class="toast" hidden role="status"></div>
+<div id="tv" hidden aria-live="off">
+  <div class="tvtop"><div class="tvdate" id="tvDate"></div><div class="tvclock" id="tvClock"></div></div>
+  <div id="tvStage"></div>
+  <div class="tvdots" id="tvDots"></div>
+  <div class="tvctl" id="tvCtl" hidden>
+    <button id="tvPrev" type="button" aria-label="הקודם">›</button>
+    <button id="tvExit" type="button">✕ יציאה מהתצוגה</button>
+    <button id="tvNext" type="button" aria-label="הבא">‹</button>
+  </div>
+</div>
+
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
@@ -1837,7 +1932,7 @@ async function bkRestore(j){
   }catch(e){say(m,'השחזור נעצר באמצע. בדקו חיבור ונסו שוב, זה בטוח לנסות שוב.');}
 }
 function paintSettings(){
-  paintBackup();
+  paintBackup();paintTvCard();
   {const lk=!!lockOf()&&!isAdult(me);$('btnSwitch').hidden=lk;$('btnForget').hidden=lk;$('codeCard').hidden=!isAdult(me);}
   $('pinState').textContent=(people[me]||{}).pin?'לפרופיל שלך מוגדר קוד אישי.':'אין קוד אישי לפרופיל שלך.';
 }
@@ -1869,6 +1964,8 @@ function openMain(){
   const qt=new URLSearchParams(location.search).get('tab');
   if(qt&&$('tab-'+qt)){tab(qt);if(qt==='food')foodFromPush();history.replaceState(null,'',location.pathname);}
   else if(location.search)history.replaceState(null,'',location.pathname);
+  /* טאבלט שהופעל בו מסך התצוגה נפתח ישר בתצוגה */
+  if(isAdult(me)&&(qt==='tv'||LS.get('yaya.tv')==='1'))openTV();
 }
 function onPeople(snap){
   if(!$('s-who').hidden)paintWho();
@@ -5120,6 +5217,223 @@ $('pushOn').onclick=async()=>{
 };
 $('pushTest').onclick=()=>{
   swReg&&swReg.showNotification('yaya',{body:'ככה תיראה התראה. ההתראות האמיתיות נשלחות מהשרת.',icon:'icon-180.png',lang:'he',dir:'rtl'});
+};
+
+/* ---------- מסך תצוגה לטאבלט: שקפים מתחלפים כל 10 שניות ----------
+   תמונות של הבנות, הדמויות המצוירות, מי מוציאה את לוני עכשיו ואחר כך, והלו"ז של היום.
+   נפתח מהגדרות (אבא או אמא). הטאבלט זוכר ונפתח ישר בתצוגה, עד שיוצאים ממנה */
+const TV_MS=10000,TV_MAXPIC=60;
+const DOGHM={m:[7,0],l:[12,30],s:[14,0],a:[17,30],b:[20,0],n:[22,0]};
+const hmOf=k=>DOGHM[k][0]*60+DOGHM[k][1];
+let tvOn=false,tvT=null,tvClk=null,tvI=-1,tvPics=[],tvPicI=0,tvPicUnsub=null,tvLock=null,tvCtlT=null,tvWhoSel='ziv';
+const tvCol=()=>collection(db,'families',code,'tvpic');
+const tvC=id=>id&&byId[id]?byId[id].d:'#E8C547';
+function subTvPics(){
+  if(tvPicUnsub||!db||!code)return;
+  tvPicUnsub=onSnapshot(tvCol(),s=>{
+    tvPics=s.docs.map(d=>Object.assign({id:d.id},d.data())).filter(p=>typeof p.d==='string'&&p.d.startsWith('data:image/')).sort((a,b)=>(a.at||0)-(b.at||0));
+    paintTvThumbs();
+  },()=>{});
+}
+/* התורנויות הבאות של לוני, לפי הסדר. משבצת של היום שלא סומנה נשארת "עכשיו" עד שמגיע הזמן של הבאה (לכל היותר 3 שעות) */
+function tvWalks(n){
+  const now=new Date(),out=[],cw=fmt(dogWk(now));
+  for(let o=0;o<10&&out.length<n;o++){
+    const d=addDays(now,o),wd=d.getDay(),wkK=fmt(dogWk(d));
+    const W=wkK===cw?curWk:(nxWk&&nxWk.key===wkK?nxWk:null);
+    const ks=SLOTS.filter(x=>hasSlot(wd,x.k)).map(x=>x.k).sort((a,b)=>hmOf(a)-hmOf(b));
+    for(let i=0;i<ks.length&&out.length<n;i++){
+      const k=ks[i],key=wd+'_'+k;
+      if(W&&W.done&&W.done[key])continue;
+      const st=new Date(d.getFullYear(),d.getMonth(),d.getDate(),DOGHM[k][0],DOGHM[k][1]);
+      if(o===0){
+        const nx=ks[i+1],end=nx?new Date(d.getFullYear(),d.getMonth(),d.getDate(),DOGHM[nx][0],DOGHM[nx][1]):addDays(d,1);
+        if(now>=Math.min(+end,+st+3*3600e3))continue;
+      }
+      out.push({k,o,wd,who:W&&W.slots?(W.slots[key]||''):'',now:o===0&&now>=st});
+    }
+  }
+  return out;
+}
+function tvWhen(w){
+  const t=slotName(w.k);
+  if(w.now)return 'עכשיו! ('+t+')';
+  return (w.o===0?'היום':w.o===1?'מחר':'ביום '+DAYN[w.wd])+' · '+t;
+}
+/* --- השקפים --- */
+function tvPhoto(s){
+  if(!tvPics.length)return false;
+  const p=tvPics[tvPicI%tvPics.length];tvPicI++;
+  s.classList.add('pic');
+  const bg=new Image();bg.className='tvbg';bg.alt='';bg.src=p.d;
+  const im=new Image();im.className='tvph';im.alt=p.who&&byId[p.who]?byId[p.who].name:'';im.src=p.d;
+  s.append(bg,im);
+  if(p.who&&byId[p.who]){const c=h('div','tvcap',byId[p.who].name);c.style.setProperty('--c',tvC(p.who));s.append(c);}
+  return true;
+}
+function tvChars(s){
+  s.append(h('div','tvh','הבנות שלנו 💛'));
+  const row=h('div','tvfigs');
+  KIDS.forEach((id,i)=>{
+    const f=h('div','tvfig');f.style.setProperty('--c',tvC(id));f.style.animationDelay=(i*.35)+'s';
+    f.append(figure(id,300),h('b',null,byId[id].name));row.append(f);
+  });
+  const dog=h('div','tvdog','🐩');dog.setAttribute('aria-hidden','true');row.append(dog);
+  s.append(row);return true;
+}
+function tvLuni(s){
+  s.append(h('div','tvh','🐾 מי מוציאה את לוני?'));
+  const L=tvWalks(2),box=h('div','tvwk');
+  if(!L.length){s.append(h('div','tvfree','עוד לא שובצה תורנות'));return true;}
+  L.forEach((w,i)=>{
+    const c=h('div','tvw'+(i===0?' main':''));c.style.setProperty('--c',w.who?tvC(w.who):'#9AA8C4');
+    c.append(h('div','lbl',i===0?'הבאה בתור':'ואחר כך'));
+    if(w.who&&byId[w.who])c.append(figure(w.who,240),h('div','nm',byId[w.who].name));
+    else c.append(h('div','nm','עוד לא שובץ'));
+    c.append(h('div','wh'+(w.now?' now':''),tvWhen(w)));
+    box.append(c);
+  });
+  s.append(box);return true;
+}
+function tvRow(it){
+  const ev=it.ev,K=kindOf(ev.kind),r=h('div','tvr');
+  const t=h('div','t');
+  if(ev.time){t.append(document.createTextNode(ev.time));if(ev.end)t.append(h('small',null,'עד '+ev.end));}
+  else t.append(h('small',null,'כל היום'));
+  const bar=h('i','bar');
+  const cs=ev.fam?['#E8C547']:evPeople(ev).map(tvC);
+  bar.style.background=cs.length>1?'linear-gradient(to bottom,'+cs.map((c,i)=>c+' '+(i*100/cs.length)+'% '+((i+1)*100/cs.length)+'%').join(',')+')':(cs[0]||'#888');
+  const x=h('div','x');x.append(h('b',null,K[2]+' '+(ev.title||K[1])));
+  const meta=[ev.fam?'כל המשפחה':whoTxt(ev),ev.place?'📍 '+ev.place:''].filter(Boolean).join(' · ');
+  if(meta)x.append(h('span',null,meta));
+  r.append(t,bar,x);
+  if(!ev.fam){const av=h('div','av');evPeople(ev).slice(0,4).forEach(id=>av.append(avatar(id,Math.round(Math.min(innerWidth,innerHeight)*.07))));r.append(av);}
+  return r;
+}
+function tvDay(s){
+  const now=new Date(),late=now.getHours()>=20,d=late?addDays(now,1):now,k=dkey(d);
+  s.append(h('div','tvh',late?'📅 מה יש מחר':'📅 הלו"ז של היום'));
+  const L=calItemsAll(k,k);
+  if(!L.length)s.append(h('div','tvfree',late?'מחר יום פנוי 🌤️':'היום אין אירועים בלוח 🌤️'));
+  else{
+    const max=12,box=h('div','tvday'+(L.length>6?' two':''));
+    L.slice(0,max).forEach(it=>box.append(tvRow(it)));s.append(box);
+    if(L.length>max)s.append(h('div','tvnext','ועוד '+(L.length-max)+'...'));
+  }
+  if(!late){
+    const ex=calItemsAll(dkey(addDays(now,1)),dkey(addDays(now,1))).filter(it=>it.ev.kind==='exam'&&!it.ev.fam);
+    ex.slice(0,3).forEach(it=>s.append(h('div','tvnext','📝 מחר: '+(it.ev.title||'בחינה')+' · '+whoTxt(it.ev)+' בהצלחה!')));
+  }
+  return true;
+}
+const TV_SLIDES=[tvPhoto,tvChars,tvLuni,tvDay];
+function tvShow(dir){
+  if(!tvOn)return;
+  clearTimeout(tvT);
+  const st=$('tvStage'),old=st.querySelector('.tvs.on');
+  let made=null;
+  for(let n=0;n<TV_SLIDES.length&&!made;n++){
+    tvI=(tvI+(dir<0?-1:1)+TV_SLIDES.length)%TV_SLIDES.length;
+    const s=h('div','tvs');
+    let ok=false;try{ok=TV_SLIDES[tvI](s);}catch(e){console.warn('tv',e);}
+    if(ok)made=s;
+  }
+  if(made){
+    st.append(made);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>made.classList.add('on')));
+    if(old){old.classList.remove('on');setTimeout(()=>old.remove(),1000);}
+    const dots=$('tvDots');dots.innerHTML='';
+    TV_SLIDES.forEach((f,i)=>{if(f===tvPhoto&&!tvPics.length)return;const b=h('i',i===tvI?'on':'');dots.append(b);});
+  }
+  tvT=setTimeout(()=>tvShow(1),TV_MS);
+}
+function tvClock(){
+  const d=new Date();
+  $('tvClock').textContent=hhmm(d);
+  $('tvDate').textContent=d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
+}
+async function tvWake(){try{if(tvOn&&'wakeLock' in navigator&&!document.hidden)tvLock=await navigator.wakeLock.request('screen');}catch(e){}}
+function openTV(){
+  if(!me||!isAdult(me))return;
+  tvOn=true;LS.set('yaya.tv','1');
+  document.body.classList.add('tv');$('tv').hidden=false;
+  subTvPics();if(!nxUnsub)subNextWk();
+  tvClock();clearInterval(tvClk);tvClk=setInterval(tvClock,15000);
+  tvI=-1;$('tvStage').innerHTML='';tvShow(1);tvWake();
+}
+function tvExit(){
+  tvOn=false;LS.del('yaya.tv');clearTimeout(tvT);clearInterval(tvClk);clearTimeout(tvCtlT);
+  try{if(tvLock)tvLock.release();}catch(e){}tvLock=null;
+  try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}
+  $('tv').hidden=true;$('tvCtl').hidden=true;$('tvStage').innerHTML='';document.body.classList.remove('tv');
+  /* חזרה לבחירת פרופיל, כדי שהבנות לא ייכנסו מהטאבלט לפרופיל של אבא או אמא (שם מתבקש הקוד האישי) */
+  showWho();
+}
+document.addEventListener('visibilitychange',()=>{if(tvOn&&!document.hidden){tvWake();tvClock();tvShow(0);}});
+$('tv').addEventListener('click',e=>{
+  if(e.target.closest('#tvCtl'))return;
+  $('tvCtl').hidden=false;clearTimeout(tvCtlT);tvCtlT=setTimeout(()=>{$('tvCtl').hidden=true;},5000);
+});
+$('tvPrev').onclick=()=>{tvShow(-1);clearTimeout(tvCtlT);tvCtlT=setTimeout(()=>{$('tvCtl').hidden=true;},5000);};
+$('tvNext').onclick=()=>{tvShow(1);clearTimeout(tvCtlT);tvCtlT=setTimeout(()=>{$('tvCtl').hidden=true;},5000);};
+$('tvExit').onclick=()=>{if(confirm('לצאת ממסך התצוגה?'))tvExit();};
+/* --- הגדרות: הפעלה ותמונות --- */
+function paintTvCard(){
+  const c=$('tvCard');if(!c)return;c.hidden=!isAdult(me);if(c.hidden)return;
+  subTvPics();
+  const w=$('tvWho');w.innerHTML='';
+  KIDS.concat(['fam']).forEach(id=>{
+    const b=chip(id==='fam'?'כל המשפחה':byId[id].name,tvWhoSel===id,()=>{tvWhoSel=id;paintTvCard();});
+    w.append(b);
+  });
+  paintTvThumbs();
+}
+function paintTvThumbs(){
+  const box=$('tvThumbs');if(!box||$('tvCard').hidden)return;
+  box.innerHTML='';
+  tvPics.slice().reverse().forEach(p=>{
+    const f=h('figure');const im=new Image();im.src=p.d;im.alt='';im.loading='lazy';
+    if(byId[p.who])im.style.setProperty('--c',byId[p.who].l);
+    const x=h('button',null,'✕');x.type='button';x.setAttribute('aria-label','מחיקת התמונה');
+    x.onclick=()=>{if(confirm('למחוק את התמונה מהתצוגה?'))deleteDoc(doc(tvCol(),p.id)).catch(()=>say($('tvMsg'),'המחיקה נכשלה. בדקו חיבור.'));};
+    f.append(im,h('figcaption',null,byId[p.who]?byId[p.who].name:'משפחה'),x);box.append(f);
+  });
+}
+/* מקטינים כל תמונה בטלפון (עד 1400 פיקסלים), כדי שתישמר בענן ותיטען מהר בטאבלט */
+async function tvShrink(file){
+  const url=URL.createObjectURL(file);
+  try{
+    const im=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url;});
+    let max=1400,q=.82,out='';
+    for(let t=0;t<5;t++){
+      const r=Math.min(1,max/Math.max(im.naturalWidth,im.naturalHeight));
+      const c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.naturalWidth*r));c.height=Math.max(1,Math.round(im.naturalHeight*r));
+      c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+      out=c.toDataURL('image/jpeg',q);
+      if(out.length<700e3)return out;
+      max*=.8;q=Math.max(.5,q-.08);
+    }
+    return out.length<950e3?out:null;
+  }catch(e){return null;}
+  finally{URL.revokeObjectURL(url);}
+}
+$('tvAdd').onclick=()=>$('tvFile').click();
+$('tvFile').onchange=async()=>{
+  const m=$('tvMsg'),fs=[...$('tvFile').files];$('tvFile').value='';if(!fs.length)return;
+  const room=TV_MAXPIC-tvPics.length;
+  if(room<=0){say(m,'יש כבר '+TV_MAXPIC+' תמונות. מחקו כמה כדי להוסיף.');return;}
+  let ok=0,bad=0;
+  for(let i=0;i<Math.min(fs.length,room);i++){
+    say(m,'מעלה '+(i+1)+' מתוך '+Math.min(fs.length,room)+'...',true);
+    const d=await tvShrink(fs[i]);
+    if(!d){bad++;continue;}
+    try{await setDoc(doc(tvCol()),{who:tvWhoSel,d,at:Date.now()+i,by:me});ok++;}catch(e){bad++;}
+  }
+  say(m,ok?((ok===1?'נוספה תמונה אחת':'נוספו '+ok+' תמונות')+(bad?', '+bad+' לא הצליחו':'')):'ההעלאה לא הצליחה. בדקו חיבור ונסו שוב.',!!ok);
+};
+$('tvGo').onclick=()=>{
+  try{const el=document.documentElement;if(el.requestFullscreen)el.requestFullscreen().catch(()=>{});else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();}catch(e){}
+  openTV();
 };
 
 /* ---------- אתחול ---------- */

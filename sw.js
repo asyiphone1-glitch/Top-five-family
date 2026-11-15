@@ -1,7 +1,7 @@
 /* yaya: התראות כשהאפליקציה סגורה, ופתיחה גם בלי אינטרנט (r5_offline).
    קבצי האפליקציה: קודם מהרשת, כדי שעדכונים יגיעו מיד. רק אם אין רשת (או שהיא איטית מאוד) נפתח העותק השמור.
    ספריות חיצוניות עם מספר גרסה (Firebase, גופנים) נשמרות ונטענות מהטלפון. */
-const CACHE = 'yaya-v1';
+const CACHE = 'yaya-v2';
 const SHELL = ['./', 'index.html', 'tm.js?v=1', 'manifest.webmanifest', 'icon-180.png'];
 self.addEventListener('install', e => {
   self.skipWaiting();
