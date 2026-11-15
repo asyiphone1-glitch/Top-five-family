@@ -331,6 +331,9 @@ table.fsum tr.upd .fsn b::after{content:'';display:inline-block;width:9px;height
 .fbtns2{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
 .fbtns2 .btn{margin:0}
 .fbquick{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.fbarb{margin-top:10px}
+.fbarch{margin-top:4px;padding-inline-start:8px;border-inline-start:2px solid var(--line)}
+.fbday{font-weight:700;color:var(--mute);font-size:.85rem;margin-top:10px}
 .fbc{margin-bottom:12px}.fbc .fbs.new span{font-weight:700}
 .kc .none{color:var(--mute);font-size:.92rem;padding:4px 0}
 .nav.many{overflow-x:auto;scrollbar-width:none}
@@ -1588,7 +1591,10 @@ function kidDel(d){
   setDoc(pdoc(d.id),{...packList(st),day:today()},{merge:true}).catch(()=>toast('המחיקה נכשלה.'));
 }
 /* ---------- פידבק כתוב מההורים לכל ילדה ---------- */
-let notes=[],notesUnsub=null;const fbDraft={},rpDraft={},rpOpen={};
+let notes=[],notesUnsub=null;const fbDraft={},rpDraft={},rpOpen={},fbArch={};
+/* פידבק וצל״שים מוצגים רק ביום שנשלחו. בסוף היום הם עוברים לארכיון והמסך מתנקה (הנתונים נשמרים) */
+const dayStart=()=>{const d=new Date();d.setHours(0,0,0,0);return d.getTime();};
+const isTodayNote=n=>(n.at||0)>=dayStart();
 const notesCol=()=>collection(db,'families',code,'notes');
 function subNotes(){
   if(notesUnsub)notesUnsub();
@@ -1627,7 +1633,7 @@ function fbBox(id){
   };
   okBtn(b,'fb'+id,'נשלח');
   w.append(ta,b);
-  notes.filter(n=>n.to===id).slice(0,3).forEach(n=>{
+  const row=n=>{
     const r=h('div','fbs'+(n.medal?' med':''));
     r.append(h('span',null,n.medal?'🏅 צל״ש'+(n.t?': '+n.t:''):n.t));
     r.append(h('small',null,(byId[n.by]?byId[n.by].name+' · ':'')+dshort(fmt(new Date(n.at)))+' · '+(n.seen?'נקרא ✓':'עוד לא נקרא')));
@@ -1637,13 +1643,30 @@ function fbBox(id){
       rp.append(h('small',null,' · '+dshort(fmt(new Date(n.rAt||n.at)))));
       r.append(rp);
     }
-    w.append(r);
-  });
+    return r;
+  };
+  const all=notes.filter(n=>n.to===id);
+  all.filter(isTodayNote).forEach(n=>w.append(row(n)));
+  const old=all.filter(n=>!isTodayNote(n));
+  if(old.length){
+    const ab=h('button','btn quiet sm fbarb',(fbArch[id]?'▾':'▸')+' ארכיון ('+old.length+')');ab.type='button';
+    ab.onclick=()=>{fbArch[id]=!fbArch[id];paintKidsTab();};
+    w.append(ab);
+    if(fbArch[id]){
+      const box=h('div','fbarch');let last='';
+      old.forEach(n=>{
+        const dk=fmt(new Date(n.at));
+        if(dk!==last){last=dk;box.append(h('div','fbday',new Date(n.at).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})));}
+        box.append(row(n));
+      });
+      w.append(box);
+    }
+  }
   return w;
 }
 function paintMyNotes(){
   const c=$('myNotes');if(!c)return;
-  const mine=me&&!isAdult(me)?notes.filter(n=>n.to===me&&(!n.seen||Date.now()-n.at<3*864e5)).slice(0,3):[];
+  const mine=me&&!isAdult(me)?notes.filter(n=>n.to===me&&isTodayNote(n)):[];
   c.hidden=!mine.length;c.innerHTML='';if(c.hidden)return;
   c.append(h('h3',null,'פידבק מההורים'));
   mine.forEach(n=>{
@@ -1696,6 +1719,10 @@ function paintWeekSum(){
     if(did)parts.push(did===1?'משימה אחת בוצעה':did+' משימות בוצעו');
     if(took)parts.push(took===1?'משימה פתוחה אחת נלקחה':took+' משימות פתוחות נלקחו');
     if(walks)parts.push(walks===1?'הוצאה אחת של לוני':walks+' הוצאות של לוני');
+    const wn=notes.filter(n=>n.to===p.id&&(n.at||0)>=ws),med=wn.filter(n=>n.medal).length,fb=wn.length-med,rp=wn.filter(n=>n.reply).length;
+    if(med)parts.push('🏅 '+(med===1?'צל״ש אחד':med+' צל״שים'));
+    if(fb)parts.push(fb===1?'פידבק אחד':fb+' פידבקים');
+    if(rp)parts.push(rp===1?'הגיבה פעם אחת':'הגיבה '+rp+' פעמים');
     const r=h('div');r.style.cssText='display:flex;align-items:center;gap:10px';
     r.append(avatar(p.id,32),h('span',null,p.name+': '+(parts.length?parts.join(', '):'עוד אין פעילות השבוע')));
     c.append(r);
@@ -1887,7 +1914,7 @@ function dayTick(){
     subNextWk();
   }
   if(!dirty){work=myState();renderTasks();}
-  paintHome();paintKidsTab();
+  paintHome();paintKidsTab();paintMyNotes();
   if(!$('tab-dog').hidden)paintDog();
 }
 setInterval(dayTick,60000);
