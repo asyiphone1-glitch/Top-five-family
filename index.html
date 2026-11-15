@@ -5439,7 +5439,9 @@ function tvNightPaint(){
   else s.append(h('div','lun','לילה טוב 🌙'));
   st.append(s);$('tvDots').innerHTML='';
 }
-const TV_SLIDES=[tvPhoto,tvChars,tvLuni,tvDay,tvProg,tvPod,tvMorning];
+/* תמונה בין כל שקף מידע לבא אחריו, כדי שהתמונות ישתלבו לאורך כל הסיבוב */
+const TV_INFO=[tvChars,tvLuni,tvDay,tvProg,tvPod,tvMorning];
+const TV_SLIDES=TV_INFO.flatMap(f=>[tvPhoto,f]);
 function tvShow(dir){
   if(!tvOn)return;
   clearTimeout(tvT);
@@ -5458,7 +5460,7 @@ function tvShow(dir){
     requestAnimationFrame(()=>requestAnimationFrame(()=>made.classList.add('on')));
     if(old){old.classList.remove('on');setTimeout(()=>old.remove(),1000);}
     const dots=$('tvDots');dots.innerHTML='';
-    TV_SLIDES.forEach((f,i)=>{if(f===tvPhoto&&!tvPics.length)return;if(f===tvMorning&&i!==tvI&&new Date().getHours()<19)return;const b=h('i',i===tvI?'on':'');dots.append(b);});
+    const cur=TV_SLIDES[tvI];if(cur!==tvPhoto)TV_INFO.forEach(f=>{if(f===tvMorning&&f!==cur&&new Date().getHours()<19)return;dots.append(h('i',f===cur?'on':''));});
   }
   tvT=setTimeout(()=>tvShow(1),TV_MS);
 }
