@@ -2381,11 +2381,16 @@ function paintDog(){
   if(has&&isAdult(me))box.append(reportCard(wkey));
 
   /* ימים */
-  const todayK=fmt(new Date());
+  const todayK=fmt(new Date()),boss=me==='dad';
+  /* אבא (מנהל ראשי) יכול להציג גם ימים שעברו בשבוע, כדי לעדכן מי הוציאה בפועל */
+  if(boss&&has&&fmt(weekStart)<=todayK&&fmt(addDays(weekStart,1))<=todayK){
+    const t=h('button','btn sm quiet',dogPast?'הסתרת ימים שעברו':'ימים שעברו השבוע');t.type='button';
+    t.onclick=()=>{dogPast=!dogPast;paintDog();};box.append(t);
+  }
   for(let o=0;o<7;o++){
     const date=addDays(weekStart,o),d=date.getDay(),dk=fmt(date),isNow=dk===todayK,isPast=dk<todayK;
-    /* ימים שעברו לא מוצגים: רק מהיום ועד סוף השבוע של לוני (חמישי) */
-    if(isPast)continue;
+    /* ימים שעברו לא מוצגים: רק מהיום ועד סוף השבוע של לוני (חמישי). אבא יכול לפתוח אותם */
+    if(isPast&&!(boss&&dogPast))continue;
     const card=h('section','day'+(isNow?' now':''));
     card.append(h('h3',null,'יום '+DAYN[d]+' '+date.getDate()+'/'+(date.getMonth()+1)));
     SLOTS.forEach(sl=>{
@@ -2422,7 +2427,10 @@ function paintDog(){
       }else if(isNow){
         mk(gx(a,'הוצאתי במקומו','הוצאתי במקומה'),'quiet',()=>walked(wkey,key));
       }
+      /* אבא: מי הוציאה בפועל (גם במקום מישהו אחר, גם בדיעבד) */
+      if(boss&&(isNow||isPast))mk('מי הוציא?','quiet',()=>{draft=(draft==='w:'+key?null:'w:'+key);paintDog();});
       if(acts.childNodes.length)row.append(acts);
+      if(boss&&draft==='w:'+key)row.append(whoWalkedForm(wkey,key,a,dn));
       if(draft===key&&a===me&&!dn)row.append(swapForm(wkey,key));
       if(draft==='c:'+key&&a===me&&!dn)row.append(cantForm(wkey,key));
       card.append(row);
@@ -2431,6 +2439,20 @@ function paintDog(){
   }
 }
 
+let dogPast=false;
+/* אבא בוחר מי הוציאה את לוני. הנקודות (כולל בונוס "לקחה משמרת") מחושבות לפי מי שנבחר */
+function whoWalkedForm(wkey,key,a,dn){
+  const f=h('div','chips');f.style.cssText='grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;padding-top:6px';
+  const set=v=>{
+    draft=null;
+    setDoc(wkRef(wkey),{done:{[key]:v?{by:v,at:Date.now(),set:me}:deleteField()}},{merge:true})
+      .then(()=>toast(v?'עודכן: '+gx(v,'הוציא ','הוציאה ')+byId[v].name+(a&&v!==a&&byId[a]?' במקום '+byId[a].name:''):'הסימון בוטל'))
+      .catch(()=>{dogMsg='הפעולה נכשלה. בדקו חיבור.';paintDog();});
+  };
+  PEOPLE.forEach(p=>f.append(chip(p.name+(p.id===a?' (בתור)':''),!!dn&&dn.by===p.id,()=>set(p.id))));
+  if(dn)f.append(chip('אף אחד',false,()=>set(null)));
+  return f;
+}
 function walked(wkey,key){
   if(fmt(slotDate(wkey,key.split('_')[0]))!==fmt(new Date())){toast('אפשר לסמן הוצאה רק ביום עצמו.');return;}
   setDoc(wkRef(wkey),{done:{[key]:{by:me,at:Date.now()}}},{merge:true})
