@@ -610,6 +610,45 @@ body.tv .pop,body.tv .toast{display:none!important}
   #tv .tvfig .pfig{height:26vh!important;max-width:40vw}
   #tv .tvday.two{grid-template-columns:1fr}
 }
+/* תצוגה: שקפים נוספים */
+#tv .tvprog{width:min(90vw,1000px);display:flex;flex-direction:column;gap:2.6vmin}
+#tv .tvp{display:flex;align-items:center;gap:3vmin;background:rgba(255,255,255,.07);border-radius:3vmin;padding:2vmin 3vmin}
+#tv .tvp .m{flex:1;min-width:0}
+#tv .tvp .m b{font:800 4.6vmin var(--display);color:var(--c)}
+#tv .tvp .bar{height:2.6vmin;border-radius:2vmin;background:rgba(255,255,255,.12);overflow:hidden;margin-top:1vmin}
+#tv .tvp .bar i{display:block;height:100%;background:var(--c);border-radius:2vmin;transition:width 1s}
+#tv .tvp .n{font:700 4vmin var(--body);min-width:22vmin;text-align:center}
+#tv .tvp.all .n{color:#FFD166}
+#tv .tvpod{display:flex;align-items:flex-end;justify-content:center;gap:4vmin}
+#tv .tvpc{display:flex;flex-direction:column;align-items:center;position:relative}
+#tv .tvpc .pfig{width:auto!important;height:min(23vh,20vw)!important}
+#tv .tvpc.r1 .pfig{height:min(30vh,25vw)!important}
+#tv .tvpc .crown{position:absolute;top:-6vmin;font-size:7vmin;animation:tvhop 2s ease-in-out infinite}
+#tv .tvpc b{font:800 4.6vmin var(--display);color:var(--c);margin-top:1vmin}
+#tv .tvpc .step{margin-top:1vmin;width:26vmin;border-radius:2vmin 2vmin 0 0;background:color-mix(in srgb,var(--c) 45%,#14203A);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1vmin}
+#tv .tvpc.r1 .step{height:12vmin}#tv .tvpc.r2 .step{height:9vmin}#tv .tvpc.r3 .step{height:8.5vmin}
+#tv .tvpc .step span{font:800 5vmin var(--display)}
+#tv .tvpc .step small{font:700 2.8vmin var(--body)}
+#tv .tvp4{margin-top:2vmin;font:700 3.4vmin var(--body);opacity:.8}
+#tv .tvmedal{margin-top:1.6vmin;max-width:88vw;font:600 3.4vmin var(--body);background:rgba(255,209,102,.12);border-radius:2vmin;padding:1vmin 2.6vmin;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tv .tvmedal b{color:var(--c)}
+#tv .tvmorn{width:min(94vw,1150px);display:flex;flex-direction:column;gap:1.4vmin}
+#tv .tvmr{display:grid;grid-template-columns:28vmin 18vmin 1fr;align-items:center;gap:2vmin;background:rgba(255,255,255,.07);border-radius:2.4vmin;padding:1.2vmin 2.4vmin}
+#tv .tvmr .nm{display:flex;align-items:center;gap:1.6vmin}
+#tv .tvmr .nm b{font:800 4vmin var(--display);color:var(--c)}
+#tv .tvmr .wk{font:700 4vmin var(--display);direction:ltr;text-align:right}
+#tv .tvmr .fd{display:flex;flex-direction:column;font:600 3.5vmin/1.35 var(--body);min-width:0}
+#tv .tvmr .fd span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tv.night{background:#000}
+#tv.night .tvtop{opacity:0}
+#tv .tvnight .big{font:700 24vmin/1 var(--display);direction:ltr;color:#6B7A99}
+#tv .tvnight .lun{margin-top:3vmin;font:600 4vmin var(--body);color:#5C6884}
+@media (orientation:portrait){
+  #tv .tvpod{gap:2vmin}
+  #tv .tvpc .step{width:28vw}
+  #tv .tvmr{grid-template-columns:1fr auto;}
+  #tv .tvmr .fd{grid-column:1 / -1}
+}
 /* תמונות בהגדרות */
 .tvth{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .tvth figure{position:relative;margin:0;width:76px}
@@ -5326,10 +5365,86 @@ function tvDay(s){
   }
   return true;
 }
-const TV_SLIDES=[tvPhoto,tvChars,tvLuni,tvDay];
+/* --- שקפים נוספים (אושרו 15/11/2026): איך הולך היום, פודיום שבועי, מחר בבוקר, ומצב לילה --- */
+function tvKidCount(id){
+  const st=listState(people[id]);let tot=0,dn=0;
+  st.tasks.forEach((t,i)=>{if(t.trim()&&!hasSubs(st,i)){tot++;if(st.done[i])dn++;}});
+  const sod=startOfDay(new Date());
+  jobs.filter(j=>resp(j)===id&&(!j.done||(j.doneAt&&j.doneAt>=sod))).forEach(j=>{tot++;if(j.done)dn++;});
+  const dw=new Date().getDay();
+  SLOTS.forEach(sl=>{if(!hasSlot(dw,sl.k))return;const key=dw+'_'+sl.k;if(curWk.slots[key]===id){tot++;if(curWk.done[key])dn++;}});
+  return [dn,tot];
+}
+function tvProg(s){
+  s.append(h('div','tvh','✅ איך הולך היום?'));
+  const box=h('div','tvprog');
+  KIDS.forEach(id=>{
+    const [dn,tot]=tvKidCount(id),r=h('div','tvp'+(tot&&dn===tot?' all':''));r.style.setProperty('--c',tvC(id));
+    r.append(avatar(id,Math.round(Math.min(innerWidth,innerHeight)*.11)));
+    const mid=h('div','m');mid.append(h('b',null,byId[id].name));
+    const bar=h('div','bar'),f=h('i');f.style.width=(tot?Math.round(100*dn/tot):0)+'%';bar.append(f);mid.append(bar);
+    r.append(mid,h('div','n',!tot?'אין משימות':dn===tot?'סיימה הכול 🎉':dn+' מתוך '+tot));
+    box.append(r);
+  });
+  s.append(box);return true;
+}
+function tvPod(s){
+  const sv=podMode;podMode='w';let rows;try{rows=podScores();}finally{podMode=sv;}
+  s.append(h('div','tvh','🏆 הפודיום של השבוע'));
+  const any=rows[0].pts>0,stage=h('div','tvpod');
+  [1,0,2].forEach(i=>{
+    const r=rows[i],col=h('div','tvpc r'+(i+1));col.style.setProperty('--c',tvC(r.id));
+    if(any&&i===0)col.append(h('div','crown','👑'));
+    col.append(figure(r.id,i===0?260:210),h('b',null,byId[r.id].name));
+    const st=h('div','step');st.append(h('span',null,String(i+1)),h('small',null,r.pts+' נק׳ · 🐾 '+r.w));col.append(st);
+    stage.append(col);
+  });
+  s.append(stage);
+  const r4=rows[3];if(r4)s.append(h('div','tvp4','4. '+byId[r4.id].name+' · '+r4.pts+' נק׳ · 🐾 '+r4.w));
+  const wk7=Date.now()-7*864e5;
+  notes.filter(n=>n.medal&&(n.at||0)>wk7&&KIDS.includes(n.to)).slice(0,2).forEach(n=>{
+    const m=h('div','tvmedal');m.style.setProperty('--c',tvC(n.to));
+    m.append(h('b',null,'🏅 '+byId[n.to].name+': '),document.createTextNode(String(n.t||'').slice(0,90)));s.append(m);
+  });
+  if(!any)s.append(h('div','tvnext','השבוע רק התחיל. מי תהיה הראשונה?'));
+  return true;
+}
+/* מ-19:00: שעות ההשכמה ומה אוכלים מחר */
+function tvMorning(s){
+  if(new Date().getHours()<19)return false;
+  const k=tmrKey();if(!(k in foodDays))return false;
+  const rows=PEOPLE.map(p=>{const ad=isAdult(p.id),t=wakeOf(k,p.id),o=ad?null:effOf(k,p.id);return {p,ad,t,ten:ad?'':mealTxt(o,'ten'),lunch:ad?'':mealTxt(o,'lunch')};})
+    .filter(r=>r.t||r.ten||r.lunch).sort((a,b)=>(a.t||'99').localeCompare(b.t||'99'));
+  if(!rows.length)return false;
+  s.append(h('div','tvh','☀️ מחר בבוקר'));
+  const tb=h('div','tvmorn');
+  rows.forEach(r=>{
+    const e=h('div','tvmr');e.style.setProperty('--c',tvC(r.p.id));
+    const n=h('div','nm');n.append(avatar(r.p.id,Math.round(Math.min(innerWidth,innerHeight)*.075)),h('b',null,r.p.name));
+    e.append(n,h('div','wk',r.t?'⏰ '+r.t:''));
+    const fd=h('div','fd');
+    if(!r.ad){fd.append(h('span',null,'🥪 '+(r.ten||'—')),h('span',null,'🍲 '+(r.lunch||'—')));}
+    e.append(fd);tb.append(e);
+  });
+  s.append(tb);return true;
+}
+/* מצב לילה: 22:30 עד 06:30 רק שעון מעומעם. אם התורנות של 22:00 עוד לא סומנה, מופיעה שורה קטנה */
+const tvNight=()=>{const d=new Date(),m=d.getHours()*60+d.getMinutes();return m>=22*60+30||m<6*60+30;};
+function tvNightPaint(){
+  const st=$('tvStage');st.innerHTML='';
+  const s=h('div','tvs on tvnight');
+  s.append(h('div','big',hhmm(new Date())));
+  const w=tvWalks(1)[0];
+  if(w&&w.now&&w.who&&byId[w.who])s.append(h('div','lun','🐾 לוני עוד מחכה ל'+byId[w.who].name+' ('+slotName(w.k)+')'));
+  else s.append(h('div','lun','לילה טוב 🌙'));
+  st.append(s);$('tvDots').innerHTML='';
+}
+const TV_SLIDES=[tvPhoto,tvChars,tvLuni,tvDay,tvProg,tvPod,tvMorning];
 function tvShow(dir){
   if(!tvOn)return;
   clearTimeout(tvT);
+  const nt=tvNight();$('tv').classList.toggle('night',nt);
+  if(nt){tvNightPaint();tvT=setTimeout(()=>tvShow(1),30000);return;}
   const st=$('tvStage'),old=st.querySelector('.tvs.on');
   let made=null;
   for(let n=0;n<TV_SLIDES.length&&!made;n++){
@@ -5343,7 +5458,7 @@ function tvShow(dir){
     requestAnimationFrame(()=>requestAnimationFrame(()=>made.classList.add('on')));
     if(old){old.classList.remove('on');setTimeout(()=>old.remove(),1000);}
     const dots=$('tvDots');dots.innerHTML='';
-    TV_SLIDES.forEach((f,i)=>{if(f===tvPhoto&&!tvPics.length)return;const b=h('i',i===tvI?'on':'');dots.append(b);});
+    TV_SLIDES.forEach((f,i)=>{if(f===tvPhoto&&!tvPics.length)return;if(f===tvMorning&&i!==tvI&&new Date().getHours()<19)return;const b=h('i',i===tvI?'on':'');dots.append(b);});
   }
   tvT=setTimeout(()=>tvShow(1),TV_MS);
 }
