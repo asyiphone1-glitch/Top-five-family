@@ -55,3 +55,14 @@ jobs:
             git commit -m "בקשת פיתוח מהאפליקציה"
             git pull --rebase -q origin main && git push -q origin HEAD:main
           fi
+      - name: Save sign-in backup
+        # עותק מוצפן של החיבור של השרת, כדי שלא יינעל בחוץ אם הזיכרון של GitHub נמחק (r7_server)
+        if: always()
+        run: |
+          if [ -f push/rt.enc ] && [ -n "$(git status --porcelain push/rt.enc)" ]; then
+            git config user.name "yaya-bot"
+            git config user.email "yaya-bot@users.noreply.github.com"
+            git add push/rt.enc
+            git commit -m "שמירת חיבור השרת (מוצפן)"
+            git pull --rebase -q origin main && git push -q origin HEAD:main
+          fi

@@ -1457,7 +1457,7 @@ const notesCol=()=>collection(db,'families',code,'notes');
 function subNotes(){
   if(notesUnsub)notesUnsub();
   notesUnsub=onSnapshot(notesCol(),snap=>{
-    notes=snap.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>(b.at||0)-(a.at||0));
+    notes=snap.docs.map(d=>Object.assign({id:d.id},d.data())).filter(okNote).sort((a,b)=>(b.at||0)-(a.at||0));
     if(isAdult(me)){const old=Date.now()-60*864e5;notes.filter(n=>n.at<old).forEach(n=>deleteDoc(doc(notesCol(),n.id)).catch(()=>{}));}
     paintKidsTab();paintMyNotes();
   },()=>{});
@@ -1608,14 +1608,18 @@ function paintDevs(){
   const ids=Object.keys(devs),pend=ids.filter(i=>devs[i].ok!==true).sort((a,b)=>(devs[b].at||0)-(devs[a].at||0));
   $('devH').textContent='טלפונים במשפחה'+(pend.length?' ('+pend.length+' מחכים לאישור)':'');
   const nm=d=>d.pid==='server'?'שרת ההתראות':byId[d.pid]?byId[d.pid].name:'';
+  /* r7_fakeserver: אם השרת האמיתי כבר מאושר ורץ, "שרת" חדש שמבקש אישור הוא חשוד ואי אפשר לאשר אותו */
+  const realSrv=ids.some(i=>devs[i].ok===true&&devs[i].pid==='server')&&health&&Date.now()-(health.at||0)<15*60e3;
   pend.forEach(id=>{
     const d=devs[id],row=h('div','prow');
-    row.append(h('i','dot'),h('span',null,'🆕 '+(d.kind||'טלפון')+(nm(d)?' · '+nm(d):'')),h('small',null,'ביקש '+ago(Date.now()-(d.at||Date.now()))));
+    const fake=d.pid==='server'&&realSrv;
+    row.append(h('i','dot'),h('span',null,(fake?'⚠️ חשוד: ':'🆕 ')+(d.kind||'טלפון')+(nm(d)?' · '+nm(d):'')),h('small',null,fake?'השרת האמיתי כבר עובד. לא לאשר':'ביקש '+ago(Date.now()-(d.at||Date.now()))));
     const acts=h('div','acts');
     const ok=h('button','btn sm',me==='mom'?'מאשרת':'מאשר');ok.type='button';
     ok.onclick=()=>setDoc(devRef(id),{ok:true,by:me,okAt:Date.now()},{merge:true}).then(()=>toast('הטלפון אושר')).catch(()=>toast('האישור נכשל. בדקו חיבור.'));
     const no=h('button','btn sm quiet','דחייה');no.type='button';
     no.onclick=()=>{if(confirm('לדחות את הטלפון הזה? הוא לא יוכל להיכנס למשפחה.'))deleteDoc(devRef(id)).catch(()=>toast('הדחייה נכשלה.'));};
+    if(fake)ok.hidden=true;
     acts.append(ok,no);row.append(acts);box.append(row);
   });
   const okIds=ids.filter(i=>devs[i].ok===true);
@@ -1732,7 +1736,26 @@ async function beat(){
 }
 const PUSHTX={on:'🔔 התראות פעילות',off:'🔕 התראות כבויות',blocked:'🚫 התראות חסומות בטלפון',web:'🔕 נפתח מהדפדפן, לא מהאייקון',no:'🔕 הטלפון לא תומך בהתראות'};
 function startBeat(){clearInterval(hb);hb=setInterval(beat,120000);beat();}
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){beat();paintHome();}});
+/* מעבר יום ושבוע כשהאפליקציה פתוחה ברקע (r7_week): בודקים כל דקה ובכל חזרה לאפליקציה */
+let tickDay='',tickWk='';
+function dayTick(){
+  if(!db||!me||$('s-main').hidden)return;
+  const d=today(),w=fmt(dogWk(new Date()));
+  if(!tickWk){tickDay=d;tickWk=w;return;}
+  if(d===tickDay&&w===tickWk)return;
+  const oldWk=tickWk;tickDay=d;tickWk=w;
+  $('dateTxt').textContent=new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
+  if(w!==oldWk){
+    subCurWk();
+    if(fmt(weekStart)===oldWk){weekStart=dogWk(new Date());draft=null;confirmGen=false;subWeek();}
+    subNextWk();
+  }
+  if(!dirty){work=myState();renderTasks();}
+  paintHome();paintKidsTab();
+  if(!$('tab-dog').hidden)paintDog();
+}
+setInterval(dayTick,60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){dayTick();beat();paintHome();}});
 
 /* ---------- מסך ראשי ---------- */
 function tab(n){
@@ -1839,7 +1862,7 @@ function openMain(){
   $('dateTxt').textContent=new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
   show('s-main');tab('today');renderTasks();startBeat();
   /* טעינה לפי הצורך (r5_lazy): קודם מה שמופיע ב"היום שלי", השאר אחרי שהמסך כבר מוכן, והקניות רק כשנכנסים אליהן */
-  weekStart=dogWk(new Date());subWeek();subFam();subJobs();subCurWk();paintJobForm();subShop();subCal();subNotes();
+  weekStart=dogWk(new Date());tickDay=today();tickWk=fmt(weekStart);subWeek();subFam();subJobs();subCurWk();paintJobForm();subShop();subCal();subNotes();
   clearTimeout(lazyT);lazyT=setTimeout(()=>{subSwaps();subRep();subAdv();subNextWk();subFood();},1200);
   clearInterval(homeT);homeT=setInterval(()=>{if(!$('tab-home').hidden)paintHome();checkInbox();},30000);
   syncPush();
@@ -1896,7 +1919,7 @@ function subWeek(){
   if(wkUnsub)wkUnsub();
   wk={slots:{},done:{}};
   wkUnsub=onSnapshot(wkRef(fmt(weekStart)),s=>{
-    const d=s.exists()?s.data():{};
+    const d=cleanWk(s.exists()?s.data():{});
     wk={slots:d.slots||{},done:d.done||{},report:d.report||null,empty:d.empty||[],cons:d.cons||{},orig:d.orig||null,gen:d.gen||0,auto:!!d.auto,by:d.by||''};
     paintDog();
   },()=>{});
@@ -1905,10 +1928,24 @@ function subWeek(){
 function subSwaps(){
   if(swUnsub)swUnsub();
   swUnsub=onSnapshot(collection(db,'families',code,'swaps'),snap=>{
-    swaps=snap.docs.map(d=>Object.assign({id:d.id},d.data()));
+    swaps=snap.docs.map(d=>Object.assign({id:d.id},d.data())).filter(okSwap);
     paintDog();
   },()=>{});
 }
+
+/* r7_guard: פריט פגום (שם חסר או לא מוכר, למשל אחרי שחזור גיבוי) מדולג במקום להפיל את כל המסך */
+const okId=v=>typeof v==='string'&&!!byId[v];
+function cleanWk(d){
+  d=d||{};
+  const sl=o=>o&&typeof o==='object'?Object.fromEntries(Object.entries(o).filter(([k,v])=>/^[0-6]_[a-z]$/.test(k)&&okId(v))):{};
+  const dn=Object.fromEntries(Object.entries(d.done&&typeof d.done==='object'?d.done:{}).filter(([k,v])=>v&&typeof v==='object'&&(!v.by||okId(v.by))));
+  const rp=d.report&&typeof d.report==='object'?Object.fromEntries(Object.entries(d.report).filter(([k,v])=>okId(k)&&v&&typeof v==='object')):null;
+  const cs=d.cons&&typeof d.cons==='object'?Object.fromEntries(Object.entries(d.cons).filter(([k,v])=>okId(k)&&v&&typeof v==='object')):{};
+  return Object.assign({},d,{slots:sl(d.slots),done:dn,orig:d.orig?sl(d.orig):null,report:rp,cons:cs,empty:Array.isArray(d.empty)?d.empty:[]});
+}
+const okJob=j=>j&&typeof j.text==='string'&&j.text.trim()&&(j.to==='all'||j.to==='fam'||okId(j.to))&&(!j.claim||okId(j.claim))&&(!j.by||okId(j.by));
+const okNote=n=>n&&okId(n.to)&&(!n.by||okId(n.by));
+const okSwap=x=>x&&okId(x.from)&&okId(x.to)&&/^[0-6]_[a-z]$/.test(String(x.slot||''))&&(!x.take||/^[0-6]_[a-z]$/.test(String(x.take)));
 
 /* שאלון והעדפות */
 function normPrefs(r,id){
@@ -2132,7 +2169,7 @@ function nextKey(){return fmt(addDays(dogWk(new Date()),7));}
 function subNextWk(){
   if(nxUnsub)nxUnsub();
   const k=nextKey();nxWk=null;
-  nxUnsub=onSnapshot(wkRef(k),sn=>{nxWk=Object.assign({key:k},sn.exists()?sn.data():{});autoPlan();if(!$('tab-dog').hidden)paintDog();},()=>{});
+  nxUnsub=onSnapshot(wkRef(k),sn=>{nxWk=Object.assign({key:k},cleanWk(sn.exists()?sn.data():{}));autoPlan();if(!$('tab-dog').hidden)paintDog();},()=>{});
 }
 /* אחרי המועד, הטלפון הראשון שפותח את האפליקציה משבץ את השבוע הבא (פעם אחת בלבד) */
 async function autoPlan(){
@@ -2148,7 +2185,7 @@ let consDraft=null,consKey='',consMsg='';
 /* חוגים מהלוח: משבצת של לוני שנופלת מחצי שעה לפני החוג ועד חצי שעה אחרי שהוא נגמר נחסמת אוטומטית לבת.
    נכנסים: אירוע מסוג "חוג", או כל אירוע עם שעה שחוזר כל שבוע, של הבת עצמה (לא "כל המשפחה").
    בוקר = 07:00, אחרי בית הספר = 14:00. חוג בלי שעת סיום נחשב שעה */
-const SLOT_MIN={m:420,s:840,a:1050,b:1200,n:1320},CLS_PAD=30,CLS_DUR=60;
+const SLOT_MIN={m:420,s:840,l:750,a:1050,b:1200,n:1320},CLS_PAD=30,CLS_DUR=60;
 const hmMin=t=>{const a=String(t||'').split(':');return (+a[0])*60+(+a[1]||0);};
 function clsBlocks(id,wkey){
   const out={};if(isAdult(id)||typeof cal==='undefined')return out;
@@ -2242,6 +2279,7 @@ function weekPoints(d,acc){
 }
 /* תצוגה */
 function h(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;}
+function chip(txt,on,fn){const b=h('button','chip',txt);b.type='button';b.setAttribute('aria-pressed',on?'true':'false');b.onclick=fn;return b;}
 function genderTake(){return (byId[me]&&byId[me].g==='m')?'אני לוקח':'אני לוקחת';}
 /* לשון לפי האדם: gx(id,'זכר','נקבה') */
 function gx(id,m,f){return (byId[id]&&byId[id].g==='m')?m:f;}
@@ -2786,9 +2824,12 @@ function unlockAudio(){
 document.addEventListener('pointerdown',unlockAudio,{passive:true});
 document.addEventListener('touchend',unlockAudio,{passive:true});
 /* iPhone: בלי זה צליל מהאתר מושתק כשהמתג בצד הטלפון על שקט */
-try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
+/* r7_music: מצב "השמעה" רק בזמן הצלצול עצמו, כדי לא לעצור מוזיקה או סרטון באפליקציה אחרת */
+let asT=null;
+function asPlay(){try{if(navigator.audioSession){navigator.audioSession.type='playback';clearTimeout(asT);asT=setTimeout(()=>{try{navigator.audioSession.type='auto';}catch(e){}},14000);}}catch(e){}}
 let comp=null;
 function chime(){
+  asPlay();
   try{navigator.vibrate&&navigator.vibrate([200,120,200,1800,200,120,200]);}catch(e){}
   if(ringEl){
     try{
@@ -2825,7 +2866,7 @@ function chimeWA(){
     });
   });
 }
-function remind(lines,goTab){
+function remind(lines,goTab,quiet){
   const pop=$('pop'),ul=$('popList');
   if(pop.hidden)ul.innerHTML='';
   lines.forEach(t=>{
@@ -2840,7 +2881,7 @@ function remind(lines,goTab){
   });
   $('popGo').textContent=goTab==='cal'?'ללוח המשפחתי':goTab==='dog'?'ללוח של לוני':goTab==='today'?'למשימות שלי':goTab==='fam'?'למשימות המשפחתיות':'למשימות';
   $('popGo').onclick=()=>{pop.hidden=true;tab(goTab||'jobs');};
-  pop.hidden=false;chime();
+  pop.hidden=false;if(!quiet)chime();
   setTimeout(()=>$('popOk').focus(),50);
 }
 $('popOk').onclick=()=>{$('pop').hidden=true;};
@@ -3003,7 +3044,8 @@ let advOpen=false,advCat='new';
 /* מתי כל המלצה יושמה באפליקציה */
 const BUILT_AT={r_dogring:'2026-11-08',r_pre10:'2026-11-08',r_approve:'2026-11-08',r_fair:'2026-11-08',r_cheer:'2026-11-08',r_push:'2026-11-08',r_week:'2026-11-08',
   r5_autobk:'2026-11-12',r5_health:'2026-11-12',r5_60:'2026-11-12',r5_errors:'2026-11-12',r5_offline:'2026-11-12',r5_lazy:'2026-11-12',r5_badge:'2026-11-12',r5_icons:'2026-11-12',r5_swipe:'2026-11-12',r5_taskpts:'2026-11-12',r5_party:'2026-11-12',r5_cant:'2026-11-12',
-  r2_today:'2026-11-10',r2_gender:'2026-11-10',r2_repeat:'2026-11-10',r2_taxi:'2026-11-10',r2_status:'2026-11-10',r2_backup:'2026-11-10',r2_study:'2026-11-10'};
+  r2_today:'2026-11-10',r2_gender:'2026-11-10',r2_repeat:'2026-11-10',r2_taxi:'2026-11-10',r2_status:'2026-11-10',r2_backup:'2026-11-10',r2_study:'2026-11-10',
+  r7_week:'2026-11-15',r7_server:'2026-11-15',r7_logs:'2026-11-15',r7_phones:'2026-11-15',r7_music:'2026-11-15'};
 const BUILT=new Set(Object.keys(BUILT_AT));
 const builtTxt=id=>'✅ יושם באפליקציה'+(BUILT_AT[id]?' ב-'+dshort(BUILT_AT[id]):'');
 const isDone=r=>{const st=decision(r.id);return !!st&&st.s==='yes'&&(BUILT.has(r.id)||!r.build);};
@@ -3090,7 +3132,7 @@ const jobRef=id=>doc(db,'families',code,'jobs',id);
 function subJobs(){
   if(jobsUnsub)jobsUnsub();
   jobsUnsub=onSnapshot(jobsCol(),snap=>{
-    jobs=snap.docs.map(d=>Object.assign({id:d.id},d.data()));
+    jobs=snap.docs.map(d=>Object.assign({id:d.id},d.data())).filter(okJob);
     if(isAdult(me)&&!cleaned){
       cleaned=true;const old=Date.now()-14*864e5;
       jobs.filter(j=>j.done&&j.doneAt&&j.doneAt<old).forEach(j=>deleteDoc(jobRef(j.id)).catch(()=>{}));
@@ -3502,13 +3544,13 @@ function paintBadge(){
 let curWk={slots:{},done:{}},curUnsub=null;
 function subCurWk(){
   if(curUnsub)curUnsub();
-  curUnsub=onSnapshot(wkRef(fmt(dogWk(new Date()))),s=>{const d=s.exists()?s.data():{};curWk={slots:d.slots||{},done:d.done||{},orig:d.orig||null};checkRem();appBadge();paintPodium(false);paintKidsTab();},()=>{});
+  curUnsub=onSnapshot(wkRef(fmt(dogWk(new Date()))),s=>{const d=cleanWk(s.exists()?s.data():{});curWk={slots:d.slots||{},done:d.done||{},orig:d.orig||null};checkRem();appBadge();paintPodium(false);paintKidsTab();},()=>{});
 }
 const DOGT={l:[12,30],a:[17,30],b:[20,0],n:[22,0]};
 function remTargets(j){if(j.done)return [];if(j.to==='fam')return PEOPLE.map(p=>p.id);if(j.claim&&j.to==='all')return [j.claim];if(j.to!=='all')return [j.to];return KIDS;}
 function checkRem(){
   if(!me||!code||!db)return;
-  const now=Date.now(),win=12*3600e3,fire=[];
+  const now=Date.now(),win=12*3600e3,fire=[];let loud=false;const FRESH=15*60e3;
   jobs.forEach(j=>{
     if(!j.hasT||!j.due||j.done||!remTargets(j).includes(me))return;
     const pts=[[j.due,'d']];if(on('r_pre10'))pts.push([j.due-600000,'p']);
@@ -3516,7 +3558,7 @@ function checkRem(){
       if(t>now||now-t>win)return;
       if(k==='p'&&now>=j.due)return;
       const key='yaya.rem.'+j.id+'.'+k+'.'+j.due;
-      if(LS.get(key))return;LS.set(key,'1');
+      if(LS.get(key))return;LS.set(key,'1');if(now-t<=FRESH)loud=true;
       fire.push({t:(k==='p'?'בעוד 10 דקות: ':'הגיע הזמן: ')+j.text,snz:{k:'l',t:j.text,tab:'jobs'}});
     });
   });
@@ -3529,7 +3571,7 @@ function checkRem(){
       const t=new Date(d.getFullYear(),d.getMonth(),d.getDate(),DOGT[k][0],DOGT[k][1]).getTime();
       if(t>now||now-t>2*3600e3)continue;
       const lk='yaya.dog.'+fmt(d)+'.'+k;
-      if(LS.get(lk))continue;LS.set(lk,'1');
+      if(LS.get(lk))continue;LS.set(lk,'1');if(now-t<=FRESH)loud=true;
       dogFire.push('תורך להוציא את לוני ('+SHORT[k]+')');
     }
   }
@@ -3541,14 +3583,14 @@ function checkRem(){
       t=Number(t)||0;
       if(!t||t>now||now-t>win||st.done[i]||!String(st.tasks[i]||'').trim())return;
       const key='yaya.trem.'+tb+'.'+t+'.'+st.tasks[i];
-      if(LS.get(key))return;LS.set(key,'1');
+      if(LS.get(key))return;LS.set(key,'1');if(now-t<=FRESH)loud=true;
       const m=st.lv[i]?mainOf(st,i):-1;
       tFire.push({t:'תזכורת: '+(m>=0?st.tasks[m]+' ‹ ':'')+st.tasks[i],snz:{k:'t',txt:st.tasks[i]}});if(!tTab)tTab=tb;
     });
   });
   /* תזכורות שנדחו (נודניק) של משימות מההורים */
-  {const a=snzList(),keep=[];a.forEach(x=>{if(x.at<=now){if(now-x.at<win)fire.push({t:'תזכורת חוזרת: '+x.t,snz:{k:'l',t:x.t,tab:x.tab}});}else keep.push(x);});if(keep.length!==a.length)LS.set(snzKey(),JSON.stringify(keep));}
-  if(fire.length||dogFire.length||tFire.length)remind(tFire.concat(fire,dogFire),tFire.length?tTab:fire.length?'jobs':'dog');
+  {const a=snzList(),keep=[];a.forEach(x=>{if(x.at<=now){if(now-x.at<=FRESH)loud=true;if(now-x.at<win)fire.push({t:'תזכורת חוזרת: '+x.t,snz:{k:'l',t:x.t,tab:x.tab}});}else keep.push(x);});if(keep.length!==a.length)LS.set(snzKey(),JSON.stringify(keep));}
+  if(fire.length||dogFire.length||tFire.length)remind(tFire.concat(fire,dogFire),tFire.length?tTab:fire.length?'jobs':'dog',!loud);
 }
 setInterval(checkRem,15000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkRem();});
@@ -4214,16 +4256,16 @@ function calRemText(ev,k){
 function calCheckRem(){
   if(!me||!code||!db)return;
   const now=Date.now(),win=12*3600e3,a=dkey(addDays(new Date(),-1)),b=dkey(addDays(new Date(),8));
-  const fire=[];
+  const fire=[];let loud=false;
   cal.concat(tmEvents()).forEach(ev=>{
     if(!ev.rem||!remWho(ev).includes(me))return;
     occIn(ev,a,b).forEach(k=>{
       const t=remAt(ev,k);if(!t||t>now||now-t>win)return;
       const key='yaya.crem.'+ev.id+'.'+k+'.'+ev.rem+'.'+(ev.time||'');
-      if(LS.get(key))return;LS.set(key,'1');fire.push(calRemText(ev,k));
+      if(LS.get(key))return;LS.set(key,'1');if(now-t<=15*60e3)loud=true;fire.push(calRemText(ev,k));
     });
   });
-  if(fire.length)remind(fire,'cal');
+  if(fire.length)remind(fire,'cal',!loud);
 }
 setInterval(calCheckRem,15000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){calCheckRem();if(me&&db)tmLoad(false);}});
@@ -4300,7 +4342,7 @@ function kidSummary(host,o,w,status,dayTxt){
 }
 function mealsOf(o){return {ten:(o.ten||[]).slice(),tenX:o.tenX||'',lunch:(o.lunch||[]).slice(),lunchX:o.lunchX||''};}
 function setLocal(k,f,id,v){foodDays[k]=Object.assign({},foodDays[k]);foodDays[k][f]=Object.assign({},foodDays[k][f],{[id]:v});}
-function mealTxt(o,mk){if(!o)return '';const a=(o[mk]||[]).slice();if(o[mk+'X'])a.push(o[mk+'X']);return a.join(', ');}
+function mealTxt(o,mk){if(!o)return '';const v=o[mk],a=Array.isArray(v)?v.slice():v?[String(v)]:[];if(o[mk+'X'])a.push(o[mk+'X']);return a.join(', ');}
 /* תיקון: הזמנות שנשלחו אחרי חצות (לפני 04:00) נשמרו בטעות ליום שאחרי. מעבירים אותן ליום הנכון */
 async function healNightFood(){
   try{
@@ -4986,14 +5028,21 @@ async function subId(ep){const b=await crypto.subtle.digest('SHA-256',new TextEn
 async function saveSub(sub){
   if(!code||!me||!sub)return;
   const j=sub.toJSON();
-  await setDoc(doc(db,'families',code,'push',await subId(j.endpoint)),{who:me,sub:JSON.stringify(j),at:Date.now(),ios:isIOS});
+  await setDoc(doc(db,'families',code,'push',await subId(j.endpoint)),{who:me,sub:JSON.stringify(j),at:Date.now(),ios:isIOS,uid:myUid||''});
 }
 /* כשמחליפים פרופיל בטלפון, ההתראות עוברות לפרופיל החדש */
 async function syncPush(){
   try{
     if(!swReg||!me||!code||!pushOK()||Notification.permission!=='granted')return paintPush();
-    const sub=await swReg.pushManager.getSubscription();
-    if(sub){const v=me+'|'+sub.endpoint;if(LS.get('yaya.push.last')!==v){await saveSub(sub);LS.set('yaya.push.last',v);}}
+    /* r7_phones: כל טלפון מחדש את ההרשמה שלו (פעם ביום, או מיד אם היא נמחקה או השתנתה) */
+    let sub=await swReg.pushManager.getSubscription();
+    if(!sub)sub=await swReg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID_PUB)});
+    if(sub){
+      const v=me+'|'+sub.endpoint+'|'+(myUid||''),last=Number(LS.get('yaya.push.at'))||0;
+      let gone=false;
+      if(LS.get('yaya.push.last')===v&&Date.now()-last<864e5){try{gone=!(await getDoc(doc(db,'families',code,'push',await subId(sub.endpoint)))).exists();}catch(e){}}
+      if(LS.get('yaya.push.last')!==v||gone||Date.now()-last>=864e5){await saveSub(sub);LS.set('yaya.push.last',v);LS.set('yaya.push.at',String(Date.now()));}
+    }
   }catch(e){}
   paintPush();
 }
@@ -5019,7 +5068,7 @@ $('pushOn').onclick=async()=>{
     say(m,'מפעיל...',true);
     let sub=await swReg.pushManager.getSubscription();
     if(!sub)sub=await swReg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID_PUB)});
-    await saveSub(sub);LS.set('yaya.push.last',me+'|'+sub.endpoint);
+    await saveSub(sub);LS.set('yaya.push.last',me+'|'+sub.endpoint+'|'+(myUid||''));LS.set('yaya.push.at',String(Date.now()));
     paintPush();beat();
   }catch(e){say(m,'ההפעלה נכשלה. בדקו חיבור ונסו שוב.');}
 };

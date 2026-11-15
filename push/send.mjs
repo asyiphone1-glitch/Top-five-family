@@ -2,17 +2,19 @@
 // קורא משימות ותורנויות מ-Firestore, ושולח למי שהגיע הזמן שלו.
 import webpush from 'web-push';
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 
 const API_KEY = 'AIzaSyDo6MslDuYf2izjnZuzQfNxJ7WsXbV4hFE';
 const PROJECT = 'y-task-ce5ba';
 const VAPID_PUB = 'BP2DfRuPoADshH2Pa1jkpdeTA0id0OvlMayYX1E7G5oDirf1hOK9jccPk7ttX0cQeiXWhYyNQU1ZcKcFlSo1hig';
 const SITE = 'https://asyiphone1-glitch.github.io/Top-five-family/';
 const TZ = 'Asia/Jerusalem';
-const WINDOW = 45 * 60e3;          // שולחים עד 45 דקות אחרי הזמן (GitHub מתעכב לפעמים)
+let WINDOW = 45 * 60e3;            // שולחים עד 45 דקות אחרי הזמן. אם ההרצה הקודמת הייתה מזמן, משלימים מה שפוספס (עד 3 שעות)
 const KIDS = ['ziv', 'roni', 'hili', 'aviv'];
 const DOGT = { l: [12, 30, '12:30'], a: [17, 30, '17:30'], b: [20, 0, '20:00'], n: [22, 0, '22:00'] };
 const ADV0 = { r_dogring: 'yes', r_pre10: 'yes' };
 const STATE = '.state/rt';
+const RT_ENC = 'push/rt.enc';     // עותק מוצפן של החיבור, למקרה שהזיכרון של GitHub נמחק (r7_server)
 const DRY = process.env.DRY_RUN === '1';
 
 const CODE = String(process.env.FAMILY_CODE || '').trim().toLowerCase().replace(/\s+/g, '');
@@ -21,25 +23,55 @@ if (!CODE || !PRIV) { console.log('חסרים FAMILY_CODE או VAPID_PRIVATE ב�
 webpush.setVapidDetails(SITE, VAPID_PUB, PRIV);
 
 const BASE = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents`;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+// תקלת רשת אחת לא מבטלת את כל ההרצה: עד 3 ניסיונות (r7_server)
+async function net(u, o) {
+  for (let i = 0; ; i++) {
+    try {
+      const r = await fetch(u, o);
+      if ((r.status >= 500 || r.status === 429) && i < 2) { await sleep(1500 * (i + 1)); continue; }
+      return r;
+    } catch (e) { if (i >= 2) throw e; await sleep(1500 * (i + 1)); }
+  }
+}
+// החיבור נשמר גם מוצפן במאגר. המפתח נגזר מהסוד של GitHub, אז בלי הסוד אי אפשר לפענח אותו
+const rtKey = () => crypto.createHash('sha256').update('yaya-rt:' + PRIV).digest();
+function rtSeal(rt) {
+  const iv = crypto.randomBytes(12), c = crypto.createCipheriv('aes-256-gcm', rtKey(), iv);
+  const b = Buffer.concat([c.update(rt, 'utf8'), c.final()]);
+  return Buffer.concat([iv, c.getAuthTag(), b]).toString('base64');
+}
+function rtOpen(s) {
+  try { const b = Buffer.from(s.trim(), 'base64'), d = crypto.createDecipheriv('aes-256-gcm', rtKey(), b.subarray(0, 12)); d.setAuthTag(b.subarray(12, 28)); return Buffer.concat([d.update(b.subarray(28)), d.final()]).toString('utf8'); }
+  catch (e) { return null; }
+}
 let token = null;
 
 async function signIn() {
-  let rt = null;
-  try { rt = fs.readFileSync(STATE, 'utf8').trim(); } catch (e) {}
-  if (rt) {
-    const r = await fetch(`https://securetoken.googleapis.com/v1/token?key=${API_KEY}`, {
+  const cand = [];
+  try { cand.push(fs.readFileSync(STATE, 'utf8').trim()); } catch (e) {}
+  try { const x = rtOpen(fs.readFileSync(RT_ENC, 'utf8')); if (x) cand.push(x); } catch (e) {}
+  for (const rt of [...new Set(cand.filter(Boolean))]) {
+    const r = await net(`https://securetoken.googleapis.com/v1/token?key=${API_KEY}`, {
       method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(rt)
     });
     if (r.ok) { const j = await r.json(); token = j.id_token; save(j.refresh_token); return; }
+    // תקלה זמנית בשרת של גוגל: לא פותחים חשבון חדש (שהיה נועל את השרת בחוץ), מנסים בהרצה הבאה
+    if (r.status >= 500 || r.status === 429) throw new Error('כניסה ל-Firebase נכשלה זמנית: ' + r.status);
   }
-  const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`, {
+  const r = await net(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"returnSecureToken":true}'
   });
   if (!r.ok) throw new Error('כניסה ל-Firebase נכשלה: ' + r.status + ' ' + await r.text());
   const j = await r.json(); token = j.idToken; save(j.refreshToken);
 }
-function save(rt) { try { fs.mkdirSync('.state', { recursive: true }); fs.writeFileSync(STATE, rt); } catch (e) {} }
+function save(rt) {
+  try { fs.mkdirSync('.state', { recursive: true }); fs.writeFileSync(STATE, rt); } catch (e) {}
+  // מעדכנים את העותק המוצפן רק כשהחיבור השתנה (ה-workflow שומר אותו במאגר)
+  let old = null; try { old = rtOpen(fs.readFileSync(RT_ENC, 'utf8')); } catch (e) {}
+  if (old !== rt && !DRY) try { fs.writeFileSync(RT_ENC, rtSeal(rt) + '\n'); } catch (e) {}
+}
 
 const H = () => ({ Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' });
 const enc = s => s.split('/').map(encodeURIComponent).join('/');
@@ -60,7 +92,7 @@ const obj = f => Object.fromEntries(Object.entries(f || {}).map(([k, v]) => [k, 
 const idOf = d => d.name.split('/').pop();
 
 async function getDoc(path) {
-  const r = await fetch(`${BASE}/${enc(path)}`, { headers: H() });
+  const r = await net(`${BASE}/${enc(path)}`, { headers: H() });
   if (r.status === 404) return null;
   if (!r.ok) throw new Error('קריאה נכשלה ' + path + ': ' + r.status);
   return obj((await r.json()).fields);
@@ -68,7 +100,7 @@ async function getDoc(path) {
 async function list(path) {
   const out = []; let pt = '';
   for (let i = 0; i < 20; i++) {
-    const r = await fetch(`${BASE}/${enc(path)}?pageSize=300${pt ? '&pageToken=' + encodeURIComponent(pt) : ''}`, { headers: H() });
+    const r = await net(`${BASE}/${enc(path)}?pageSize=300${pt ? '&pageToken=' + encodeURIComponent(pt) : ''}`, { headers: H() });
     if (!r.ok) throw new Error('קריאה נכשלה ' + path + ': ' + r.status);
     const j = await r.json();
     (j.documents || []).forEach(d => out.push(Object.assign({ id: idOf(d) }, obj(d.fields))));
@@ -79,10 +111,20 @@ async function list(path) {
 async function put(path, data) {
   const fields = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, typeof v === 'number' ? { integerValue: String(v) } : typeof v === 'boolean' ? { booleanValue: v } : { stringValue: String(v) }]));
   if (DRY) return true;
-  const r = await fetch(`${BASE}/${enc(path)}`, { method: 'PATCH', headers: H(), body: JSON.stringify({ fields }) });
+  const r = await net(`${BASE}/${enc(path)}`, { method: 'PATCH', headers: H(), body: JSON.stringify({ fields }) });
   return r.ok;
 }
-async function del(path) { if (!DRY) await fetch(`${BASE}/${enc(path)}`, { method: 'DELETE', headers: H() }); }
+async function del(path) { if (!DRY) await net(`${BASE}/${enc(path)}`, { method: 'DELETE', headers: H() }).catch(() => {}); }
+// קריאה חסכונית (r7_quota): רק מסמכים ששדה אחד שלהם עומד בתנאי, במקום כל האוסף
+const fv = v => typeof v === 'number' ? { integerValue: String(Math.round(v)) } : { stringValue: String(v) };
+async function query(col, field, op, value) {
+  const r = await net(`${BASE}/${enc('families/' + CODE)}:runQuery`, {
+    method: 'POST', headers: H(),
+    body: JSON.stringify({ structuredQuery: { from: [{ collectionId: col }], where: { fieldFilter: { field: { fieldPath: field }, op, value: fv(value) } } } })
+  });
+  if (!r.ok) throw new Error('קריאה נכשלה ' + col + ': ' + r.status);
+  return (await r.json()).filter(x => x.document).map(x => Object.assign({ id: idOf(x.document) }, obj(x.document.fields)));
+}
 
 // ---- שעון ישראל ----
 function parts(t) {
@@ -129,24 +171,24 @@ async function tmExams() {
   try { rt = fs.readFileSync(TM_STATE, 'utf8').trim(); } catch (e) {}
   const keep = r => { try { fs.mkdirSync('.state', { recursive: true }); fs.writeFileSync(TM_STATE, r); } catch (e) {} };
   if (rt) {
-    const r = await fetch(`https://securetoken.googleapis.com/v1/token?key=${TM_KEY}`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(rt) });
+    const r = await net(`https://securetoken.googleapis.com/v1/token?key=${TM_KEY}`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(rt) });
     if (r.ok) { const j = await r.json(); tk = j.id_token; keep(j.refresh_token); }
   }
   if (!tk) {
-    const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${TM_KEY}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"returnSecureToken":true}' });
+    const r = await net(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${TM_KEY}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"returnSecureToken":true}' });
     if (!r.ok) throw new Error('teach-me sign-in ' + r.status);
     const j = await r.json(); tk = j.idToken; keep(j.refreshToken);
   }
   const TB = `https://firestore.googleapis.com/v1/projects/${TM_PROJECT}/databases/(default)/documents`;
   const un = x => { if (x && typeof x.j === 'string') { try { return JSON.parse(x.j); } catch (e) {} } return x || {}; };
-  const r = await fetch(`${TB}/meta/examDates`, { headers: { Authorization: 'Bearer ' + tk } });
+  const r = await net(`${TB}/meta/examDates`, { headers: { Authorization: 'Bearer ' + tk } });
   if (!r.ok) throw new Error('teach-me examDates ' + r.status);
   const dates = un(obj((await r.json()).fields)).dates || {};
   const info = {};
   try {
     let pt = '';
     for (let i = 0; i < 20; i++) {
-      const u = await fetch(`${TB}/uploads?pageSize=300${pt ? '&pageToken=' + encodeURIComponent(pt) : ''}`, { headers: { Authorization: 'Bearer ' + tk } });
+      const u = await net(`${TB}/uploads?pageSize=300${pt ? '&pageToken=' + encodeURIComponent(pt) : ''}`, { headers: { Authorization: 'Bearer ' + tk } });
       if (!u.ok) break;
       const j = await u.json();
       for (const d of j.documents || []) { const x = un(obj(d.fields)), ne = x && x.newExam; if (ne && ne.id) info[ne.id] = { pid: x.pid, subj: ne.subj, hide: !!x.hide }; }
@@ -191,10 +233,26 @@ async function main() {
       if (!(await put(`${F}/dev/${uid}`, { ...base, ok: true }))) await put(`${F}/dev/${uid}`, { ...base, ok: false });
     } else if (me.ok !== true) { console.log('שרת ההתראות מחכה לאישור של אבא או אמא בלשונית "הבית" > "טלפונים במשפחה".'); process.exit(1); }
   }
+  // אם ההרצה הקודמת הייתה מזמן (cron-job.org נעצר), משלימים את מה שפוספס מאז, עד 3 שעות אחורה (r7_server)
+  const hp = await getDoc(F + '/prefs/health').catch(() => null);
+  if (hp && Number(hp.at) > 0) WINDOW = Math.min(3 * 3600e3, Math.max(WINDOW, now - Number(hp.at) + 6 * 60e3));
   // נורה ירוקה לאבא: השרת רץ (r5_health)
   await put(F + '/prefs/health', { at: now, run: String(process.env.GITHUB_RUN_ID || '') }).catch(() => {});
   await nightly(F, now).catch(e => console.log('הגיבוי הלילי נכשל:', e.message || e));
-  const [subs, jobs, adv, logs] = await Promise.all([list(F + '/push'), list(F + '/jobs'), getDoc(F + '/prefs/advice'), list(F + '/pushlog')]);
+  // מה כבר נשלח: מסמך אחד (prefs/sentlog) במקום מאות מסמכים ב-pushlog, שנקראו בכל הרצה (r7_quota)
+  const slDoc = await getDoc(F + '/prefs/sentlog');
+  let sentMap = {};
+  try { sentMap = JSON.parse((slDoc && slDoc.j) || '{}') || {}; } catch (e) {}
+  if (!slDoc) {
+    const old = await list(F + '/pushlog').catch(() => []);
+    for (const l of old) sentMap[l.id] = Number(l.at) || now;
+    for (const l of old.slice(0, 400)) await del(`${F}/pushlog/${l.id}`);
+  }
+  const [subs0, jobs, adv, devl] = await Promise.all([list(F + '/push'), query('jobs', 'due', 'GREATER_THAN_OR_EQUAL', now - WINDOW), getDoc(F + '/prefs/advice'), list(F + '/dev').catch(() => null)]);
+  // טלפון שנותק (או נדחה) לא מקבל יותר התראות, וההרשמה שלו נמחקת (r7_phones)
+  const okDev = devl && new Set(devl.filter(d => d.ok === true).map(d => d.id));
+  const subs = subs0.filter(x => !okDev || !x.uid || okDev.has(x.uid));
+  if (okDev) for (const x of subs0) if (x.uid && !okDev.has(x.uid)) await del(`${F}/push/${x.id}`);
   if (process.env.SHOW_ADV) { const pr = await list(F + '/people').catch(e => String(e)); const pf = await list(F + '/prefs').catch(e => String(e)); console.log('בדיקה: משימות', jobs.length, 'פרופילים', Array.isArray(pr) ? pr.length : pr, 'prefs', Array.isArray(pf) ? pf.map(d => d.id).join(',') : pf, 'advice?', adv === null ? 'אין מסמך' : Object.keys(adv).length + ' שדות'); }
   if (process.env.SHOW_ADV) console.log('החלטות:', JSON.stringify(Object.fromEntries(Object.entries(adv || {}).map(([k, v]) => [k, k.startsWith('_') ? v : (v && v.s)]))));
   // "צא לפיתוח": אבא לחץ באפליקציה, ההחלטות נכתבות לקובץ בריפו כדי שקלוד יקרא אותן
@@ -209,9 +267,9 @@ async function main() {
       console.log('בקשת פיתוח נכתבה ל-dev/request.json');
     }
   }
-  if (!subs.length) { console.log('אין טלפונים רשומים להתראות.'); return; }
+  if (!subs.length) { console.log('אין טלפונים רשומים להתראות.'); if (!slDoc) await put(F + '/prefs/sentlog', { j: JSON.stringify(sentMap), at: now }); return; }
   const on = id => ((adv && adv[id] && adv[id].s) || ADV0[id]) === 'yes';
-  const sent = new Set(logs.map(l => l.id));
+  const sent = new Set(Object.keys(sentMap));
   const out = []; // {key, who:[...], body, tab}
 
   for (const j of jobs) {
@@ -228,7 +286,7 @@ async function main() {
 
   // תזכורות מהפעמון: משימות אישיות (רק לבעלים) ומשימות משפחתיות (לאבא ולאמא)
   {
-    const [ppl, famd] = await Promise.all([list(F + '/people'), getDoc(F + '/prefs/family')]);
+    const ppl = await list(F + '/people');
     const tp = parts(now), td = ymd(tp.y, tp.m, tp.d);
     const hsh = t => { let x = 0; for (const c of t) x = (x * 31 + c.codePointAt(0)) | 0; return (x >>> 0).toString(36); };
     const scan = (d, owner, who, tab) => {
@@ -257,7 +315,7 @@ async function main() {
 
   // פידבק כתוב מההורים: התראה לילדה כשמגיע פידבק חדש
   {
-    const nts = await list(F + '/notes').catch(() => []);
+    const nts = await query('notes', 'at', 'GREATER_THAN_OR_EQUAL', now - 6 * 3600e3).catch(() => []);
     for (const n of nts) {
       const at = Number(n.at) || 0;
       if (!n.to || n.seen || !at || now - at > 6 * 3600e3) continue;
@@ -311,7 +369,7 @@ async function main() {
 
   // בקשות החלפה בתורנות של לוני: הודעה למי שביקשו ממנה, ולמבקשת כשענו לה
   {
-    const sw = await list(F + '/swaps').catch(() => []);
+    const sw = await query('swaps', 'at', 'GREATER_THAN_OR_EQUAL', now - 12 * 3600e3).catch(() => []);
     const NM = { dad: 'אבא', mom: 'אמא', ziv: 'זיו', roni: 'רוני', hili: 'הילי', aviv: 'אביב' };
     for (const x of sw) {
       const at = Number(x.at) || 0;
@@ -397,7 +455,11 @@ async function main() {
 
   // לוח משפחתי: תזכורות לאירועים (ולבחינות מ-teach-me שהוגדרה להן תזכורת). אין הגדרה = אין תזכורת
   {
-    const [evs, tmo] = await Promise.all([list(F + '/cal'), list(F + '/caltm')]);
+    // בכל הרצה: רק אירועים שהוגדרה להם תזכורת. ב-16:00 (תזכורת בחינות): כל הלוח
+    const p16 = parts(now), t16a = localToUtc(p16.y, p16.m, p16.d, 16, 0), examRun = t16a <= now && now - t16a <= WINDOW;
+    const [evs, tmo] = examRun
+      ? await Promise.all([list(F + '/cal'), list(F + '/caltm')])
+      : await Promise.all([query('cal', 'rem', 'GREATER_THAN', ''), query('caltm', 'rem', 'GREATER_THAN', '')]);
     const ALL = ['dad', 'mom', ...KIDS];
     const KN = { cls: ['חוג', '🎨'], exam: ['בחינה', '📝'], event: ['אירוע', '🎉'], bday: ['יום הולדת', '🎂'], appt: ['תור', '🩺'], other: ['אחר', '📌'] };
     const p = parts(now);
@@ -448,8 +510,7 @@ async function main() {
     }
 
     // בחינות: תזכורת אחת לכל בת, יומיים לפני, ב-16:00 (בלי קשר לתזכורת שהוגדרה ביומן)
-    const t16 = localToUtc(p.y, p.m, p.d, 16, 0);
-    if (t16 <= now && now - t16 <= WINDOW) {
+    if (examRun) {
       const D2 = dk(2), NMK = { ziv: 'זיו', roni: 'רוני', hili: 'הילי', aviv: 'אביב' };
       let tm = null;
       try { tm = await tmExams(); console.log('בחינות מ-teach-me:', tm.length); }
@@ -490,24 +551,32 @@ async function main() {
     }
   }
 
-  for (const n of out) {
-    if (sent.has(n.key)) continue;
-    const targets = subs.filter(s => n.who.includes(s.who));
-    for (const s of targets) {
-      const payload = JSON.stringify({ title: 'yaya', body: n.body, tab: n.tab, tag: n.key });
-      if (DRY) { console.log('DRY', s.who, n.body); continue; }
-      try { await webpush.sendNotification(JSON.parse(s.sub), payload, { TTL: 3600, urgency: 'high' }); }
-      catch (e) {
-        if (e.statusCode === 404 || e.statusCode === 410) await del(`${F}/push/${s.id}`);
-        console.log('שליחה נכשלה', s.who, e.statusCode || e.message);
+  // המאגר פומבי: בדוח לא נכתבים תוכן ההודעות או שמות (r7_logs)
+  let nSent = 0, nPh = 0, nFail = 0, changed = !slDoc;
+  const saveLog = async () => {
+    for (const k in sentMap) if (now - Number(sentMap[k]) > 3 * 864e5) { delete sentMap[k]; changed = true; }
+    if (changed) await put(F + '/prefs/sentlog', { j: JSON.stringify(sentMap), at: now });
+    changed = false;
+  };
+  try {
+    for (const n of out) {
+      if (sent.has(n.key)) continue;
+      sent.add(n.key);
+      const targets = subs.filter(s => n.who.includes(s.who));
+      for (const s of targets) {
+        const payload = JSON.stringify({ title: 'yaya', body: n.body, tab: n.tab, tag: n.key });
+        if (DRY) { console.log('DRY', s.who, n.body); continue; }
+        try { await webpush.sendNotification(JSON.parse(s.sub), payload, { TTL: 3600, urgency: 'high' }); nPh++; }
+        catch (e) {
+          if (e.statusCode === 404 || e.statusCode === 410) await del(`${F}/push/${s.id}`);
+          nFail++; console.log('שליחה נכשלה:', e.statusCode || 'שגיאה');
+        }
       }
+      sentMap[n.key] = now; changed = true; nSent++;
+      if (nSent % 5 === 0) await saveLog();
     }
-    await put(`${F}/pushlog/${n.key}`, { at: now });
-    console.log('נשלח:', n.body, '→', n.who.join(','), '(' + targets.length + ' טלפונים)');
-  }
-
-  // ניקוי רישומים ישנים
-  for (const l of logs) if (l.at && now - l.at > 3 * 864e5) await del(`${F}/pushlog/${l.id}`);
+  } finally { await saveLog(); }
+  console.log('נשלחו ' + nSent + ' התראות (' + nPh + ' טלפונים' + (nFail ? ', ' + nFail + ' נכשלו' : '') + ')');
 }
 
 main().catch(e => { console.error(e.message || e); process.exit(1); });
