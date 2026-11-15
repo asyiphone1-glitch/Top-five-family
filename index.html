@@ -542,6 +542,9 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
 .cbx i{width:12px;height:12px;border-radius:50%}
 .cme{margin:10px 0 0}
 .cwarn{color:var(--warn);font-weight:600;font-size:.92rem;margin:6px 0 0}
+.cpaste{width:100%;margin:0 0 10px}
+.cpta{min-height:96px;resize:vertical;font:inherit}
+.cpmsg{margin:-4px 0 10px;font-weight:600;color:var(--accent)}
 .cwarn:empty{display:none}
 .cview p{margin:4px 0}
 .cview .cvt{font:700 1.25rem var(--display)}
@@ -4353,6 +4356,23 @@ function paintCalForm(){
     return;
   }
   if(!cf.isNew){const sb=studyBtn(ev,cf.day);if(sb){sb.style.margin='0 0 10px';f.append(sb);}}
+  if(cf.isNew){
+    if(!cf.paste){
+      const pb=h('button','btn quiet cpaste',cf.pmsg?'📋 הדבקה אחרת':'📋 הדבקת הודעה');pb.type='button';
+      pb.onclick=async()=>{keep();cf.pmsg='';cf.paste={txt:''};let got='';
+        try{if(navigator.clipboard&&navigator.clipboard.readText)got=String(await navigator.clipboard.readText()||'');}catch(e){}
+        if(!cf)return;
+        cf.paste.txt=got;if(got.trim()&&/\d|מחר|היום|יום /.test(got)){cf.paste.txt=got;pasteFill();return;}
+        paintCalForm();const a=$('cfPaste');if(a)a.focus();};
+      f.append(pb);
+      if(cf.pmsg){const pm=h('p','cpmsg',cf.pmsg);pm.setAttribute('role','status');f.append(pm);}
+    }else{
+      f.append(lbl('cfPaste','הדביקו כאן את ההודעה'));
+      const ta=h('textarea','field cpta');ta.id='cfPaste';ta.rows=4;ta.value=cf.paste.txt||'';ta.oninput=()=>{cf.paste.txt=ta.value;};f.append(ta);
+      const fb=h('button','btn pri','מילוי מההודעה');fb.type='button';fb.onclick=pasteFill;f.append(fb);
+      if(cf.paste.msg)f.append(h('p','cwarn',cf.paste.msg));
+    }
+  }
   f.append(lbl('cfTitle','מה?'));
   const ti=h('input','field');ti.id='cfTitle';ti.maxLength=80;ti.autocomplete='off';ti.placeholder='למשל: חוג ג׳ודו, בחינה בחשבון, בת מצווה';ti.value=ev.title||'';f.append(ti);
   const kr=h('div','chips');kr.setAttribute('role','group');kr.setAttribute('aria-label','סוג');
@@ -4416,6 +4436,93 @@ function dupWarn(day,title){
   const hit=tmEvents().filter(x=>x.date===day&&kids.includes(x.who[0]));
   if(!hit.length)return '';
   return hit.map(x=>'ל'+byId[x.who[0]].name+' כבר יש '+x.title+' ביום הזה ב-\u2068teach-me\u2069').join('. ')+'. אם זו אותה בחינה, אין צורך להוסיף, היא כבר מופיעה בלוח.';
+}
+/* --- הדבקת הודעה (וואטסאפ וכו') → אירוע מוכן לבדיקה --- */
+function pasteParse(raw,now){
+  now=now||new Date();
+  const HB='֐-׿',NB='(^|[^'+HB+'0-9])',NE='(?=$|[^'+HB+'])';
+  let t=String(raw||'').replace(/\r/g,'').replace(/[״“”]/g,'"').replace(/[׳‘’]/g,"'").replace(/\[\d{1,2}[:.]\d{2}[^\]]*\]\s*[^:\n]{0,30}:\s*/g,'').trim();
+  const d0=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const ad=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x;};
+  const dk=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const out={title:'',date:'',time:'',end:'',place:'',who:[],fam:false,found:[]};
+  let rest=t;const cut=s=>{rest=rest.split(s).join(' ');};
+  /* תאריך */
+  const mk=(y,m,d)=>{const x=new Date(y,m-1,d);return x.getMonth()===m-1&&x.getDate()===d?x:null;};
+  const fut=(m,d,y)=>{if(y){if(y<100)y+=2000;return mk(y,m,d);}let x=mk(now.getFullYear(),m,d);if(x&&x<ad(d0,-30))x=mk(now.getFullYear()+1,m,d);return x;};
+  let date=null,m;
+  const reNum=/(^|[^\d:])(\d{1,2})[./](\d{1,2})(?:[./](\d{4}|\d{2}))?(?![\d:])/g;
+  while(!date&&(m=reNum.exec(t))){const x=fut(+m[3],+m[2],m[4]?+m[4]:0);if(x){date=x;cut(m[0].slice(m[1].length));}}
+  const GM=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+  if(!date){const r=new RegExp('(\\d{1,2})\\s*(?:ב|ל|-)?\\s*('+GM.join('|')+'|מרס)','g');while(!date&&(m=r.exec(t))){const mi=m[2]==='מרס'?3:GM.indexOf(m[2])+1;const x=fut(mi,+m[1]);if(x){date=x;cut(m[0]);}}}
+  const HM={'תשרי':'Tishri','חשון':'Heshvan','חשוון':'Heshvan','מרחשון':'Heshvan','מרחשוון':'Heshvan','כסלו':'Kislev','כסליו':'Kislev','טבת':'Tevet','שבט':'Shevat','אדר א':'Adar I','אדר ב':'Adar II','אדר':'Adar','ניסן':'Nisan','אייר':'Iyar','סיון':'Sivan','סיוון':'Sivan','תמוז':'Tamuz','אב':'Av','מנחם אב':'Av','אלול':'Elul'};
+  const GV={'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,'כ':20,'ל':30};
+  const gem=s=>{s=s.replace(/["']/g,'');if(!s||s.length>3)return 0;let n=0;for(const c of s){if(!GV[c])return 0;n+=GV[c];}return n<=30?n:0;};
+  let hebTxt='';
+  {const names=Object.keys(HM).sort((a,b)=>b.length-a.length).map(x=>x.replace(' ',"\\s*'?\\s*")).join('|');
+   const r=new RegExp(NB+'ב?([א-ל]{1,2}["\']?[א-ט]?)\\s+(?:ב|ל)?('+names+")'?"+NE,'g');
+   while((m=r.exec(t))){const dn=gem(m[2]);if(!dn)continue;const key=m[3].replace(/['\s]+/g,' ').replace(/ $/,'').trim();const en=HM[key]||HM[key.replace(' ','')];if(!en)continue;
+     hebTxt=m[0].slice(m[1].length);cut(hebTxt);
+     if(!date){let F;try{F=new Intl.DateTimeFormat('en-u-ca-hebrew',{day:'numeric',month:'long'});}catch(e){F=null;}
+       if(F)for(let i=-1;i<400;i++){const x=ad(d0,i),p=F.formatToParts(x),dd=+(p.find(q=>q.type==='day')||{}).value,mm=(p.find(q=>q.type==='month')||{}).value||'';
+         if(dd===dn&&(mm===en||(en==='Adar'&&mm==='Adar II'))){date=x;break;}}}
+     break;}
+  }
+  const DN=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+  if(!date){
+    const r=new RegExp(NB+'(מחרתיים|מחר|היום|הערב)'+NE);if((m=r.exec(t))){date=ad(d0,m[2]==='מחרתיים'?2:m[2]==='מחר'?1:0);cut(m[0].slice(m[1].length));}
+  }
+  if(!date){
+    const r=new RegExp(NB+"(?:ב?יום\\s+(ראשון|שני|שלישי|רביעי|חמישי|שישי|שבת)|ב(ראשון|שלישי|רביעי|חמישי|שישי|שבת))(\\s+הקרוב|\\s+הבא)?"+NE);
+    if((m=r.exec(t))){const wd=DN.indexOf(m[2]||m[3]);let n=(wd-d0.getDay()+7)%7;if(m[4]&&/הבא/.test(m[4])&&n<7)n+=n===0?7:0;date=ad(d0,n);}
+  }
+  /* תמיד מנקים את שם היום מהכותרת */
+  rest=rest.replace(new RegExp(NB+"(?:ב?יום\\s+(?:ראשון|שני|שלישי|רביעי|חמישי|שישי|שבת)|ב(?:שישי|שבת))(?:\\s+הקרוב|\\s+הבא)?"+NE,'g'),'$1 ').replace(new RegExp(NB+'(?:מחרתיים|מחר|היום|הערב)'+NE,'g'),'$1 ');
+  if(date){out.date=dk(date);out.found.push('תאריך');}
+  /* שעה */
+  const pad=x=>String(x).padStart(2,'0');
+  const pm=s=>/בערב|אחה"צ|אחר הצהריים|בלילה|אחהצ/.test(s);
+  const tms=[];
+  {const r=/(^|[^\d.\/])([01]?\d|2[0-3]):([0-5]\d)(?![\d.\/])/g;while((m=r.exec(t)))tms.push({h:+m[2],mi:+m[3],i:m.index+m[1].length,s:m[0].slice(m[1].length)});}
+  if(!tms.length){const r=/(?:בשעה|בשעות|שעה|ב-?)\s*(\d{1,2})(?:\.(\d{2}))?(?![\d.:\/])\s*(בבוקר|בערב|בצהריים|אחה"צ|בלילה)?/g;
+    while((m=r.exec(t))){let hh=+m[1];if(hh>23)continue;if(!m[0].includes('שע')&&!m[3])continue;if(m[3]&&pm(m[3])&&hh<12)hh+=12;if(m[3]==='בצהריים'&&hh<6)hh+=12;tms.push({h:hh,mi:+(m[2]||0),i:m.index,s:m[0]});}}
+  if(tms.length){
+    let a=tms[0];const tail=t.slice(a.i+a.s.length,a.i+a.s.length+30);if(pm(tail)&&a.h<12)a.h+=12;
+    out.time=pad(a.h)+':'+pad(a.mi);out.found.push('שעה');
+    const b=tms[1];if(b){const mid=t.slice(a.i+a.s.length,b.i);let bh=b.h;if(bh<a.h&&bh<12)bh+=12;
+      if(/^\s*(?:-|–|—|עד|ועד|ל-?)\s*$/.test(mid)&&(bh*60+b.mi)>(a.h*60+a.mi)){out.end=pad(bh)+':'+pad(b.mi);}}
+    tms.forEach(x=>cut(x.s));
+  }
+  rest=rest.replace(/(?:^|\s)(?:בשעה|בשעות|משעה|עד השעה|החל מ-?|מ-|עד|ב-|ב)?\s*(?:-|–)?\s*(?=\s|$)/g,' ');
+  /* מקום */
+  {const r=/(?:📍\s*|(?:מקום|כתובת|איפה|היכן)\s*:\s*|(?:^|[\s,])ב?)((?:בית העלמין|בית הספר|בית הקברות|בית הכנסת|בית העם|בית ספר|ביה"ס|בי"ס|אולם|גן |מתנ"ס|פארק|מסעדת|מסעדה|רחוב|רח'|מרכז|קניון|כיכר|מועדון|חדר)[^,.\n!?]{0,40})/;
+   if((m=r.exec(t))){out.place=m[1].trim().slice(0,80);out.found.push('מקום');cut(m[1]);}}
+  /* מי */
+  const body=t.replace(/^\s*(שלום|היי|הי|ערב טוב|בוקר טוב|צהריים טובים|שבוע טוב|שבת שלום)[^\n!.,:]{0,25}[!.,:]?/,'');
+  const NM={dad:'אבא',mom:'אמא',ziv:'זיו',roni:'רוני',hili:'הילי',aviv:'אביב'};
+  for(const id in NM){if(new RegExp(NB+'[ולשבהמכ]{0,2}'+NM[id]+NE).test(body))out.who.push(id);}
+  if(new RegExp(NB+'(כל המשפחה|לכל המשפחה|כולנו|כל הבנות)'+NE).test(body)){if(/כל הבנות/.test(body))out.who=['ziv','roni','hili','aviv'];else{out.fam=true;out.who=[];}}
+  if(out.who.length||out.fam)out.found.push('של מי');
+  /* כותרת: המשפט הראשון שנשאר, בלי ברכות, תאריכים ושעות */
+  let r2=rest.replace(/^\s*(שלום|היי|הי|ערב טוב|בוקר טוב|צהריים טובים|שבוע טוב|שבת שלום|הורים יקרים|הורים|תלמידים יקרים|משפחה יקרה|חברים)[^\n!.,:]{0,20}?(לכולם|יקרים|יקרות)?\s*[!.,:]+/,'');
+  r2=r2.replace(new RegExp(NB+'(תוסיף|תוסיפי|להוסיף|ללוח|לאבא|לאמא)'+NE,'g'),'$1 ');
+  const sent=r2.split(/[\n.!?]+/).map(s=>s.replace(new RegExp(NB+'(נקיים את|נקיים|יתקיים|תתקיים|יתקיימו|מתקיים|מתקיימת|ייערך|תיערך|נערוך|אנו מזמינים|מוזמנים ל|מוזמנים|מזכירים ש|תזכורת:?|ביום|בתאריך|בשעה|תאריך|שעה)'+NE,'g'),'$1 ').replace(/[\s,;:\-–]+/g,' ').replace(/(^| )ב( |$)/g,' ').trim()).filter(s=>s.replace(/[^א-תa-z]/gi,'').length>=3);
+  out.title=(sent[0]||'').replace(/^ה(?=[א-ת]{3})/,s=>s).slice(0,60).trim();
+  if(out.title)out.found.unshift('כותרת');
+  out.note=hebTxt?hebTxt.trim().replace(/^ב(?=[א-ל]{1,2}["'])/,''):'';
+  return out;
+}
+function pasteFill(){
+  keep();const txt=String(cf.paste&&cf.paste.txt||'').trim();
+  if(!txt){cf.paste.msg='לא הודבקה הודעה.';paintCalForm();return;}
+  const r=pasteParse(txt),ev=cf.src;
+  if(r.title)ev.title=r.title;if(r.date)ev.date=r.date;
+  if(r.time){ev.time=r.time;ev.end=r.end||'';}if(r.place)ev.place=r.place;if(r.note)ev.note=r.note;
+  if(isAdult(me)){if(r.fam){cf.fam=true;cf.multi=false;cf.who.clear();}else if(r.who.length){cf.fam=false;cf.who=new Set(r.who);cf.multi=r.who.length>1;}}
+  const g=guessKind(ev.title);if(g){cf.kind=g;cf.kindAuto=false;if(g==='cls'&&!cf.rep){cf.rep='w';cf.repAuto=true;}if(g==='bday'&&!cf.rep){cf.rep='y';cf.repAuto=true;}}
+  const miss=[];if(!r.date)miss.push('תאריך');if(isAdult(me)&&!cf.fam&&!cf.who.size)miss.push('של מי');
+  cf.paste=null;cf.pmsg=r.found.length?'✓ מולא מההודעה'+(miss.length?'. לבחור: '+miss.join(', '):''):'לא מצאתי פרטים בהודעה. מלאו ידנית.';
+  paintCalForm();
 }
 async function saveCal(){
   keep();const ev=cf.src,m=$('cfMsg');
