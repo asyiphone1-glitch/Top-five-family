@@ -3069,7 +3069,7 @@ function remind(lines,goTab,quiet){
     }
     ul.append(li);
   });
-  $('popGo').textContent=goTab==='cal'?'ללוח המשפחתי':goTab==='dog'?'ללוח של לוני':goTab==='today'?'למשימות שלי':goTab==='fam'?'למשימות המשפחתיות':'למשימות';
+  $('popGo').textContent=goTab==='cal'?'ללוח המשפחתי':goTab==='dog'?'ללוח של לוני':goTab==='today'?'למשימות שלי':goTab==='food'?'לאוכל והשכמה':goTab==='fam'?'למשימות המשפחתיות':'למשימות';
   $('popGo').onclick=()=>{pop.hidden=true;tab(goTab||'jobs');};
   pop.hidden=false;if(!quiet)chime();
   setTimeout(()=>$('popOk').focus(),50);
@@ -4786,6 +4786,32 @@ function checkFood(){
 }
 setInterval(checkFood,15000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkFood();});
+/* צלצול השכמה בבוקר: רק בטלפון של אבא, בשעת ההשכמה של כל בת ושל אמא. השעה הקבועה לא חלה בשבת */
+function checkWakeRing(){
+  if(me!=='dad'||!code||!db)return;
+  const d=new Date(),k=dkey(d);
+  if(d.getHours()<FOOD_NIGHT||d.getHours()>=13||!foodDays[k])return;
+  const sat=d.getDay()===6,now=Date.now(),byT={};
+  PEOPLE.forEach(p=>{
+    if(p.id==='dad')return;
+    let t='';
+    if(isAdult(p.id))t=((foodDays[k].wakes||{})[p.id])||(sat?'':wakeDef[p.id]||'');
+    else{const w=kidWakeInfo(k,p.id);if(w&&!(sat&&w.src==='f'))t=w.t;}
+    if(/^\d\d:\d\d$/.test(t||''))(byT[t]=byT[t]||[]).push(p.name);
+  });
+  const fire=[];let loud=false;
+  Object.keys(byT).sort().forEach(t=>{
+    const [hh,mm]=t.split(':').map(Number),at=new Date(d.getFullYear(),d.getMonth(),d.getDate(),hh,mm).getTime();
+    if(at>now||now-at>20*60e3)return;
+    const lk='yaya.wkring.'+k+'.'+t;if(LS.get(lk))return;LS.set(lk,'1');
+    if(now-at<=15*60e3)loud=true;
+    const n=byT[t],txt=n.length===1?n[0]:n.slice(0,-1).join(', ')+' ו'+n[n.length-1];
+    fire.push('⏰ '+t+' · זמן להעיר את '+txt);
+  });
+  if(fire.length)remind(fire,'food',!loud);
+}
+setInterval(checkWakeRing,15000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkWakeRing();});
 function openFoodPop(){
   foodAlt=false;kidFood($('foodPopForm'),true);
   $('foodPop').hidden=false;chime();

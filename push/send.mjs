@@ -423,6 +423,42 @@ async function main() {
     }
   }
 
+  // צלצול השכמה בבוקר: רק לאבא, בשעת ההשכמה שנקבעה לכל בת ולאמא (כדי שיעיר אותן).
+  // אותה שעה לכמה אנשים = התראה אחת. השעה הקבועה לא חלה בשבת, רק שעה שנקבעה במיוחד לאותו יום.
+  // התראה שאיחרה ביותר מ-20 דקות לא נשלחת (כבר לא רלוונטית)
+  {
+    const p = parts(now);
+    if (p.h >= 4 && p.h < 13) {
+      const td = ymd(p.y, p.m, p.d);
+      const [fd, wdef] = await Promise.all([getDoc(`${F}/food/${td}`), getDoc(`${F}/prefs/wake`)]);
+      const ord = (fd && fd.orders) || {}, pls = (fd && fd.plans) || {}, wks = (fd && fd.wakes) || {}, wb = (fd && fd.wakeBy) || {};
+      const wd = p.wd === 6 ? {} : (wdef || {});
+      const ok = t => typeof t === 'string' && /^\d\d:\d\d$/.test(t) ? t : '';
+      // אותו סדר עדיפויות כמו באפליקציה: מה שההורה קבע או מה שהבת בחרה (החדש מביניהם), ואם אין, השעה הקבועה
+      const kidWake = id => {
+        const pw = wks[id] && wb[id] && wb[id].at ? { t: wks[id], at: Number(wb[id].at) } : null;
+        const o = ord[id] && ord[id].at ? ord[id] : null, pl = pls[id] && pls[id].at && pls[id].st ? pls[id] : null;
+        const own = o && o.wake ? { t: o.wake, at: Number(o.at) } : (pl && pl.st === 'alt' && pl.alt && pl.alt.wake ? { t: pl.alt.wake, at: Number(pl.alt.at) || 0 } : null);
+        if (pw && (!own || pw.at >= own.at)) return ok(pw.t);
+        if (own) return ok(own.t);
+        return ok(wd[id]);
+      };
+      const NM = { mom: 'אמא', ziv: 'זיו', roni: 'רוני', hili: 'הילי', aviv: 'אביב' };
+      const byT = {};
+      for (const id of [...KIDS, 'mom']) {
+        const t = id === 'mom' ? ok(wks.mom) || ok(wd.mom) : kidWake(id);
+        if (t) (byT[t] = byT[t] || []).push(id);
+      }
+      for (const t in byT) {
+        const [hh, mm] = t.split(':').map(Number), at = localToUtc(p.y, p.m, p.d, hh, mm);
+        if (at > now || now - at > 20 * 60e3) continue;
+        const names = byT[t].map(id => NM[id]);
+        const txt = names.length === 1 ? names[0] : names.slice(0, -1).join(', ') + ' ו' + names[names.length - 1];
+        out.push({ key: `wk_${td}_${t.replace(':', '')}`, who: ['dad'], tab: 'food', body: `⏰ ${t} · זמן להעיר את ${txt}` });
+      }
+    }
+  }
+
   // תכנון אוכל של אבא/אמא לבנות: הודעה לבת על תכנון חדש, להורים על בקשה למשהו אחר, ולבת על התשובה
   {
     const p = parts(now);
