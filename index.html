@@ -2198,15 +2198,16 @@ $('quizSave').onclick=()=>{
 
 /* אלגוריתם השיבוץ: אילוצים קשיחים לא נשברים, והשאר במיטוב */
 function rngOf(seed){let a=(seed>>>0)||1;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
-function planWeek(ws,P,hurt,HI){
-  hurt=hurt||{};HI=HI||{n:{},s:{}};
+function planWeek(ws,P,hurt,HI,lock){
+  hurt=hurt||{};HI=HI||{n:{},s:{}};lock=lock||{};
   const ids=PEOPLE.map(p=>p.id),kids=ids.filter(i=>!isAdult(i));
   const slots=[];
   for(let o=0;o<7;o++){const d=(ws.getDay()+o)%7;SLOTS.forEach(x=>{if(hasSlot(d,x.k))slots.push({d:d,o:o,k:x.k,key:d+'_'+x.k,date:fmt(addDays(ws,o))});});}
   const idx={};slots.forEach((x,i)=>idx[x.o+'_'+x.k]=i);
   const prevI=slots.map(x=>idx[(x.o-1)+'_'+x.k]);
   const blocked=(id,x)=>{const r=P[id];return ruleBlock(id,x.key)||r.block.includes(x.key)||(r.wb||[]).includes(x.key)||r.once.some(o=>o.d===x.date&&o.s.includes(x.k));};
-  const elig=slots.map(x=>ids.filter(id=>!blocked(id,x)));
+  /* משבצת נעולה (כבר עברה או סומנה) נשארת אצל מי שהייתה, ונספרת בהוגנות של כל השבוע */
+  const elig=slots.map(x=>x.key in lock?(lock[x.key]&&ids.includes(lock[x.key])?[lock[x.key]]:[]):ids.filter(id=>!blocked(id,x)));
   const rnd=rngOf(weekNo(ws)*7919+13);
   const SK=SLOTS.map(x=>x.k);
   const hm=kids.reduce((a,k)=>a+(HI.n[k]||0),0)/kids.length;
@@ -2218,7 +2219,7 @@ function planWeek(ws,P,hurt,HI){
      אלא אם בת חסמה כמעט הכול ואין לה יותר משבצות פנויות (ואז היא מקבלת את כל מה שהיא יכולה).
      אבא: עד 4 יותר מכל בת. אמא: 2. משבצת נשארת ריקה רק אם אף אחד לא פנוי בה */
   const U=1000;
-  const mb=(id,u)=>id==='mom'?(u<=2?-100*U:100*U):id==='dad'?U*(2*(u-4)-1)-1:U*(2*u-1);
+  const mb=(id,u)=>id==='mom'?(u<=2?-100*U:100*U):id==='dad'?U*(2*(u-4)-1)+1:U*(2*u-1);
   const tie={};kids.forEach(k=>tie[k]=hd[k]*20+rnd()*10);
   const NS=slots.length,NP=ids.length,S=0,T=NS+NP+1,N=T+1,E=[],G=Array.from({length:N},()=>[]);
   const ae=(u,v,cap,cost)=>{G[u].push(E.length);E.push({v:v,c:cap,w:cost});G[v].push(E.length);E.push({v:u,c:0,w:-cost});};
@@ -2328,12 +2329,18 @@ async function runPlan(wkey,auto){
       }catch(e){}
     }
     await new Promise(r=>setTimeout(r,30));
-    const res=planWeek(parseKey(wkey),P,hurt,HI);
+    /* שיבוץ מחדש באמצע שבוע: מה שכבר עבר או סומן נשאר כמו שהוא, ומשבצים רק את מה שעוד לפנינו */
+    const lock={},cs=cleanWk(cd),nowT=Date.now();
+    if(!auto){for(let o=0;o<7;o++){const dt=addDays(parseKey(wkey),o),wd=dt.getDay();SLOTS.forEach(x=>{if(!hasSlot(wd,x.k))return;const key=wd+'_'+x.k;
+      if(cs.done[key]||dt.getTime()+SLOT_MIN[x.k]*60e3<=nowT)lock[key]=cs.slots[key]||null;});}}
+    const res=planWeek(parseKey(wkey),P,hurt,HI,lock);
     let wrote=false;
     await runTransaction(db,async tx=>{
       const sn=await tx.get(wkRef(wkey));const d=sn.exists()?sn.data():{};
       if(auto&&(d.gen||Object.keys(d.slots||{}).length))return;
-      tx.set(wkRef(wkey),{slots:res.asg,orig:res.asg,done:{},report:res.report,empty:res.empty,cons:d.cons||{},gen:Date.now(),by:me,auto:!!auto});
+      const dc=cleanWk(d),orig=Object.assign({},res.asg),done={};
+      for(const k in lock){if(dc.done[k])done[k]=d.done[k];const o=(dc.orig||{})[k]||dc.slots[k];if(o)orig[k]=o;else delete orig[k];}
+      tx.set(wkRef(wkey),{slots:res.asg,orig:orig,done:done,report:res.report,empty:res.empty,cons:d.cons||{},gen:Date.now(),by:me,auto:!!auto});
       wrote=true;
     });
     dogMsg=wrote&&auto?'השיבוץ לשבוע הבא מוכן. אפשר לראות אותו ב"שבוע הבא".':'';
@@ -2543,7 +2550,7 @@ function paintDog(){
   if(isAdult(me)){
     const missing=PEOPLE.filter(p=>!(people[p.id]||{}).prefsDone).map(p=>p.name);
     if(!has||confirmGen||true){
-      const g=h('button',has?'btn quiet':'btn pri',confirmGen?'ללחוץ שוב לאישור: שיבוץ מחדש ימחק סימוני הוצאה':(has?'שיבוץ מחדש של השבוע':'שיבוץ השבוע לפי השאלונים'));
+      const g=h('button',has?'btn quiet':'btn pri',confirmGen?'ללחוץ שוב לאישור: משבצים מחדש רק מה שעוד לפנינו':(has?'שיבוץ מחדש של השבוע':'שיבוץ השבוע לפי השאלונים'));
       g.type='button';
       g.onclick=()=>{
         if(has&&!confirmGen){confirmGen=true;paintDog();return;}
