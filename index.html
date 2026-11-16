@@ -1843,7 +1843,9 @@ function errLog(msg){
     }).catch(()=>{}).finally(()=>{errBusy=false;});
   }catch(e){}
 }
-window.addEventListener('error',e=>errLog('תקלה בקוד: '+(e.message||'')+(e.lineno?' (שורה '+e.lineno+')':'')));
+/* "Script error." בלי שורה = תקלה מקוד שלא שלנו (תוסף או קוד שהדפדפן מזריק). אין מה לתקן, לא מדווחים */
+const errForeign=m=>/^\s*(תקלה בקוד:\s*)?Script error\.?\s*$/i.test(String(m||''));
+window.addEventListener('error',e=>{if(!e.lineno&&errForeign(e.message))return;errLog('תקלה בקוד: '+(e.message||'')+(e.lineno?' (שורה '+e.lineno+')':''));});
 window.addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&/offline|unavailable|network/i.test(String(r.code||r.message||'')))return;errLog('פעולה נכשלה: '+String((r&&(r.code||r.message))||r||'').slice(0,80));});
 let errs={},errsUnsub=null;
 function subErrs(){
@@ -1855,6 +1857,8 @@ function paintHome(){
   const box=$('presence');if(!box)return;
   box.innerHTML='';
   const now=Date.now();
+  /* מתי הגיעה הגרסה הנוכחית: הזמן הכי מוקדם שטלפון כלשהו דיווח שהוא בה */
+  let updAt=0;PEOPLE.forEach(p=>{const d=(people[p.id]||{}).dev;if(d&&d.ver===APP_VER&&d.since&&(!updAt||d.since<updAt))updAt=d.since;});
   PEOPLE.forEach(p=>{
     const s=(people[p.id]||{}).seen;
     const on=!!s&&now-s<300000;
@@ -1868,11 +1872,13 @@ function paintHome(){
     if(isAdult(me)&&dv){
       const st=h('div','pdev');
       const old=dv.ver&&dv.ver!==APP_VER;
-      st.append(h('span',old?'bad':null,old?'⚠️ גרסה ישנה, צריך לסגור ולפתוח':'✓ גרסה עדכנית'),h('span',dv.push==='on'?null:'bad',PUSHTX[dv.push]||'🔕 התראות לא ידועות'));
+      /* מי שפשוט לא נכנס מאז העדכון יתעדכן לבד בכניסה הבאה. אזהרה רק אם נכנס אחרי העדכון ועדיין בגרסה ישנה */
+      const notYet=old&&updAt&&(dv.at||s||0)<updAt;
+      st.append(old&&notYet?h('span',null,'⏳ '+(p.g==='m'?'לא נכנס':'לא נכנסה')+' מאז העדכון'):h('span',old?'bad':null,old?'⚠️ גרסה ישנה, צריך לסגור ולפתוח':'✓ גרסה עדכנית'),h('span',dv.push==='on'?null:'bad',PUSHTX[dv.push]||'🔕 התראות לא ידועות'));
       if(dv.push!=='web')st.append(h('span',null,dv.app?'📱 מהאייקון':'🌐 מהדפדפן'));
       row.append(st);
     }
-    const el=(errs[p.id]||[]).filter(x=>now-x.at<3*864e5);
+    const el=(errs[p.id]||[]).filter(x=>now-x.at<3*864e5&&!errForeign(x.m));
     if(isAdult(me)&&el.length){
       const er=h('div','perr');
       el.slice(-3).reverse().forEach(x=>{const d=new Date(x.at);er.append(h('div',null,'⚠️ '+x.m+' · '+(dshort(fmt(d)))+' ב-'+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')));});
@@ -1883,6 +1889,7 @@ function paintHome(){
 }
 /* מצב הטלפון: גרסה, התראות, האם נפתח מהאייקון. אבא רואה את זה בלשונית "הבית" */
 const APP_VER=(()=>{try{const t=document.querySelector('script[type="module"]').textContent;let x=5381;for(let i=0;i<t.length;i++)x=((x*33)^t.charCodeAt(i))>>>0;return x.toString(36);}catch(e){return '';}})();
+function verSince(){const k='yaya.verSince';try{const o=JSON.parse(LS.get(k)||'{}');if(o.v===APP_VER&&o.at)return o.at;const at=Date.now();LS.set(k,JSON.stringify({v:APP_VER,at:at}));return at;}catch(e){return Date.now();}}
 let pushSt='';
 async function pushState(){
   try{
@@ -1897,7 +1904,7 @@ async function beat(){
   if(!db||!me||document.hidden)return;
   pushSt=await pushState();
   const app=navigator.standalone===true||matchMedia('(display-mode: standalone)').matches;
-  setDoc(pdoc(me),{name:byId[me].name,seen:Date.now(),dev:{ver:APP_VER,push:pushSt,app:app,at:Date.now()}},{merge:true}).catch(()=>{});
+  setDoc(pdoc(me),{name:byId[me].name,seen:Date.now(),dev:{ver:APP_VER,since:verSince(),push:pushSt,app:app,at:Date.now()}},{merge:true}).catch(()=>{});
   if(myUid)setDoc(devRef(myUid),{pid:me,seen:Date.now(),kind:devKind()},{merge:true}).catch(()=>{});
 }
 const PUSHTX={on:'🔔 התראות פעילות',off:'🔕 התראות כבויות',blocked:'🚫 התראות חסומות בטלפון',web:'🔕 נפתח מהדפדפן, לא מהאייקון',no:'🔕 הטלפון לא תומך בהתראות'};
