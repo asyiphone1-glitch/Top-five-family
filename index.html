@@ -2067,8 +2067,9 @@ const SLOTS=[
   {k:'m',n:'בוקר',t:'לפני בית הספר'},
   {k:'s',n:'אחרי בית הספר',t:'כשחוזרים'},
   {k:'l',n:'12:30',t:''},
-  {k:'a',n:'17:30',t:''},
-  {k:'b',n:'20:00',t:''},
+  {k:'a',n:'17:00',t:''},
+  {k:'c',n:'19:00',t:''},
+  {k:'b',n:'20:30',t:''},
   {k:'n',n:'22:00',t:''}
 ];
 const DAYN=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
@@ -2133,7 +2134,7 @@ function normPrefs(r,id){
           max:(id==='mom'?2:id==='dad'?12:7),wb:[]};
 }
 function loadPrefs(){return normPrefs((people[me]||{}).prefs,me);}
-const SHORT={m:'בוקר',s:'אחרי ביה"ס',l:'12:30',a:'17:30',b:'20:00',n:'22:00'};
+const SHORT={m:'בוקר',s:'אחרי ביה"ס',l:'12:30',a:'17:00',c:'19:00',b:'20:30',n:'22:00'};
 const G=(m,f)=>(byId[me]&&byId[me].g==='m')?m:f;
 function chipRow(list,arr,label,cls){
   const row=h('div','chips');
@@ -2237,7 +2238,7 @@ function planWeek(ws,P,hurt,HI){
   const W={};ids.forEach(id=>W[id]=hurt[id]?1.6:1);
   const DV=6,BW=3;
   function cost(a){
-    let c=0;const dc={},sc={},n={};ids.forEach(i=>{n[i]=0;sc[i]={m:0,s:0,l:0,a:0,b:0,n:0};});
+    let c=0;const dc={},sc={},n={};ids.forEach(i=>{n[i]=0;sc[i]={m:0,s:0,l:0,a:0,c:0,b:0,n:0};});
     for(let i=0;i<a.length;i++){
       const id=a[i];if(!id)continue;
       const x=slots[i],r=P[id],w=W[id];
@@ -2363,7 +2364,7 @@ let consDraft=null,consKey='',consMsg='';
 /* חוגים מהלוח: משבצת של לוני שנופלת מחצי שעה לפני החוג ועד חצי שעה אחרי שהוא נגמר נחסמת אוטומטית לבת.
    נכנסים: אירוע מסוג "חוג", או כל אירוע עם שעה שחוזר כל שבוע, של הבת עצמה (לא "כל המשפחה").
    בוקר = 07:00, אחרי בית הספר = 14:00. חוג בלי שעת סיום נחשב שעה */
-const SLOT_MIN={m:420,s:840,l:750,a:1050,b:1200,n:1320},CLS_PAD=30,CLS_DUR=60;
+const SLOT_MIN={m:420,s:840,l:750,a:1020,c:1140,b:1230,n:1320},CLS_PAD=30,CLS_DUR=60;
 const hmMin=t=>{const a=String(t||'').split(':');return (+a[0])*60+(+a[1]||0);};
 function clsBlocks(id,wkey){
   const out={};if(isAdult(id)||typeof cal==='undefined')return out;
@@ -2663,7 +2664,7 @@ function reportCard(wkey){
   const who=wk.auto?'שובץ אוטומטית ביום חמישי ב-22:00':(byId[wk.by]?'שובץ על ידי '+byId[wk.by].name:'');
   if(who)c.append(h('p','date',who+(wk.gen?', '+new Date(wk.gen).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'}):'')+'.'));
   const cnt={},per={},walks={};
-  PEOPLE.forEach(p=>{cnt[p.id]=0;per[p.id]={m:0,s:0,l:0,a:0,b:0,n:0};walks[p.id]=0;});
+  PEOPLE.forEach(p=>{cnt[p.id]=0;per[p.id]={m:0,s:0,l:0,a:0,c:0,b:0,n:0};walks[p.id]=0;});
   for(const k in wk.slots){const id=wk.slots[k];if(!cnt.hasOwnProperty(id))continue;cnt[id]++;per[id][k.split('_')[1]]++;}
   for(const k in wk.done){const d=wk.done[k];if(d&&walks.hasOwnProperty(d.by))walks[d.by]++;}
   const kc=KIDS.map(k=>cnt[k]),mn=Math.min(...kc),mx=Math.max(...kc);
@@ -3131,7 +3132,7 @@ const TEAM={
   maya:{n:'מאיה כהן',r:'יציבות ותפעול',c:'#6D4C41'}
 };
 const RECS=[
-  {id:'r_dogring',w:'yoav',t:'צלצול גם לתורנות של לוני',d:'מי שבתורנות של 17:30, 20:00 או 22:00 מקבלת צלצול והודעה בשעה עצמה, כמו במשימות. בלי זה התורנות מופיעה רק בלוח.'},
+  {id:'r_dogring',w:'yoav',t:'צלצול גם לתורנות של לוני',d:'מי שבתורנות של 17:00, 19:00, 20:30 או 22:00 מקבלת צלצול והודעה בשעה עצמה, כמו במשימות. בלי זה התורנות מופיעה רק בלוח.'},
   {id:'r_pre10',w:'yoav',t:'תזכורת 10 דקות לפני',d:'צלצול נוסף 10 דקות לפני שעת המשימה, כדי שיהיה זמן להתארגן. החיסרון: שני צלצולים לכל משימה.'},
   {id:'r_limit2',w:'tamar',t:'עד 2 משימות פתוחות לכל ילדה בבת אחת',d:'מונע מצב שהזריזה לוקחת את כל המשימות הנוחות ולאחרות נשארות הקשות. כשהיא מסיימת אחת, אפשר לקחת עוד.'},
   {id:'r_release',w:'noa',t:'אפשר להחזיר משימה שלקחת',d:'ילדה שלקחה משימה פתוחה ולא מספיקה יכולה להחזיר אותה לרשימה, ואחות אחרת תיקח. בלי זה המשימה נתקעת אצלה.'},
@@ -3789,7 +3790,7 @@ function subCurWk(){
   if(curUnsub)curUnsub();
   curUnsub=onSnapshot(wkRef(fmt(dogWk(new Date()))),s=>{const d=cleanWk(s.exists()?s.data():{});curWk={slots:d.slots||{},done:d.done||{},orig:d.orig||null};checkRem();appBadge();paintPodium(false);paintKidsTab();},()=>{});
 }
-const DOGT={l:[12,30],a:[17,30],b:[20,0],n:[22,0]};
+const DOGT={l:[12,30],a:[17,0],c:[19,0],b:[20,30],n:[22,0]};
 function remTargets(j){if(j.done)return [];if(j.to==='fam')return PEOPLE.map(p=>p.id);if(j.claim&&j.to==='all')return [j.claim];if(j.to!=='all')return [j.to];return KIDS;}
 function checkRem(){
   if(!me||!code||!db)return;
@@ -5490,7 +5491,7 @@ $('pushTest').onclick=()=>{
    תמונות של הבנות, הדמויות המצוירות, מי מוציא את לוני עכשיו ואחר כך, והלו"ז של היום.
    נפתח מהגדרות (אבא או אמא). הטאבלט זוכר ונפתח ישר בתצוגה, עד שיוצאים ממנה */
 const TV_MS=10000,TV_MAXPIC=60;
-const DOGHM={m:[7,0],l:[12,30],s:[14,0],a:[17,30],b:[20,0],n:[22,0]};
+const DOGHM={m:[7,0],l:[12,30],s:[14,0],a:[17,0],c:[19,0],b:[20,30],n:[22,0]};
 const hmOf=k=>DOGHM[k][0]*60+DOGHM[k][1];
 let tvOn=false,tvT=null,tvClk=null,tvI=-1,tvPics=[],tvPicI=0,tvPicUnsub=null,tvLock=null,tvCtlT=null,tvWhoSel='ziv';
 const tvCol=()=>collection(db,'families',code,'tvpic');
