@@ -5487,7 +5487,7 @@ $('pushTest').onclick=()=>{
 };
 
 /* ---------- מסך תצוגה לטאבלט: שקפים מתחלפים כל 10 שניות ----------
-   תמונות של הבנות, הדמויות המצוירות, מי מוציאה את לוני עכשיו ואחר כך, והלו"ז של היום.
+   תמונות של הבנות, הדמויות המצוירות, מי מוציא את לוני עכשיו ואחר כך, והלו"ז של היום.
    נפתח מהגדרות (אבא או אמא). הטאבלט זוכר ונפתח ישר בתצוגה, עד שיוצאים ממנה */
 const TV_MS=10000,TV_MAXPIC=60;
 const DOGHM={m:[7,0],l:[12,30],s:[14,0],a:[17,30],b:[20,0],n:[22,0]};
@@ -5549,12 +5549,12 @@ function tvChars(s){
   s.append(row);return true;
 }
 function tvLuni(s){
-  s.append(h('div','tvh','🐾 מי מוציאה את לוני?'));
+  s.append(h('div','tvh','🐾 מי מוציא את לוני?'));
   const L=tvWalks(2),box=h('div','tvwk');
   if(!L.length){s.append(h('div','tvfree','עוד לא שובצה תורנות'));return true;}
   L.forEach((w,i)=>{
     const c=h('div','tvw'+(i===0?' main':''));c.style.setProperty('--c',w.who?tvC(w.who):'#9AA8C4');
-    c.append(h('div','lbl',i===0?'הבאה בתור':'ואחר כך'));
+    c.append(h('div','lbl',i===0?'עכשיו בתור':'ואחר כך'));
     if(w.who&&byId[w.who])c.append(figure(w.who,240),h('div','nm',byId[w.who].name));
     else c.append(h('div','nm','עוד לא שובץ'));
     c.append(h('div','wh'+(w.now?' now':''),tvWhen(w)));
@@ -5611,7 +5611,7 @@ function tvProg(s){
     r.append(avatar(id,Math.round(Math.min(innerWidth,innerHeight)*.11)));
     const mid=h('div','m');mid.append(h('b',null,byId[id].name));
     const bar=h('div','bar'),f=h('i');f.style.width=(tot?Math.round(100*dn/tot):0)+'%';bar.append(f);mid.append(bar);
-    r.append(mid,h('div','n',!tot?'אין משימות':dn===tot?'סיימה הכול 🎉':dn+' מתוך '+tot));
+    r.append(mid,h('div','n',!tot?'אין משימות':dn===tot?'הכול בוצע 🎉':dn+' מתוך '+tot));
     box.append(r);
   });
   s.append(box);return true;
