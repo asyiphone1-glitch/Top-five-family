@@ -469,13 +469,15 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
 .chip.ctoday{min-height:34px;padding:2px 12px;font-size:.85rem;margin:0 0 4px}
 .csum{margin:6px 0 4px;font-size:.95rem}
 .cday{margin-top:8px;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
-.cday.today{border:2px solid var(--accent)}
+.cday.today{border:2px solid var(--accent);box-shadow:0 4px 16px color-mix(in srgb,var(--accent) 28%,transparent)}
 .cday.past{opacity:.72}
 .cdh{display:flex;align-items:baseline;gap:8px;padding:7px 14px;background:var(--soft)}
 .cdh b{font:800 1.3rem var(--display);min-width:1.4em}
 .cdh span{font-weight:700}
 .cdh small{margin-inline-start:auto;color:var(--mute);font-size:.82rem;font-weight:600}
-.cday.today .cdh{background:color-mix(in srgb,var(--accent) 14%,var(--surface))}
+.cday.today .cdh,.cday.today.empty .cdh{background:var(--accent);color:#fff;padding:7px 14px}
+.cday.today .cdh small{color:#fff;opacity:.9}
+.cday.today .cdh span{font-size:1.08rem}
 .cday.empty .cdh{background:transparent;padding:4px 14px}
 .cday.empty .cdh b{font-size:1.05rem;color:var(--mute)}
 .cday.empty .cdh span{font-weight:500;color:var(--mute)}
@@ -4300,10 +4302,11 @@ function paintWeekCal(box){
   const s=sunday(k2d(calAnchor)),e=addDays(s,6),a=dkey(s),b=dkey(e);
   const lab=s.getMonth()===e.getMonth()?s.getDate()+'–'+e.getDate()+' ב'+MONTHS[s.getMonth()]:s.getDate()+'.'+(s.getMonth()+1)+' – '+e.getDate()+'.'+(e.getMonth()+1);
   calNav(box,lab,()=>{calAnchor=dkey(addDays(s,-7));paintCal();},()=>{calAnchor=dkey(addDays(s,7));paintCal();},a<=calHome()&&calHome()<=b);
-  const items=calItems(a,b);
-  const cnt=items.length;
-  box.append(h('p','progress csum',cnt?(cnt===1?'אירוע אחד השבוע':cnt+' אירועים השבוע'):'אין אירועים השבוע'));
-  for(let i=0;i<7;i++){
+  const cur=a<=today()&&today()<=b,from=cur?k2d(today()).getDay():0;
+  const items=calItems(cur?today():a,b);
+  const cnt=items.length,wl=cur&&from>0?' עד שבת':' השבוע';
+  box.append(h('p','progress csum',cnt?(cnt===1?'אירוע אחד'+wl:cnt+' אירועים'+wl):'אין אירועים'+wl));
+  for(let i=from;i<7;i++){
     const d=addDays(s,i),k=dkey(d),L=items.filter(it=>it.day===k);
     const sec=h('section','cday'+(k===today()?' today':'')+(L.length?'':' empty')+(k<today()?' past':''));
     const hd=h('div','cdh');
