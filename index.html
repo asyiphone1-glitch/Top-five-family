@@ -776,7 +776,6 @@ body.tv .pop,body.tv .toast{display:none!important}
   </div>
 
   <div id="tab-dog" hidden>
-    <div id="podBox"></div>
     <div id="dogBox"></div>
     <div class="card" id="quizCard">
       <h3>השאלון שלי לתורנויות</h3>
@@ -803,6 +802,7 @@ body.tv .pop,body.tv .toast{display:none!important}
   </div>
 
   <div id="tab-set" hidden>
+    <div id="podBox"></div>
     <div id="advCard" class="card" hidden>
       <button id="advOpen" class="btn quiet" type="button" aria-expanded="false" aria-controls="advIn"></button>
       <div id="advIn" hidden><div id="advTabs" class="chips" role="group" aria-label="קטגוריות המלצות"></div><div id="advBox"></div></div>
@@ -1938,8 +1938,8 @@ function tab(n){
   });
   $('gearBtn').classList.toggle('on',n==='set');
   if(n==='home')paintHome();
-  if(n==='set'){paintSettings();paintPush();}
-  if(n==='dog'){paintDog();paintPodium(true);quizShow(false);}
+  if(n==='set'){paintSettings();paintPush();paintPodium(true);}
+  if(n==='dog'){paintDog();quizShow(false);}
   if(n==='kids')paintKidsTab();
   if(n==='jobs'||n==='today')paintJobs();
   if(n==='jobs')paintSent();
@@ -2761,7 +2761,7 @@ function podScores(){
   return KIDS.map(k=>Object.assign({id:k},acc[k])).sort((a,b)=>b.pts-a.pts||b.w-a.w||b.cover-a.cover||KIDS.indexOf(a.id)-KIDS.indexOf(b.id));
 }
 function paintPodium(animate){
-  const box=$('podBox');if(!box||!me||$('tab-dog').hidden)return;
+  const box=$('podBox');if(!box||!me||$('tab-set').hidden)return;
   const rows=podScores();
   const sig=podMode+JSON.stringify(rows);
   if(!animate&&sig===podSig)return;

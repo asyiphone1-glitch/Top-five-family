@@ -367,6 +367,36 @@ async function main() {
     }
   }
 
+  // תוצאות השבוע: בשישי ב-12:00 כולם מקבלים את הדירוג של שבוע לוני שהסתיים בחמישי
+  // (אותו חישוב כמו בפודיום שבהגדרות: הוצאה 10, לקחה מאחרת 5, מעבר למתוכנן 5, ונקודות על משימות מההורים)
+  {
+    const p = parts(now), t12 = localToUtc(p.y, p.m, p.d, 12, 0);
+    if (p.wd === 5 && t12 <= now && now - t12 <= WINDOW) {
+      const lf = new Date(Date.UTC(p.y, p.m - 1, p.d) - 7 * 864e5);
+      const lk = ymd(lf.getUTCFullYear(), lf.getUTCMonth() + 1, lf.getUTCDate());
+      const from = localToUtc(lf.getUTCFullYear(), lf.getUTCMonth() + 1, lf.getUTCDate(), 0, 0), to = localToUtc(p.y, p.m, p.d, 0, 0);
+      const wk = await getDoc(`${F}/weeks/${lk}`).catch(() => null);
+      const PT = { walk: 10, cover: 5, extra: 5 };
+      const acc = Object.fromEntries(KIDS.map(k => [k, { pts: 0, w: 0, cover: 0 }]));
+      const done = (wk && wk.done) || {}, orig = wk && wk.orig;
+      for (const key in done) {
+        const dn = done[key]; if (!dn || !acc[dn.by]) continue;
+        const q = acc[dn.by]; q.w++; q.pts += PT.walk;
+        if (orig) { const o = orig[key]; if (!o) q.pts += PT.extra; else if (o !== dn.by) { q.cover++; q.pts += PT.cover; } }
+      }
+      if (on('r5_taskpts')) {
+        const dj = await query('jobs', 'doneAt', 'GREATER_THAN_OR_EQUAL', from).catch(() => []);
+        for (const j of dj) { const pt = Number(j.pts) || 0, at = Number(j.doneAt) || 0; if (pt && j.done && acc[j.doneBy] && at < to) acc[j.doneBy].pts += pt; }
+      }
+      const NM = { ziv: 'זיו', roni: 'רוני', hili: 'הילי', aviv: 'אביב' }, MD = ['🥇', '🥈', '🥉', '4.'];
+      const rows = KIDS.map(id => ({ id, ...acc[id] })).sort((a, b) => b.pts - a.pts || b.w - a.w || b.cover - a.cover || KIDS.indexOf(a.id) - KIDS.indexOf(b.id));
+      const body = rows[0].pts > 0
+        ? '🏆 תוצאות השבוע: ' + rows.map((r, i) => `${MD[i]} ${NM[r.id]} ${r.pts}`).join(' · ') + ' נק׳. שבוע טוב ושבת שלום!'
+        : '🏆 השבוע לא נצברו נקודות. שבוע חדש מתחיל עכשיו, בהצלחה!';
+      out.push({ key: `wr_${lk}`, who: ['dad', 'mom', ...KIDS], tab: 'set', body });
+    }
+  }
+
   // בקשות החלפה בתורנות של לוני: הודעה למי שביקשו ממנה, ולמבקשת כשענו לה
   {
     const sw = await query('swaps', 'at', 'GREATER_THAN_OR_EQUAL', now - 12 * 3600e3).catch(() => []);
