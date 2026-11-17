@@ -382,6 +382,7 @@ async function main() {
       for (const key in done) {
         const dn = done[key]; if (!dn || !acc[dn.by]) continue;
         const q = acc[dn.by]; q.w++; q.pts += PT.walk;
+        if (/^x_/.test(key)) { q.pts += PT.extra; continue; }
         if (orig) { const o = orig[key]; if (!o) q.pts += PT.extra; else if (o !== dn.by) { q.cover++; q.pts += PT.cover; } }
       }
       if (on('r5_taskpts')) {

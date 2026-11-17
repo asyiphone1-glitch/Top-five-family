@@ -2332,6 +2332,7 @@ async function runPlan(wkey,auto){
       const sn=await tx.get(wkRef(wkey));const d=sn.exists()?sn.data():{};
       if(auto&&(d.gen||Object.keys(d.slots||{}).length))return;
       const dc=cleanWk(d),orig=Object.assign({},res.asg),done={};
+      for(const k in dc.done)if(/^x_/.test(k))done[k]=d.done[k];
       for(const k in lock){if(dc.done[k])done[k]=d.done[k];const o=(dc.orig||{})[k]||dc.slots[k];if(o)orig[k]=o;else delete orig[k];}
       tx.set(wkRef(wkey),{slots:res.asg,orig:orig,done:done,report:res.report,empty:res.empty,cons:d.cons||{},gen:Date.now(),by:me,auto:!!auto});
       wrote=true;
@@ -2441,7 +2442,9 @@ function consCard(wkey){
 /* ניקוד: הוצאה 10, לקחת משמרת של מישהו אחר 5 בונוס, הוצאה שלא תוכננה לאף אחד 5 בונוס */
 const PTS={walk:10,cover:5,extra:5};
 function bonusOf(d,key){
-  const dn=(d.done||{})[key];if(!dn||!d.orig)return '';
+  const dn=(d.done||{})[key];if(!dn)return '';
+  if(/^x_/.test(key))return 'extra';
+  if(!d.orig)return '';
   const o=d.orig[key];
   if(!o)return 'extra';
   return o!==dn.by?'cover':'';
@@ -2484,6 +2487,10 @@ function paintDog(){
     g.onclick=()=>{weekStart=dogWk(new Date());draft=null;subWeek();};box.append(g);}
 
   if(dogMsg){const m=h('div','note ok',dogMsg);m.setAttribute('role','status');box.append(m);}
+  if(wkey===cur){
+    const xb=h('button','btn pri','🐾 הוצאתי את לוני עכשיו, מעבר לתוכנית');xb.type='button';
+    xb.style.cssText='width:100%;margin-bottom:10px';xb.onclick=()=>extraWalk(wkey);box.append(xb);
+  }
 
   /* שאלון חסר */
   if(!(people[me]||{}).prefsDone){
@@ -2614,6 +2621,24 @@ function paintDog(){
       if(draft==='c:'+key&&a===me&&!dn)row.append(cantForm(wkey,key));
       card.append(row);
     });
+    Object.keys(wk.done).filter(k=>/^x_/.test(k)&&wk.done[k]&&wk.done[k].at&&fmt(new Date(wk.done[k].at))===dk)
+      .sort((x,y)=>wk.done[x].at-wk.done[y].at).forEach(k=>{
+        const dn=wk.done[k],t=new Date(dn.at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+        const row=h('div','slot done');
+        const tm=h('div','tm',t);tm.append(h('small',null,'מעבר לתוכנית'));
+        const mid=h('div');
+        const who=h('div','who2'+(dn.by===me?' me':''),byId[dn.by]?byId[dn.by].name:'');
+        who.style.cssText='display:flex;align-items:center;gap:8px';if(byId[dn.by])who.prepend(avatar(dn.by,30));
+        mid.append(who,h('div','st ok','✓ '+(byId[dn.by]?gx(dn.by,'הוציא','הוציאה'):'הוצא')+' ב-'+t));
+        if(KIDS.includes(dn.by))mid.append(h('div','bonus','⭐ בונוס: מעבר למתוכנן (+'+PTS.extra+')'));
+        row.append(tm,mid);
+        if(isNow&&(dn.by===me||boss)){
+          const acts=h('div','acts'),b=h('button','btn sm quiet','ביטול');b.type='button';
+          b.onclick=()=>setDoc(wkRef(wkey),{done:{[k]:deleteField()}},{merge:true}).then(()=>toast('ההוצאה בוטלה')).catch(()=>{dogMsg='הפעולה נכשלה. בדקו חיבור.';paintDog();});
+          acts.append(b);row.append(acts);
+        }
+        card.append(row);
+      });
     box.append(card);
   }
 }
@@ -2631,6 +2656,16 @@ function whoWalkedForm(wkey,key,a,dn){
   PEOPLE.forEach(p=>f.append(chip(p.name+(p.id===a?' (בתור)':''),!!dn&&dn.by===p.id,()=>set(p.id))));
   if(dn)f.append(chip('אף אחד',false,()=>set(null)));
   return f;
+}
+/* הוצאה מעבר לתוכנית: נרשמת בשעה המדויקת של הלחיצה, עם בונוס "מעבר למתוכנן" */
+function extraWalk(wkey){
+  const now=Date.now();
+  const last=Object.keys(wk.done).filter(k=>/^x_/.test(k)&&wk.done[k]&&wk.done[k].by===me).map(k=>wk.done[k].at||0).sort((a,b)=>b-a)[0];
+  if(last&&now-last<30*60e3){toast('כבר נרשמה לך הוצאה ב-'+new Date(last).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}));return;}
+  const k='x_'+now;
+  setDoc(wkRef(wkey),{done:{[k]:{by:me,at:now,x:true}}},{merge:true})
+    .then(()=>toast('🐾 נרשם: '+gx(me,'הוצאת','הוצאת')+' את לוני ב-'+new Date(now).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})+(KIDS.includes(me)?' · ⭐ +'+(PTS.walk+PTS.extra)+' נק׳':'')))
+    .catch(()=>{dogMsg='הרישום נכשל. בדקו חיבור.';paintDog();});
 }
 function walked(wkey,key){
   if(fmt(slotDate(wkey,key.split('_')[0]))!==fmt(new Date())){toast('אפשר לסמן הוצאה רק ביום עצמו.');return;}
