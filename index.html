@@ -733,6 +733,7 @@ body.tv .pop,body.tv .toast{display:none!important}
   </div>
 
   <div id="tab-jobs" hidden>
+    <div id="jobsBox"></div>
     <div id="jobForm" class="card jform" hidden>
       <h3>משימה חדשה</h3>
       <label for="jText">מה צריך לעשות? כל שורה היא משימה נפרדת</label>
@@ -752,8 +753,7 @@ body.tv .pop,body.tv .toast{display:none!important}
     </div>
     <div id="sentBox" class="card" hidden></div>
     <div id="repBox" class="card" hidden></div>
-    <div id="jobsBox"></div>
-    <div id="ringCard" class="card">
+    <div id="ringCard" class="card" hidden>
       <h3>צלצול תזכורת</h3>
       <button id="ringTest" class="btn quiet" type="button">בדיקת צלצול</button>
     </div>
@@ -1360,7 +1360,7 @@ function mergeInbox(st,items){
 }
 /* מה ששלחתי לבן/בת הזוג: רק המשימות האלה, לא שאר המשימות האישיות שלו/ה */
 function paintSent(){
-  const b=$('sentBox');if(!b)return;b.innerHTML='';
+  const b=$('sentBox');if(!b)return;b.innerHTML='';sentN=0;
   if(!me||!isAdult(me)){b.hidden=true;return;}
   const sp=spouse(me),p=people[sp]||{},st=listState(p),cat=fromCat(me),rows=[];
   st.tasks.forEach((t,i)=>{
@@ -1368,7 +1368,8 @@ function paintSent(){
     for(let k=i+1;k<st.tasks.length&&st.lv[k];k++)rows.push({t:st.tasks[k],done:st.done[k]});
   });
   (Array.isArray(p.inbox)?p.inbox:[]).filter(x=>x&&x.from===me).forEach(x=>rows.push({t:String(x.t||''),wait:true}));
-  b.hidden=!rows.length;if(b.hidden)return;
+  sentN=rows.length;
+  if(!rows.length){jobsVis();return;}
   const nd=rows.filter(r=>r.done).length;
   b.append(h('h3',null,'📤 שלחתי ל'+byId[sp].name),h('p','date',nd+' מתוך '+rows.length+' בוצעו'));
   const ul=h('ul','sentl');
@@ -1378,7 +1379,7 @@ function paintSent(){
     if(r.wait)li.append(h('small',null,'עוד לא נפתחה אצל'+(sp==='mom'?'ה':'ו')));
     ul.append(li);
   });
-  b.append(ul);
+  b.append(ul);jobsVis();
 }
 let inboxBusy=false;
 async function checkInbox(){
@@ -1950,6 +1951,7 @@ function tab(n){
   if(n==='set'){paintSettings();paintPush();paintPodium(true);}
   if(n==='dog'){dogSec='';quizShow(false);paintDog();}
   if(n==='kids')paintKidsTab();
+  if(n==='jobs')jobsSec='';
   if(n==='jobs'||n==='today')paintJobs();
   if(n==='jobs')paintSent();
   if(n==='today'){paintTodayCal();tmLoad(false);paintMyNotes();}
@@ -3493,7 +3495,7 @@ function jobSort(a,b){
   return da-db_||(a.at||0)-(b.at||0);
 }
 function paintJobForm(){
-  const f=$('jobForm');f.hidden=!isAdult(me);if(f.hidden)return;
+  const f=$('jobForm');if(!isAdult(me)){f.hidden=true;return;}jobsVis();
   const sel=$('jTo');if(sel.dataset.me!==me){
     const keep=sel.value;sel.innerHTML='';sel.dataset.me=me;
     const sp=spouse(me),so=h('option',null,'👤 ל'+byId[sp].name+' (לרשימת המשימות של'+(sp==='mom'?'ה':'ו')+')');so.value='p:'+sp;sel.append(so);
@@ -3595,7 +3597,8 @@ async function genRep(force){
 function repWho(to){return to==='fam'?'כל המשפחה':to==='all'?'כל הבנות, מי שלוקחת ראשונה':to==='each'?'כל אחת מהבנות':byId[to]?byId[to].name:to;}
 function paintRep(){
   const b=$('repBox');if(!b)return;b.innerHTML='';
-  b.hidden=!isAdult(me)||!reps.length;if(b.hidden)return;
+  if(!isAdult(me)||!reps.length){b.hidden=true;return;}
+  jobsVis();
   b.append(h('h3',null,'🔁 משימות חוזרות'));
   reps.slice().sort((x,y)=>(x.at||0)-(y.at||0)).forEach(r=>{
     const row=h('div','reprow');
@@ -3786,12 +3789,31 @@ function kidJobRow(j){
   return row;
 }
 let showDone=false,jobsPend=false;
+var jobsSec='',sentN=0;
+/* לשונית משימות: כל אפשרות נפתחת מכפתור גדול. מה שלא בתת־התפריט הפתוח מוסתר */
+function jobsVis(){
+  const ad=!!me&&isAdult(me);
+  const f=$('jobForm');if(f)f.hidden=!(ad&&jobsSec==='new');
+  const s=$('sentBox');if(s)s.hidden=!(ad&&jobsSec==='sent'&&sentN);
+  const r=$('repBox');if(r)r.hidden=!(ad&&jobsSec==='rep'&&reps.length);
+  const rc=$('ringCard');if(rc)rc.hidden=!(ad&&jobsSec==='ring');
+}
+function jobsGo(sec){jobsSec=sec;paintJobs();if(sec==='new')paintJobForm();if(sec==='sent')paintSent();if(sec==='rep')paintRep();window.scrollTo({top:0,behavior:'smooth'});}
+function jobsBig(box,list){
+  const g=h('div','fbig');
+  list.forEach(([sec,ic,t,n,cls])=>{const b=h('button',cls||null);b.type='button';b.append(h('span','fbi',ic),h('span',null,t));
+    if(n)b.append(h('span','nb',String(n)));b.onclick=()=>jobsGo(sec);g.append(b);});
+  box.append(g);
+}
+function jobsBack(box){
+  const b=h('button','btn fback','→ חזרה למשימות');b.type='button';b.onclick=()=>jobsGo('');box.append(b);
+}
 function jobsBusy(){const a=document.activeElement;return !!(a&&a.classList&&a.classList.contains('kq')&&($('jobsBox').contains(a)||$('todayJobs').contains(a)));}
 function paintJobs(){
   const box=$('jobsBox');if(!box||!me)return;
   paintBadge();
   if($('tab-jobs').hidden&&$('tab-today').hidden)return;
-  const rc=$('ringCard');if(rc)rc.hidden=!isAdult(me);
+  jobsVis();
   /* בזמן שהבת מקלידה משימה חדשה לא מציירים מחדש, כדי לא לסגור את המקלדת */
   if(jobsBusy()){jobsPend=true;return;}
   jobsPend=false;
@@ -3799,25 +3821,32 @@ function paintJobs(){
   box.innerHTML='';
   const recent=j=>!j.done||!j.doneAt||Date.now()-j.doneAt<3*864e5;
   if(isAdult(me)){
-    if(on('r_approve'))section(box,'ממתינות לאישור שלך',jobs.filter(waiting));
-    const famOpen=jobs.filter(j=>!j.done&&j.to==='fam');
-    if(famOpen.length)section(box,'🏠 משימות של כל המשפחה',famOpen);
-    section(box,'פתוחות, עוד לא נלקחו',jobs.filter(j=>!j.done&&j.to==='all'&&!j.claim),'אין משימות פתוחות.');
     const grpOpen=g=>jobs.some(x=>x.grp===g&&!x.done);
-    sectionGrp(box,'בביצוע',jobs.filter(j=>j.grp?grpOpen(j.grp):(!j.done&&j.to!=='fam'&&resp(j))),'אין משימות בביצוע.');
-    sectionGrp(box,'בוצעו לאחרונה',jobs.filter(j=>j.done&&!waiting(j)&&recent(j)&&!(j.grp&&grpOpen(j.grp))));
+    const dlA=jobs.filter(j=>j.done&&!waiting(j)&&recent(j)&&!(j.grp&&grpOpen(j.grp)));
+    if(jobsSec){
+      jobsBack(box);
+      if(jobsSec==='done')sectionGrp(box,'בוצעו לאחרונה',dlA,'אין משימות שבוצעו לאחרונה.');
+      if(jobsSec==='sent'&&!sentN)box.append(h('p','date','עוד אין משימות ששלחת ל'+byId[spouse(me)].name+'.'));
+      if(jobsSec==='rep'&&!reps.length)box.append(h('p','date','אין משימות חוזרות.'));
+    }else{
+      jobsBig(box,[['new','➕','משימה חדשה',0,'fbx'],['sent','📤','שלחתי ל'+byId[spouse(me)].name,0],['rep','🔁','משימות חוזרות',0],['done','✅','בוצעו לאחרונה',0],['ring','🔔','צלצול תזכורת',0]]);
+      if(on('r_approve'))section(box,'ממתינות לאישור שלך',jobs.filter(waiting));
+      const famOpen=jobs.filter(j=>!j.done&&j.to==='fam');
+      if(famOpen.length)section(box,'🏠 משימות של כל המשפחה',famOpen);
+      section(box,'פתוחות, עוד לא נלקחו',jobs.filter(j=>!j.done&&j.to==='all'&&!j.claim),'אין משימות פתוחות.');
+      sectionGrp(box,'בביצוע',jobs.filter(j=>j.grp?grpOpen(j.grp):(!j.done&&j.to!=='fam'&&resp(j))),'אין משימות בביצוע.');
+    }
   }else{
+    const dl=jobs.filter(j=>j.done&&recent(j)&&(resp(j)===me||j.doneBy===me||openTo(j)||j.to==='fam'));
+    if(jobsSec==='done'){jobsBack(box);section(box,'בוצעו לאחרונה',dl,'אין משימות שבוצעו לאחרונה.');}
+    else{
+    jobsBig(box,[['done','✅','בוצעו לאחרונה',0]]);
     const mine=jobs.filter(j=>!j.done&&resp(j)===me);
     section(box,'מחכות לך',mine,'',true);
     const famOpen=jobs.filter(j=>!j.done&&j.to==='fam');
     if(famOpen.length)section(box,'🏠 משימות של כל המשפחה',famOpen);
     section(box,'פתוחות, אפשר לקחת',jobs.filter(j=>!j.done&&j.to==='all'&&!j.claim),'אין משימות פתוחות.');
     section(box,'האחיות לקחו',jobs.filter(j=>!j.done&&j.to==='all'&&j.claim&&j.claim!==me));
-    const dl=jobs.filter(j=>j.done&&recent(j)&&(resp(j)===me||j.doneBy===me||openTo(j)||j.to==='fam'));
-    if(dl.length){
-      const t=h('button','dtog',(showDone?'− ':'+ ')+'בוצעו לאחרונה ('+dl.length+')');t.type='button';t.setAttribute('aria-expanded',String(showDone));
-      t.onclick=()=>{showDone=!showDone;paintJobs();};box.append(t);
-      if(showDone)section(box,'',dl);
     }
   }
   /* משימות מההורים גם במסך "היום שלי" של הבנות */
