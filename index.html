@@ -1505,14 +1505,7 @@ function paintKidsTab(){
     const pj=jobs.filter(j=>resp(j)===id&&(!j.done||(j.doneAt&&j.doneAt>=sod))).sort(jobSort)
       .map(j=>({t:j.text+(j.hasT&&j.due?' · '+hhmm(new Date(j.due)):''),ok:!!j.done,tag:isLate(j)?'באיחור':'',del:{k:'job',id:j.id},tg:v=>markDone(j,v)}));
     groups.push(['משימות מההורים',pj,true]);
-    const dogs=[];
-    SLOTS.forEach(sl=>{
-      if(!hasSlot(dw,sl.k))return;
-      const key=dw+'_'+sl.k,a=curWk.slots[key],dn=curWk.done[key];
-      if(a===id)dogs.push({t:'להוציא את לוני, '+sl.n,ok:!!dn,tag:dn&&dn.by!==id&&byId[dn.by]?gx(dn.by,'הוציא ','הוציאה ')+byId[dn.by].name:'',tg:(!dn||dn.by===id)?v=>kidWalkDone(id,key,v):null});
-      else if(dn&&dn.by===id)dogs.push({t:'הוציאה את לוני, '+sl.n+(a&&byId[a]?' (במקום '+byId[a].name+')':''),ok:true});
-    });
-    if(dogs.length)groups.push(['לוני היום',dogs]);
+    /* 17/11/2026: ההוצאות של לוני לא נכנסות למשימות. הן בלשונית של לוני, עם התראה בזמן */
     let tot=0,dn=0;groups.forEach(g=>g[1].forEach(r=>{if(r.head)return;tot++;if(r.ok)dn++;}));
     const c=h('section','kc');c.style.setProperty('--kc',p.l);c.style.setProperty('--kc-d',p.d);
     const hd=h('div','kh2');hd.append(avatar(id,52),h('b',null,p.name));
@@ -3560,7 +3553,6 @@ function dayLeft(skipJob){
   (st.tasks||[]).forEach((t,i)=>{if(String(t||'').trim()&&!hasSubs(st,i)){all++;if(!st.done[i])n++;}});
   const td=today();
   jobs.forEach(j=>{if(resp(j)!==me)return;const dd=j.due?fmt(new Date(j.due)):null;if(dd&&dd>td)return;if(!j.done&&j.id===skipJob)return;all++;if(!j.done&&j.id!==skipJob)n++;});
-  const dw=new Date().getDay();SLOTS.forEach(x=>{const k=dw+'_'+x.k;if(curWk.slots[k]===me){all++;if(!curWk.done[k])n++;}});
   return {n:n,all:all};
 }
 function partyCheck(skipJob){
@@ -3770,7 +3762,7 @@ function badgeCount(){
   if(isAdult(me))return (on('r_approve')?jobs.filter(waiting).length:0)+jobs.filter(j=>!j.done&&j.to==='fam').length;
   return jobs.filter(j=>!j.done&&(resp(j)===me||j.to==='fam'||(j.to==='all'&&!j.claim))).length;
 }
-/* מספר על האייקון של האפליקציה (r5_badge). אבא ואמא: רק עדכונים מהבנות שעוד לא אישרו. הבנות: משימות שלי שלא בוצעו + משימות מההורים + תורנויות של לוני להיום */
+/* מספר על האייקון של האפליקציה (r5_badge). אבא ואמא: רק עדכונים מהבנות שעוד לא אישרו. הבנות: משימות שלי שלא בוצעו + משימות מההורים (בלי לוני) */
 let appBadgeN=-1;
 function appBadge(){
   try{
@@ -3779,7 +3771,6 @@ function appBadge(){
     let n=0;
     if(isAdult(me)){n=updCount();if(n===appBadgeN)return;appBadgeN=n;(n?navigator.setAppBadge(n):navigator.clearAppBadge()).catch(()=>{});return;}(st.tasks||[]).forEach((t,i)=>{if(String(t||'').trim()&&!st.done[i]&&!hasSubs(st,i))n++;});
     n+=jobs.filter(j=>!j.done&&(resp(j)===me||j.to==='fam')).length;
-    const dw=new Date().getDay();SLOTS.forEach(x=>{const k=dw+'_'+x.k;if(curWk.slots[k]===me&&!curWk.done[k])n++;});
     if(n===appBadgeN)return;appBadgeN=n;
     (n?navigator.setAppBadge(n):navigator.clearAppBadge()).catch(()=>{});
   }catch(e){}
@@ -3797,7 +3788,7 @@ function subCurWk(){
   if(curUnsub)curUnsub();
   curUnsub=onSnapshot(wkRef(fmt(dogWk(new Date()))),s=>{const d=cleanWk(s.exists()?s.data():{});curWk={slots:d.slots||{},done:d.done||{},orig:d.orig||null};checkRem();appBadge();paintPodium(false);paintKidsTab();},()=>{});
 }
-const DOGT={l:[12,30],a:[17,0],c:[19,0],b:[20,30],n:[22,0]};
+const DOGT={m:[7,0],s:[14,0],l:[12,30],a:[17,0],c:[19,0],b:[20,30],n:[22,0]};
 function remTargets(j){if(j.done)return [];if(j.to==='fam')return PEOPLE.map(p=>p.id);if(j.claim&&j.to==='all')return [j.claim];if(j.to!=='all')return [j.to];return KIDS;}
 function checkRem(){
   if(!me||!code||!db)return;
@@ -5607,8 +5598,6 @@ function tvKidCount(id){
   st.tasks.forEach((t,i)=>{if(t.trim()&&!hasSubs(st,i)){tot++;if(st.done[i])dn++;}});
   const sod=startOfDay(new Date());
   jobs.filter(j=>resp(j)===id&&(!j.done||(j.doneAt&&j.doneAt>=sod))).forEach(j=>{tot++;if(j.done)dn++;});
-  const dw=new Date().getDay();
-  SLOTS.forEach(sl=>{if(!hasSlot(dw,sl.k))return;const key=dw+'_'+sl.k;if(curWk.slots[key]===id){tot++;if(curWk.done[key])dn++;}});
   return [dn,tot];
 }
 function tvProg(s){
