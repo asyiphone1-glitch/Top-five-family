@@ -139,6 +139,29 @@ function localToUtc(y, m, d, h, mi) {
 }
 const ymd = (y, m, d) => y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0');
 
+// ---- שבת: אין שום התראה מכניסת שבת (30 דק׳ לפני השקיעה בשישי) עד צאת שבת (45 דק׳ אחרי השקיעה בשבת), לפי פתח תקווה ----
+function sunsetMs(y, m, d) {
+  const lat = 32.09, lng = 34.88, r = Math.PI / 180;
+  const jd = Date.UTC(y, m - 1, d, 12) / 864e5 + 2440587.5, n = Math.round(jd - 2451545 + 0.0008), J = n - lng / 360;
+  const M = (357.5291 + 0.98560028 * J) % 360, C = 1.9148 * Math.sin(M * r) + 0.02 * Math.sin(2 * M * r) + 0.0003 * Math.sin(3 * M * r);
+  const L = (M + C + 282.9372) % 360, Jt = 2451545 + J + 0.0053 * Math.sin(M * r) - 0.0069 * Math.sin(2 * L * r);
+  const sd = Math.sin(L * r) * Math.sin(23.44 * r), cd = Math.cos(Math.asin(sd));
+  const w = Math.acos((Math.sin(-0.833 * r) - Math.sin(lat * r) * sd) / (Math.cos(lat * r) * cd)) / r;
+  return Math.round((Jt + w / 360 - 2440587.5) * 864e5);
+}
+const SH_IN = 30 * 60e3, SH_OUT = 45 * 60e3;
+function shabbatAt(t) {
+  const p = parts(t);
+  if (p.wd === 5) return t >= sunsetMs(p.y, p.m, p.d) - SH_IN;
+  if (p.wd === 6) return t < sunsetMs(p.y, p.m, p.d) + SH_OUT;
+  return false;
+}
+// כמה שניות נשארו עד כניסת שבת (כדי שהתראה שנשלחה לפני שבת לא תגיע באיחור בתוך שבת)
+function secsToShabbat(t) {
+  const p = parts(t); if (p.wd !== 5) return Infinity;
+  return Math.max(60, Math.floor((sunsetMs(p.y, p.m, p.d) - SH_IN - t) / 1000));
+}
+
 // ---- גיבוי לילי (r5_autobk): כל לילה אחרי 03:00, נשמר בתוך מסד הנתונים הנעול, 14 לילות אחרונים ----
 const BK_COLS = ['people', 'jobs', 'rep', 'swaps', 'weeks', 'prefs', 'shop', 'cal', 'caltm', 'food'];
 const BK_KEEP = 14, BK_CHUNK = 250000;
@@ -626,14 +649,18 @@ async function main() {
     changed = false;
   };
   try {
+    const shabbat = shabbatAt(now), ttl = Math.min(3600, secsToShabbat(now));
+    if (shabbat) console.log('שבת: לא נשלחות התראות');
     for (const n of out) {
       if (sent.has(n.key)) continue;
       sent.add(n.key);
+      // בשבת: נרשם כאילו נשלח, כדי שלא יישלח גם אחרי צאת שבת
+      if (shabbat) { sentMap[n.key] = now; changed = true; continue; }
       const targets = subs.filter(s => n.who.includes(s.who));
       for (const s of targets) {
         const payload = JSON.stringify({ title: 'yaya', body: n.body, tab: n.tab, tag: n.key });
         if (DRY) { console.log('DRY', s.who, n.body); continue; }
-        try { await webpush.sendNotification(JSON.parse(s.sub), payload, { TTL: 3600, urgency: 'high' }); nPh++; }
+        try { await webpush.sendNotification(JSON.parse(s.sub), payload, { TTL: ttl, urgency: 'high' }); nPh++; }
         catch (e) {
           if (e.statusCode === 404 || e.statusCode === 410) await del(`${F}/push/${s.id}`);
           nFail++; console.log('שליחה נכשלה:', e.statusCode || 'שגיאה');

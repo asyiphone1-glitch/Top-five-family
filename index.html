@@ -3065,7 +3065,23 @@ document.addEventListener('touchend',unlockAudio,{passive:true});
 let asT=null;
 function asPlay(){try{if(navigator.audioSession){navigator.audioSession.type='playback';clearTimeout(asT);asT=setTimeout(()=>{try{navigator.audioSession.type='auto';}catch(e){}},5000);}}catch(e){}}
 let comp=null;
+/* שבת: אין צלצול ואין חלון תזכורת מכניסת שבת (30 דק׳ לפני השקיעה בשישי) עד צאת שבת (45 דק׳ אחרי השקיעה בשבת), לפי פתח תקווה.
+   תזכורות שחלו בשבת נבלעות ולא מצלצלות גם אחרי צאת שבת */
+function sunsetMs(y,m,d){const lat=32.09,lng=34.88,r=Math.PI/180;
+  const jd=Date.UTC(y,m-1,d,12)/864e5+2440587.5,n=Math.round(jd-2451545+0.0008),J=n-lng/360;
+  const M=(357.5291+0.98560028*J)%360,C=1.9148*Math.sin(M*r)+0.02*Math.sin(2*M*r)+0.0003*Math.sin(3*M*r);
+  const L=(M+C+282.9372)%360,Jt=2451545+J+0.0053*Math.sin(M*r)-0.0069*Math.sin(2*L*r);
+  const sd=Math.sin(L*r)*Math.sin(23.44*r),cd=Math.cos(Math.asin(sd));
+  const w=Math.acos((Math.sin(-0.833*r)-Math.sin(lat*r)*sd)/(Math.cos(lat*r)*cd))/r;
+  return Math.round((Jt+w/360-2440587.5)*864e5);}
+function inShabbat(t){
+  const d=new Date(t||Date.now()),wd=d.getDay();t=d.getTime();
+  if(wd===5)return t>=sunsetMs(d.getFullYear(),d.getMonth()+1,d.getDate())-30*60e3;
+  if(wd===6)return t<sunsetMs(d.getFullYear(),d.getMonth()+1,d.getDate())+45*60e3;
+  return false;
+}
 function chime(){
+  if(inShabbat())return;
   asPlay();
   try{navigator.vibrate&&navigator.vibrate([120,80,120]);}catch(e){}
   if(ringEl){
@@ -3104,6 +3120,7 @@ function chimeWA(){
   });
 }
 function remind(lines,goTab,quiet){
+  if(inShabbat())return;
   const pop=$('pop'),ul=$('popList');
   if(pop.hidden)ul.innerHTML='';
   lines.forEach(t=>{
@@ -4875,6 +4892,7 @@ function checkWakeRing(){
 setInterval(checkWakeRing,15000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkWakeRing();});
 function openFoodPop(){
+  if(inShabbat())return;
   foodAlt=false;kidFood($('foodPopForm'),true);
   $('foodPop').hidden=false;chime();
 }
