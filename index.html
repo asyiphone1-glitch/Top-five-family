@@ -401,6 +401,7 @@ table.fsum tr.upd .fsn b::after{content:'';display:inline-block;width:9px;height
 .fbig button .fbi{font-size:1.7rem;line-height:1}
 .fbig button .nb{top:6px;inset-inline-end:8px;background:var(--upd)}
 .fback{margin:8px 0 4px}
+.fbig .fbx{grid-column:1/-1;min-height:64px;flex-direction:row;background:var(--accent);border-color:var(--accent);color:#fff}
 .fmeal{margin-top:14px}
 .fmeal h4{margin:0 0 4px;font:700 1.08rem var(--display)}
 .fmeal .field{font-size:1.05rem;padding:12px}
@@ -1947,7 +1948,7 @@ function tab(n){
   $('gearBtn').classList.toggle('on',n==='set');
   if(n==='home')paintHome();
   if(n==='set'){paintSettings();paintPush();paintPodium(true);}
-  if(n==='dog'){paintDog();quizShow(false);}
+  if(n==='dog'){dogSec='';quizShow(false);paintDog();}
   if(n==='kids')paintKidsTab();
   if(n==='jobs'||n==='today')paintJobs();
   if(n==='jobs')paintSent();
@@ -2021,10 +2022,12 @@ function paintSettings(){
 /* השאלון של לוני: רק בלשונית לוני, סגור עד שלוחצים על הכפתור */
 function quizShow(open){
   const b=$('quizBody'),o=$('quizOpen');if(!b||!o)return;
+  if(open&&dogSec!=='quiz'){dogSec='quiz';paintDog();}
+  if(!open&&dogSec==='quiz'){dogSec='';paintDog();}
   if(open){qz=loadPrefs();paintQuiz();say($('quizMsg'),'');}
   b.hidden=!open;o.hidden=open;o.setAttribute('aria-expanded',open?'true':'false');
   o.textContent=(people[me]||{}).prefsDone?'עריכת השאלון':'מילוי השאלון';
-  if(open)$('quizCard').scrollIntoView({behavior:'smooth',block:'start'});
+  if(open)window.scrollTo({top:0,behavior:'smooth'});
 }
 $('quizOpen').onclick=()=>quizShow(true);
 $('quizClose').onclick=()=>quizShow(false);
@@ -2093,7 +2096,7 @@ function slotText(week,key){
   return 'יום '+DAYN[+a[0]]+' '+d.getDate()+'/'+(d.getMonth()+1)+', '+slotName(a[1]);
 }
 const wkRef=w=>doc(db,'families',code,'weeks',w);
-let weekStart=dogWk(new Date()),wk={slots:{},done:{}},wkUnsub=null,swaps=[],swUnsub=null,draft=null,confirmGen=false,dogMsg='',qz=null;
+let weekStart=dogWk(new Date()),wk={slots:{},done:{}},wkUnsub=null,swaps=[],swUnsub=null,draft=null,confirmGen=false,dogMsg='',qz=null,dogSec='';
 
 function subWeek(){
   if(wkUnsub)wkUnsub();
@@ -2193,7 +2196,7 @@ $('quizSave').onclick=()=>{
   if(!qz)return;
   qz.hard.sort();qz.like.sort();qz.avoid.sort();qz.block.sort();qz.once=[];
   setDoc(pdoc(me),{prefs:qz,prefsDone:true},{merge:true})
-    .then(()=>{quizShow(false);say($('quizMsg'),'השאלון נשמר.',true);})
+    .then(()=>{quizShow(false);toast('השאלון נשמר.');})
     .catch(()=>say($('quizMsg'),'השמירה נכשלה. בדקו חיבור.'));
 };
 
@@ -2473,41 +2476,18 @@ function chip(txt,on,fn){const b=h('button','chip',txt);b.type='button';b.setAtt
 function genderTake(){return (byId[me]&&byId[me].g==='m')?'אני לוקח':'אני לוקחת';}
 /* לשון לפי האדם: gx(id,'זכר','נקבה') */
 function gx(id,m,f){return (byId[id]&&byId[id].g==='m')?m:f;}
+/* לשונית לוני: מסך ראשי עם כפתורים גדולים לכל תת־תפריט, ומתחתם התוכנית של היום (רק מה שנשאר) */
 function paintDog(){
   const box=$('dogBox');if(!box)return;
   box.innerHTML='';
+  const qc=$('quizCard');if(qc)qc.hidden=dogSec!=='quiz';
   if(!me||!code)return;
   const wkey=fmt(weekStart);
   const cur=fmt(dogWk(new Date()));
-
-  /* ניווט שבועות */
-  const nav=h('div','wknav');
-  const bn=h('button','btn quiet sm','שבוע הבא');bn.type='button';
-  bn.onclick=()=>{weekStart=addDays(weekStart,7);draft=null;confirmGen=false;subWeek();};
-  const bp=h('button','btn quiet sm','שבוע קודם');bp.type='button';
-  bp.onclick=()=>{weekStart=addDays(weekStart,-7);draft=null;confirmGen=false;subWeek();};
-  const e=addDays(weekStart,6);
-  const st=wkey===cur?new Date():weekStart;
-  const lab=h('b',null,(wkey===cur?'מהיום: ':'שבוע ')+st.getDate()+'/'+(st.getMonth()+1)+' עד '+e.getDate()+'/'+(e.getMonth()+1));
-  /* לא חוזרים לשבועות שעברו: רק התוכנית קדימה */
-  nav.append(wkey>cur?bp:h('span'),lab,bn);box.append(nav);
-  if(wkey!==cur){const g=h('button','btn quiet sm','חזרה להשבוע');g.type='button';g.style.marginBottom='8px';
-    g.onclick=()=>{weekStart=dogWk(new Date());draft=null;subWeek();};box.append(g);}
-
+  if(dogSec!=='week'&&wkey!==cur){weekStart=dogWk(new Date());draft=null;confirmGen=false;subWeek();return;}
+  const has=Object.keys(wk.slots).length>0;
   if(dogMsg){const m=h('div','note ok',dogMsg);m.setAttribute('role','status');box.append(m);}
-  if(wkey===cur){
-    const xb=h('button','btn pri','🐾 הוצאתי את לוני עכשיו, מעבר לתוכנית');xb.type='button';
-    xb.style.cssText='width:100%;margin-bottom:10px';xb.onclick=()=>extraWalk(wkey);box.append(xb);
-  }
-
-  /* שאלון חסר */
-  if(!(people[me]||{}).prefsDone){
-    const n=h('div','note');
-    n.append(h('div',null,'עוד לא מילאת את השאלון. בלעדיו השיבוץ לא יודע מה קשה לך.'));
-    const b=h('button','btn pri sm','מילוי השאלון');b.type='button';b.style.marginTop='8px';
-    b.onclick=()=>quizShow(true);n.append(b);box.append(n);
-  }
-
+  if(!dogSec){
   /* בקשות החלפה אלי */
   swaps.filter(s=>s.to===me&&s.status==='pending').forEach(s=>{
     const n=h('div','note');
@@ -2530,16 +2510,40 @@ function paintDog(){
     n.append(b);box.append(n);
   });
 
-  const has=Object.keys(wk.slots).length>0;
-
-  /* תזכורת לאילוצים של השבוע הבא */
-  if(wkey===cur&&nxWk&&!nxWk.gen&&!Object.keys(nxWk.slots||{}).length&&Date.now()<=deadline(nxWk.key)&&!(nxWk.cons||{})[me]){
-    const n=h('div','note');
-    n.append(h('div',null,'עד '+dlText(nxWk.key)+' ממלאים אילוצים לשבוע הבא. אז האפליקציה משבצת את כולם, ואפשר להחליף אחר כך.'));
-    const b=h('button','btn pri sm','למילוי האילוצים');b.type='button';b.style.marginTop='8px';
-    b.onclick=()=>{weekStart=addDays(weekStart,7);draft=null;confirmGen=false;subWeek();};
-    n.append(b);box.append(n);
+    const g=h('div','fbig');
+    const big=(ic,t,fn,n,cls)=>{const b=h('button',cls||null);b.type='button';b.append(h('span','fbi',ic),h('span',null,t));
+      if(n){b.append(h('span','nb',String(n)));}b.onclick=fn;g.append(b);};
+    const go=sec=>()=>{dogSec=sec;paintDog();window.scrollTo({top:0,behavior:'smooth'});};
+    big('🐾','הוצאתי עכשיו, מעבר לתוכנית',()=>extraWalk(wkey),0,'fbx');
+    big('📅','התוכנית לשבוע',go('week'));
+    big('📝','השאלון שלי',()=>quizShow(true),(people[me]||{}).prefsDone?0:'!');
+    if(nxWk&&!nxWk.gen&&!Object.keys(nxWk.slots||{}).length&&Date.now()<=deadline(nxWk.key))
+      big('✍️','אילוצים לשבוע הבא',()=>{dogSec='week';weekStart=addDays(dogWk(new Date()),7);draft=null;confirmGen=false;subWeek();window.scrollTo({top:0,behavior:'smooth'});},(nxWk.cons||{})[me]?0:'!');
+    if(has&&isAdult(me))big('📊','דו״ח השיבוץ',go('report'));
+    box.append(g);
+    box.append(dogToday(wkey,has));
+    return;
   }
+  const back=h('button','btn fback','→ חזרה ללוני');back.type='button';
+  back.onclick=()=>{if(dogSec==='quiz'){quizShow(false);return;}dogSec='';draft=null;confirmGen=false;paintDog();};
+  box.prepend(back);
+  if(dogSec==='quiz')return;
+  if(dogSec==='report'){if(has)box.append(reportCard(wkey));return;}
+
+  /* ניווט שבועות */
+  const nav=h('div','wknav');
+  const bn=h('button','btn quiet sm','שבוע הבא');bn.type='button';
+  bn.onclick=()=>{weekStart=addDays(weekStart,7);draft=null;confirmGen=false;subWeek();};
+  const bp=h('button','btn quiet sm','שבוע קודם');bp.type='button';
+  bp.onclick=()=>{weekStart=addDays(weekStart,-7);draft=null;confirmGen=false;subWeek();};
+  const e=addDays(weekStart,6);
+  const st=wkey===cur?new Date():weekStart;
+  const lab=h('b',null,(wkey===cur?'מהיום: ':'שבוע ')+st.getDate()+'/'+(st.getMonth()+1)+' עד '+e.getDate()+'/'+(e.getMonth()+1));
+  /* לא חוזרים לשבועות שעברו: רק התוכנית קדימה */
+  nav.append(wkey>cur?bp:h('span'),lab,bn);box.append(nav);
+  if(wkey!==cur){const g=h('button','btn quiet sm','חזרה להשבוע');g.type='button';g.style.marginBottom='8px';
+    g.onclick=()=>{weekStart=dogWk(new Date());draft=null;subWeek();};box.append(g);}
+
   if(!has&&wkey>cur)box.append(consCard(wkey));
 
   /* מונים */
@@ -2572,8 +2576,6 @@ function paintDog(){
     box.append(h('p','lead','עוד לא נעשה שיבוץ לשבוע הזה. אבא או אמא יכולים להפעיל אותו מכאן.'));
   }
 
-  if(has&&isAdult(me))box.append(reportCard(wkey));
-
   /* ימים */
   const todayK=fmt(new Date()),boss=me==='dad';
   /* אבא (מנהל ראשי) יכול להציג גם ימים שעברו בשבוע, כדי לעדכן מי הוציאה בפועל */
@@ -2587,48 +2589,7 @@ function paintDog(){
     if(isPast&&!(boss&&dogPast))continue;
     const card=h('section','day'+(isNow?' now':''));
     card.append(h('h3',null,'יום '+DAYN[d]+' '+date.getDate()+'/'+(date.getMonth()+1)));
-    SLOTS.forEach(sl=>{
-      if(!hasSlot(d,sl.k))return;
-      const key=d+'_'+sl.k;
-      const a=wk.slots[key],dn=wk.done[key];
-      const row=h('div','slot'+(dn?' done':''));
-      const tm=h('div','tm',sl.n);if(sl.t)tm.append(h('small',null,sl.t));
-      const mid=h('div');
-      const who=h('div','who2'+(a===me?' me':''),a?(a===me?gx(me,'אתה','את'):byId[a].name):'פנוי');
-      if(a){who.style.cssText='display:flex;align-items:center;gap:8px';who.prepend(avatar(a,30));}
-      mid.append(who);
-      const pend=swaps.find(s=>s.week===wkey&&s.slot===key&&s.status==='pending');
-      if(dn){
-        mid.append(h('div','st ok','✓ '+(byId[dn.by]?gx(dn.by,'הוציא ','הוציאה ')+byId[dn.by].name:'הוצא')));
-        const bo=bonusOf(wk,key);
-        if(bo&&KIDS.includes(dn.by))mid.append(h('div','bonus',bo==='cover'?'🤝 בונוס: לקחה משמרת של '+(byId[wk.orig[key]]?byId[wk.orig[key]].name:'מישהו אחר')+' (+'+PTS.cover+')':'⭐ בונוס: מעבר למתוכנן (+'+PTS.extra+')'));
-      }
-      else if(pend){mid.append(h('div','st','ממתין לאישור של '+byId[pend.to].name));}
-      else if(a&&isPast)mid.append(h('div','st','לא סומן'));
-      row.append(tm,mid);
-      const acts=h('div','acts');
-      const mk=(t,cls,fn)=>{const b=h('button','btn sm '+cls,t);b.type='button';b.onclick=fn;acts.append(b);};
-      /* מסמנים "הוצאתי" (או מבטלים) רק ביום עצמו */
-      if(dn){
-        if(isNow&&(dn.by===me||a===me))mk('ביטול סימון','quiet',()=>setDoc(wkRef(wkey),{done:{[key]:deleteField()}},{merge:true}).catch(()=>{dogMsg='הפעולה נכשלה. בדקו חיבור.';paintDog();}));
-      }else if(isPast){
-      }else if(!a){
-        mk(genderTake()+' את התורנות','pri',()=>setDoc(wkRef(wkey),{slots:{[key]:me}},{merge:true}).catch(()=>{}));
-      }else if(a===me){
-        if(isNow)mk('הוצאתי','pri',()=>walked(wkey,key));
-        if(!pend)mk('החלפה או העברה','quiet',()=>{draft=(draft===key?null:key);paintDog();});
-        if(!pend&&on('r5_cant'))mk(gx(me,'לא יכול','לא יכולה'),'quiet',()=>{draft=(draft==='c:'+key?null:'c:'+key);paintDog();});
-      }else if(isNow){
-        mk(gx(a,'הוצאתי במקומו','הוצאתי במקומה'),'quiet',()=>walked(wkey,key));
-      }
-      /* אבא: מי הוציאה בפועל (גם במקום מישהו אחר, גם בדיעבד) */
-      if(boss&&(isNow||isPast))mk('מי הוציא?','quiet',()=>{draft=(draft==='w:'+key?null:'w:'+key);paintDog();});
-      if(acts.childNodes.length)row.append(acts);
-      if(boss&&draft==='w:'+key)row.append(whoWalkedForm(wkey,key,a,dn));
-      if(draft===key&&a===me&&!dn)row.append(swapForm(wkey,key));
-      if(draft==='c:'+key&&a===me&&!dn)row.append(cantForm(wkey,key));
-      card.append(row);
-    });
+    SLOTS.forEach(sl=>{if(hasSlot(d,sl.k))card.append(dogRow(wkey,date,sl));});
     Object.keys(wk.done).filter(k=>/^x_/.test(k)&&wk.done[k]&&wk.done[k].at&&fmt(new Date(wk.done[k].at))===dk)
       .sort((x,y)=>wk.done[x].at-wk.done[y].at).forEach(k=>{
         const dn=wk.done[k],t=new Date(dn.at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
@@ -2649,6 +2610,65 @@ function paintDog(){
       });
     box.append(card);
   }
+}
+/* התוכנית של היום: רק ההוצאות שעוד לפנינו (וזו שהתחילה בשעה האחרונה ועוד לא סומנה) */
+function dogToday(wkey,has){
+  const date=new Date(),d=date.getDay();
+  const card=h('section','day now');
+  card.append(h('h3',null,'התוכנית להיום, יום '+DAYN[d]+' '+date.getDate()+'/'+(date.getMonth()+1)));
+  if(!has){card.append(h('p','date','עוד לא נעשה שיבוץ לשבוע הזה.'));return card;}
+  const nm=date.getHours()*60+date.getMinutes();
+  let n=0;
+  SLOTS.forEach(sl=>{
+    if(!hasSlot(d,sl.k))return;
+    const key=d+'_'+sl.k,at=SLOT_MIN[sl.k];
+    if(wk.done[key]||nm>at+60)return;
+    card.append(dogRow(wkey,date,sl));n++;
+  });
+  if(!n)card.append(h('p','date','אין עוד הוצאות היום 🐾'));
+  return card;
+}
+function dogRow(wkey,date,sl){
+  const d=date.getDay(),dk=fmt(date),todayK=fmt(new Date()),isNow=dk===todayK,isPast=dk<todayK,boss=me==='dad';
+  const key=d+'_'+sl.k;
+    const a=wk.slots[key],dn=wk.done[key];
+    const row=h('div','slot'+(dn?' done':''));
+    const tm=h('div','tm',sl.n);if(sl.t)tm.append(h('small',null,sl.t));
+    const mid=h('div');
+    const who=h('div','who2'+(a===me?' me':''),a?(a===me?gx(me,'אתה','את'):byId[a].name):'פנוי');
+    if(a){who.style.cssText='display:flex;align-items:center;gap:8px';who.prepend(avatar(a,30));}
+    mid.append(who);
+    const pend=swaps.find(s=>s.week===wkey&&s.slot===key&&s.status==='pending');
+    if(dn){
+      mid.append(h('div','st ok','✓ '+(byId[dn.by]?gx(dn.by,'הוציא ','הוציאה ')+byId[dn.by].name:'הוצא')));
+      const bo=bonusOf(wk,key);
+      if(bo&&KIDS.includes(dn.by))mid.append(h('div','bonus',bo==='cover'?'🤝 בונוס: לקחה משמרת של '+(byId[wk.orig[key]]?byId[wk.orig[key]].name:'מישהו אחר')+' (+'+PTS.cover+')':'⭐ בונוס: מעבר למתוכנן (+'+PTS.extra+')'));
+    }
+    else if(pend){mid.append(h('div','st','ממתין לאישור של '+byId[pend.to].name));}
+    else if(a&&isPast)mid.append(h('div','st','לא סומן'));
+    row.append(tm,mid);
+    const acts=h('div','acts');
+    const mk=(t,cls,fn)=>{const b=h('button','btn sm '+cls,t);b.type='button';b.onclick=fn;acts.append(b);};
+    /* מסמנים "הוצאתי" (או מבטלים) רק ביום עצמו */
+    if(dn){
+      if(isNow&&(dn.by===me||a===me))mk('ביטול סימון','quiet',()=>setDoc(wkRef(wkey),{done:{[key]:deleteField()}},{merge:true}).catch(()=>{dogMsg='הפעולה נכשלה. בדקו חיבור.';paintDog();}));
+    }else if(isPast){
+    }else if(!a){
+      mk(genderTake()+' את התורנות','pri',()=>setDoc(wkRef(wkey),{slots:{[key]:me}},{merge:true}).catch(()=>{}));
+    }else if(a===me){
+      if(isNow)mk('הוצאתי','pri',()=>walked(wkey,key));
+      if(!pend)mk('החלפה או העברה','quiet',()=>{draft=(draft===key?null:key);paintDog();});
+      if(!pend&&on('r5_cant'))mk(gx(me,'לא יכול','לא יכולה'),'quiet',()=>{draft=(draft==='c:'+key?null:'c:'+key);paintDog();});
+    }else if(isNow){
+      mk(gx(a,'הוצאתי במקומו','הוצאתי במקומה'),'quiet',()=>walked(wkey,key));
+    }
+    /* אבא: מי הוציאה בפועל (גם במקום מישהו אחר, גם בדיעבד) */
+    if(boss&&(isNow||isPast))mk('מי הוציא?','quiet',()=>{draft=(draft==='w:'+key?null:'w:'+key);paintDog();});
+    if(acts.childNodes.length)row.append(acts);
+    if(boss&&draft==='w:'+key)row.append(whoWalkedForm(wkey,key,a,dn));
+    if(draft===key&&a===me&&!dn)row.append(swapForm(wkey,key));
+    if(draft==='c:'+key&&a===me&&!dn)row.append(cantForm(wkey,key));
+  return row;
 }
 
 let dogPast=false;
