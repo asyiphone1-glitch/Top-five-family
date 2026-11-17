@@ -5202,7 +5202,8 @@ function paintFoodParent(box){
   const canPlan=k===tmrKey();
   const asks=kids.filter(p=>{const pl=planOf(k,p.id);return pl&&pl.st==='alt';});
   /* המסך הראשי: הסיכום וכפתורים גדולים. כל השאר נפתח מכפתור */
-  if(foodSec==='wake'&&!canPlan||foodSec==='plan'&&!canPlan)foodSec='';
+  if(foodSec==='plan')foodSec='kids';
+  if(foodSec==='wake'&&!canPlan)foodSec='';
   if(!foodSec){
     box.append(foodSummary(k));
     const g=h('div','fbig');
@@ -5211,7 +5212,6 @@ function paintFoodParent(box){
       b.onclick=()=>{foodSec=sec;paintFood(true);window.scrollTo({top:0,behavior:'smooth'});};g.append(b);};
     if(canPlan)big('wake','⏰','שעות השכמה');
     big('kids','👧','ההזמנות של הבנות',asks.length);
-    if(canPlan)big('plan','📝','לקבוע לבנות');
     big('menu','🍽️','עריכת התפריט');
     box.append(g);
     return;
@@ -5220,7 +5220,6 @@ function paintFoodParent(box){
   back.onclick=()=>{foodSec='';paintFood(true);};
   box.append(back);
   if(foodSec==='wake'){box.append(wakeCard(k));return;}
-  if(foodSec==='plan'){box.append(planCard(k));return;}
   if(foodSec==='menu'){paintMenuEd(box,k,m);return;}
   /* סיכום ההזמנות. תכנון שעוד מחכה לבת נספר לפי התכנון */
   const fin=id=>{const pl=planOf(k,id);return pl?!(pl.st==='wait'||pl.st==='alt')&&!!orderOf(k,id):!!orderOf(k,id);};
@@ -5277,13 +5276,14 @@ function paintFoodParent(box){
       const e=h('button','btn sm',pl?'✏️ לשנות את התכנון':'📝 לקבוע לה');e.type='button';
       e.onclick=()=>{const src=effOf(k,p.id)||o;pdraft=null;pEnsure(k);pdraft.kids=new Set([p.id]);
         if(src){const m=mealsOf(src);pdraft.ten=new Set(m.ten);pdraft.tenX=m.tenX;pdraft.lunch=new Set(m.lunch);pdraft.lunchX=m.lunchX;}
-        foodSec='plan';paintFood(true);window.scrollTo({top:0,behavior:'smooth'});};
+        foodSec='kids';paintFood(true);const t=$('fplan');if(t)t.scrollIntoView({behavior:'smooth',block:'start'});};
       r.append(e);
       if(pl){const x=h('button','btn sm quiet','ביטול התכנון');x.type='button';x.onclick=()=>cancelPlan(k,p.id);r.append(x);}
       c.append(r);
     }
     box.append(c);
   });
+  if(canPlan)box.append(planCard(k));
 }
 /* עריכת התפריט */
 function paintMenuEd(box,k,m){
@@ -5358,7 +5358,7 @@ function savePlan(k,msg){
   const names=[...d.kids].map(id=>byId[id].name);
   pdraft=null;
   toast('נשלח לאישור: '+names.join(', '));
-  foodSec='';paintFood(true);
+  paintFood(true);window.scrollTo({top:0,behavior:'smooth'});
 }
 /* ההורה עונה לבקשה של הבת: לאשר (הבקשה נהיית ההזמנה) או להשאיר את התכנון */
 function decidePlan(k,id,yes){
