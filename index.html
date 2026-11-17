@@ -395,6 +395,12 @@ table.fsum tr.upd .fsn b::after{content:'';display:inline-block;width:9px;height
 .podlist .pt{margin-inline-start:auto;font:800 1.1rem var(--display);color:var(--accent);white-space:nowrap}
 .podlist small{display:block;color:var(--mute);font-size:.8rem;line-height:1.3}
 /* אוכל */
+.nav .nl2{line-height:1.05;text-align:center;font-size:.7rem}
+.fbig{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.fbig button{position:relative;min-height:84px;border:2px solid var(--line);border-radius:18px;background:var(--surface);color:var(--ink);font:700 1.08rem/1.25 var(--display);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;padding:10px}
+.fbig button .fbi{font-size:1.7rem;line-height:1}
+.fbig button .nb{top:6px;inset-inline-end:8px;background:var(--upd)}
+.fback{margin:8px 0 4px}
 .fmeal{margin-top:14px}
 .fmeal h4{margin:0 0 4px;font:700 1.08rem var(--display)}
 .fmeal .field{font-size:1.05rem;padding:12px}
@@ -858,7 +864,7 @@ body.tv .pop,body.tv .toast{display:none!important}
     <button id="nv-kids" type="button" hidden><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.2"/><circle cx="16" cy="8" r="3.2"/><path d="M2.5 20c.6-3.5 2.8-5.5 5.5-5.5s4.9 2 5.5 5.5M10.5 20c.6-3.5 2.8-5.5 5.5-5.5s4.9 2 5.5 5.5"/></svg>הבנות</button>
     <button id="nv-jobs" type="button"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>משימות<span id="jobBadge" class="nb" hidden></span></button>
     <button id="nv-shop" type="button" hidden><svg viewBox="0 0 24 24"><path d="M3 4h2l2.4 11h11l2-8H6.2"/><circle cx="9" cy="19.5" r="1.5"/><circle cx="17" cy="19.5" r="1.5"/></svg>קניות</button>
-    <button id="nv-food" type="button"><svg viewBox="0 0 24 24"><path d="M7 3v18M4.5 3v5a2.5 2.5 0 0 0 5 0V3"/><path d="M17 21V3c-2.2 1.3-3.5 4-3.5 7.5V14H17"/></svg>אוכל<span id="foodBadge" class="nb" hidden></span></button>
+    <button id="nv-food" type="button"><svg viewBox="0 0 24 24"><path d="M7 3v18M4.5 3v5a2.5 2.5 0 0 0 5 0V3"/><path d="M17 21V3c-2.2 1.3-3.5 4-3.5 7.5V14H17"/></svg><span class="nl2">אוכל<br>והשכמה</span><span id="foodBadge" class="nb" hidden></span></button>
     <button id="nv-cal" type="button"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17.2h.01M12 17.2h.01"/></svg>לוח</button>
     <button id="nv-dog" type="button"><svg viewBox="0 0 24 24"><path d="M4 9l2-4 3 2h6l3-2 2 4v4a8 8 0 0 1-16 0z"/><path d="M9.5 12.5h.01M14.5 12.5h.01M10.5 16c1 .8 2 .8 3 0"/></svg>לוני</button>
     <button id="nv-home" type="button" hidden><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>הבית</button>
@@ -1947,7 +1953,7 @@ function tab(n){
   if(n==='jobs')paintSent();
   if(n==='today'){paintTodayCal();tmLoad(false);paintMyNotes();}
   if(n==='shop'){shopLive();paintShop();}
-  if(n==='food')paintFood(true);
+  if(n==='food'){foodSec='';paintFood(true);}
   if(n==='cal'){paintCal();tmLoad(false);}
 }
 /* --- גיבוי ושחזור (אבא) --- */
@@ -4683,7 +4689,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden){calCheckR
 const FOOD0={ten:['גבינה','שוקולד','גבינת לכלוכים','חומוס','ריק','טוסט עם גבינה'],lunch:['אורז','תפוח אדמה']};
 const MEALS=[['ten','ארוחת עשר','🥪'],['lunch','צהרון','🍲']];
 const FOOD_H=20,FOOD_SNOOZE=15*60e3,EMPTY='ריק';
-let wakeDef={},foodDef=null,foodDays={},foodUnsubs=[],foodKeys='',foodSel='',fdraft=null,fdraftDay='',foodWant=false,foodAlt=false,pdraft=null;
+let wakeDef={},foodDef=null,foodDays={},foodUnsubs=[],foodKeys='',foodSel='',foodSec='',fdraft=null,fdraftDay='',foodWant=false,foodAlt=false,pdraft=null;
 const foodRef=k=>doc(db,'families',code,'food',k);
 const foodDefRef=()=>doc(db,'families',code,'prefs','food');
 const wakeRef=()=>doc(db,'families',code,'prefs','wake');
@@ -4847,10 +4853,10 @@ $('updAll').onclick=()=>{updAck(null);$('updPop').hidden=true;toast('הכול א
 $('updPop').addEventListener('click',e=>{if(e.target===$('updPop'))$('updPop').hidden=true;});
 function paintFoodBadge(){
   const b=$('foodBadge');if(!b)return;
-  if(me&&isAdult(me)){const n=updCount();b.hidden=!n;b.textContent=n;b.classList.add('upd');$('nv-food').setAttribute('aria-label','אוכל'+(n?', '+n+' עדכונים חדשים':''));return;}
+  if(me&&isAdult(me)){const n=updCount();b.hidden=!n;b.textContent=n;b.classList.add('upd');$('nv-food').setAttribute('aria-label','אוכל והשכמה'+(n?', '+n+' עדכונים חדשים':''));return;}
   b.classList.remove('upd');
   const due=foodDue();b.hidden=!due;b.textContent='!';
-  $('nv-food').setAttribute('aria-label','אוכל'+(due?', צריך למלא למחר':''));
+  $('nv-food').setAttribute('aria-label','אוכל והשכמה'+(due?', צריך למלא למחר':''));
 }
 function checkFood(){
   if(!me||!code||!db)return;
@@ -5136,16 +5142,36 @@ function paintFoodParent(box){
   });
   box.append(days);
   const k=foodSel,m=menuOf(k);
-  box.append(foodSummary(k));
-  if(k===tmrKey())box.append(wakeCard(k));
-  /* סיכום ההזמנות. תכנון שעוד מחכה לבת נספר לפי התכנון */
   const kids=PEOPLE.filter(p=>!isAdult(p.id));
+  const canPlan=k===tmrKey();
+  const asks=kids.filter(p=>{const pl=planOf(k,p.id);return pl&&pl.st==='alt';});
+  /* המסך הראשי: הסיכום וכפתורים גדולים. כל השאר נפתח מכפתור */
+  if(foodSec==='wake'&&!canPlan||foodSec==='plan'&&!canPlan)foodSec='';
+  if(!foodSec){
+    box.append(foodSummary(k));
+    const g=h('div','fbig');
+    const big=(sec,ic,t,n)=>{const b=h('button');b.type='button';b.append(h('span','fbi',ic),h('span',null,t));
+      if(n){const x=h('span','nb',String(n));b.append(x);}
+      b.onclick=()=>{foodSec=sec;paintFood(true);window.scrollTo({top:0,behavior:'smooth'});};g.append(b);};
+    if(canPlan)big('wake','⏰','שעות השכמה');
+    big('kids','👧','ההזמנות של הבנות',asks.length);
+    if(canPlan)big('plan','📝','לקבוע לבנות');
+    big('menu','🍽️','עריכת התפריט');
+    box.append(g);
+    return;
+  }
+  const back=h('button','btn fback','→ חזרה לסיכום');back.type='button';
+  back.onclick=()=>{foodSec='';paintFood(true);};
+  box.append(back);
+  if(foodSec==='wake'){box.append(wakeCard(k));return;}
+  if(foodSec==='plan'){box.append(planCard(k));return;}
+  if(foodSec==='menu'){paintMenuEd(box,k,m);return;}
+  /* סיכום ההזמנות. תכנון שעוד מחכה לבת נספר לפי התכנון */
   const fin=id=>{const pl=planOf(k,id);return pl?!(pl.st==='wait'||pl.st==='alt')&&!!orderOf(k,id):!!orderOf(k,id);};
   const done=kids.filter(p=>fin(p.id)).length;
   const pr=h('p','progress'+(done===kids.length?' all':''));
   pr.textContent=done===kids.length?'כל הבנות סגרו ל'+foodDayTxt(k):done+' מתוך '+kids.length+' בנות סגרו ל'+foodDayTxt(k);
   box.append(pr);
-  const asks=kids.filter(p=>{const pl=planOf(k,p.id);return pl&&pl.st==='alt';});
   if(asks.length)box.append(h('p','fask','✋ '+asks.map(p=>p.name).join(', ')+' '+(asks.length>1?'ביקשו':'ביקשה')+' משהו אחר. התשובה למטה.'));
   MEALS.forEach(([mk,name,ic])=>{
     const cnt={};
@@ -5157,7 +5183,6 @@ function paintFoodParent(box){
     ent.forEach(([x,n])=>{const s=h('span','cnt',x+' ');s.append(h('b',null,'×'+n));cs.append(s);});
     wrap.append(cs);box.append(wrap);
   });
-  const canPlan=k===tmrKey();
   kids.forEach(p=>{
     const o=orderOf(k,p.id),pl=planOf(k,p.id),c=h('div','kc');
     c.style.setProperty('--kc',p.l);c.style.setProperty('--kc-d',p.d);
@@ -5196,15 +5221,16 @@ function paintFoodParent(box){
       const e=h('button','btn sm',pl?'✏️ לשנות את התכנון':'📝 לקבוע לה');e.type='button';
       e.onclick=()=>{const src=effOf(k,p.id)||o;pdraft=null;pEnsure(k);pdraft.kids=new Set([p.id]);
         if(src){const m=mealsOf(src);pdraft.ten=new Set(m.ten);pdraft.tenX=m.tenX;pdraft.lunch=new Set(m.lunch);pdraft.lunchX=m.lunchX;}
-        paintFood(true);const t=$('fplan');if(t)t.scrollIntoView({behavior:'smooth',block:'start'});};
+        foodSec='plan';paintFood(true);window.scrollTo({top:0,behavior:'smooth'});};
       r.append(e);
       if(pl){const x=h('button','btn sm quiet','ביטול התכנון');x.type='button';x.onclick=()=>cancelPlan(k,p.id);r.append(x);}
       c.append(r);
     }
     box.append(c);
   });
-  if(canPlan)box.append(planCard(k));
-  /* עריכת התפריט */
+}
+/* עריכת התפריט */
+function paintMenuEd(box,k,m){
   const ed=h('div','card');
   ed.append(h('h3',null,'התפריט ל'+foodDayTxt(k)));
   ed.append(h('p','date','מה הבנות יכולות לבחור. מה שמשנים כאן נשמר גם לימים הבאים. לחיצה על אפשרות מסירה אותה.'));
@@ -5276,7 +5302,7 @@ function savePlan(k,msg){
   const names=[...d.kids].map(id=>byId[id].name);
   pdraft=null;
   toast('נשלח לאישור: '+names.join(', '));
-  paintFood(true);
+  foodSec='';paintFood(true);
 }
 /* ההורה עונה לבקשה של הבת: לאשר (הבקשה נהיית ההזמנה) או להשאיר את התכנון */
 function decidePlan(k,id,yes){
