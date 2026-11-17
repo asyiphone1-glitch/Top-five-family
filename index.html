@@ -3820,34 +3820,41 @@ function paintJobs(){
   if(!box.dataset.fo){box.dataset.fo='1';box.addEventListener('focusout',()=>setTimeout(()=>{if(jobsPend&&!jobsBusy())paintJobs();},200));}
   box.innerHTML='';
   const recent=j=>!j.done||!j.doneAt||Date.now()-j.doneAt<3*864e5;
+  /* הכול בכפתורים: המסך הראשי הוא רק כפתורים, וכל רשימה נפתחת בלחיצה */
+  const cn=(t,l)=>l.length?t+' ('+l.length+')':t;
+  let L;
   if(isAdult(me)){
     const grpOpen=g=>jobs.some(x=>x.grp===g&&!x.done);
-    const dlA=jobs.filter(j=>j.done&&!waiting(j)&&recent(j)&&!(j.grp&&grpOpen(j.grp)));
-    if(jobsSec){
-      jobsBack(box);
-      if(jobsSec==='done')sectionGrp(box,'בוצעו לאחרונה',dlA,'אין משימות שבוצעו לאחרונה.');
-      if(jobsSec==='sent'&&!sentN)box.append(h('p','date','עוד אין משימות ששלחת ל'+byId[spouse(me)].name+'.'));
-      if(jobsSec==='rep'&&!reps.length)box.append(h('p','date','אין משימות חוזרות.'));
-    }else{
-      jobsBig(box,[['new','➕','משימה חדשה',0,'fbx'],['sent','📤','שלחתי ל'+byId[spouse(me)].name,0],['rep','🔁','משימות חוזרות',0],['done','✅','בוצעו לאחרונה',0],['ring','🔔','צלצול תזכורת',0]]);
-      if(on('r_approve'))section(box,'ממתינות לאישור שלך',jobs.filter(waiting));
-      const famOpen=jobs.filter(j=>!j.done&&j.to==='fam');
-      if(famOpen.length)section(box,'🏠 משימות של כל המשפחה',famOpen);
-      section(box,'פתוחות, עוד לא נלקחו',jobs.filter(j=>!j.done&&j.to==='all'&&!j.claim),'אין משימות פתוחות.');
-      sectionGrp(box,'בביצוע',jobs.filter(j=>j.grp?grpOpen(j.grp):(!j.done&&j.to!=='fam'&&resp(j))),'אין משימות בביצוע.');
-    }
+    L={
+      wait:['⏳','ממתינות לאישור שלך',jobs.filter(waiting),'אין משימות שממתינות לאישור.',section],
+      fam:['🏠','משימות של כל המשפחה',jobs.filter(j=>!j.done&&j.to==='fam'),'אין משימות משפחתיות פתוחות.',section],
+      open:['📋','פתוחות, עוד לא נלקחו',jobs.filter(j=>!j.done&&j.to==='all'&&!j.claim),'אין משימות פתוחות.',section],
+      prog:['🏃','בביצוע',jobs.filter(j=>j.grp?grpOpen(j.grp):(!j.done&&j.to!=='fam'&&resp(j))),'אין משימות בביצוע.',sectionGrp],
+      done:['✅','בוצעו לאחרונה',jobs.filter(j=>j.done&&!waiting(j)&&recent(j)&&!(j.grp&&grpOpen(j.grp))),'אין משימות שבוצעו לאחרונה.',sectionGrp]
+    };
+    if(!on('r_approve'))delete L.wait;
   }else{
-    const dl=jobs.filter(j=>j.done&&recent(j)&&(resp(j)===me||j.doneBy===me||openTo(j)||j.to==='fam'));
-    if(jobsSec==='done'){jobsBack(box);section(box,'בוצעו לאחרונה',dl,'אין משימות שבוצעו לאחרונה.');}
-    else{
-    jobsBig(box,[['done','✅','בוצעו לאחרונה',0]]);
-    const mine=jobs.filter(j=>!j.done&&resp(j)===me);
-    section(box,'מחכות לך',mine,'',true);
-    const famOpen=jobs.filter(j=>!j.done&&j.to==='fam');
-    if(famOpen.length)section(box,'🏠 משימות של כל המשפחה',famOpen);
-    section(box,'פתוחות, אפשר לקחת',jobs.filter(j=>!j.done&&j.to==='all'&&!j.claim),'אין משימות פתוחות.');
-    section(box,'האחיות לקחו',jobs.filter(j=>!j.done&&j.to==='all'&&j.claim&&j.claim!==me));
-    }
+    L={
+      mine:['🙋','מחכות לך',jobs.filter(j=>!j.done&&resp(j)===me),'',section,true],
+      fam:['🏠','משימות של כל המשפחה',jobs.filter(j=>!j.done&&j.to==='fam'),'אין משימות משפחתיות פתוחות.',section],
+      open:['📋','פתוחות, אפשר לקחת',jobs.filter(j=>!j.done&&j.to==='all'&&!j.claim),'אין משימות פתוחות.',section],
+      took:['👭','האחיות לקחו',jobs.filter(j=>!j.done&&j.to==='all'&&j.claim&&j.claim!==me),'האחיות לא לקחו משימות.',section],
+      done:['✅','בוצעו לאחרונה',jobs.filter(j=>j.done&&recent(j)&&(resp(j)===me||j.doneBy===me||openTo(j)||j.to==='fam')),'אין משימות שבוצעו לאחרונה.',section]
+    };
+  }
+  if(jobsSec&&!L[jobsSec]&&!isAdult(me))jobsSec='';
+  if(jobsSec){
+    jobsBack(box);
+    const x=L[jobsSec];
+    if(x){const [ic,t,l,em,fn,q]=x;fn(box,t,l,em||'אין משימות.',q);}
+    if(jobsSec==='sent'&&!sentN)box.append(h('p','date','עוד אין משימות ששלחת ל'+byId[spouse(me)].name+'.'));
+    if(jobsSec==='rep'&&!reps.length)box.append(h('p','date','אין משימות חוזרות.'));
+  }else{
+    const list=[];
+    if(isAdult(me))list.push(['new','➕','משימה חדשה',0,'fbx']);
+    for(const k in L)list.push([k,L[k][0],cn(L[k][1],L[k][2]),0]);
+    if(isAdult(me))list.push(['sent','📤','שלחתי ל'+byId[spouse(me)].name,0],['rep','🔁',cn('משימות חוזרות',reps),0],['ring','🔔','צלצול תזכורת',0]);
+    jobsBig(box,list);
   }
   /* משימות מההורים גם במסך "היום שלי" של הבנות */
   const tj=$('todayJobs');
