@@ -573,6 +573,7 @@ body.tv .pop,body.tv .toast{display:none!important}
 #tv .tvtop{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:2.4vmin 4vmin;z-index:4;pointer-events:none}
 #tv .tvclock{font:700 8vmin/1 var(--display);direction:ltr;letter-spacing:1px}
 #tv .tvdate{font:500 3.6vmin var(--body);opacity:.85}
+#tv .tvheb{display:block;font:700 3.2vmin var(--body);color:#FFD166;margin-top:.6vmin}
 #tv .tvs{position:absolute;inset:0;padding:15vmin 4vmin 8vmin;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity .9s ease}
 #tv .tvs.on{opacity:1}
 #tv .tvh{font:800 6.4vmin/1.2 var(--display);margin:0 0 3.5vmin;text-align:center}
@@ -5853,10 +5854,27 @@ function tvShow(dir){
   }
   tvT=setTimeout(()=>tvShow(1),TV_MS);
 }
+/* תאריך עברי באותיות, למשל: ח׳ בכסלו תשפ״ז */
+function gemStr(n){
+  const L=[[400,'ת'],[300,'ש'],[200,'ר'],[100,'ק'],[90,'צ'],[80,'פ'],[70,'ע'],[60,'ס'],[50,'נ'],[40,'מ'],[30,'ל'],[20,'כ'],[10,'י'],[9,'ט'],[8,'ח'],[7,'ז'],[6,'ו'],[5,'ה'],[4,'ד'],[3,'ג'],[2,'ב'],[1,'א']];
+  let r='';n%=1000;
+  while(n>0){if(n===15){r+='טו';break;}if(n===16){r+='טז';break;}for(const[v,c]of L)if(n>=v){r+=c;n-=v;break;}}
+  return r.length>1?r.slice(0,-1)+'״'+r.slice(-1):r+'׳';
+}
+let hebF=null;
+function hebDate(d){
+  try{if(!hebF)hebF=new Intl.DateTimeFormat('he-u-ca-hebrew',{day:'numeric',month:'long',year:'numeric'});
+    const p=hebF.formatToParts(d),g=t=>(p.find(q=>q.type===t)||{}).value||'';
+    const dd=parseInt(g('day'),10),yy=parseInt(g('year'),10),mm=g('month');
+    if(!dd||!yy||!mm)return '';
+    return gemStr(dd)+' ב'+mm+' '+gemStr(yy);
+  }catch(e){return '';}
+}
 function tvClock(){
   const d=new Date();
   $('tvClock').textContent=hhmm(d);
-  $('tvDate').textContent=d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
+  const el=$('tvDate');el.textContent=d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
+  const hd=hebDate(d);if(hd)el.append(h('span','tvheb',hd));
 }
 async function tvWake(){try{if(tvOn&&'wakeLock' in navigator&&!document.hidden)tvLock=await navigator.wakeLock.request('screen');}catch(e){}}
 function openTV(){
