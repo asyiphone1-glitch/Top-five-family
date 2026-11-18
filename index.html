@@ -316,7 +316,12 @@ table.fsum tr.upd .fsn b::after{content:'';display:inline-block;width:9px;height
 .kr .kq::placeholder{color:var(--mute);opacity:.8}
 .kr.kqr:focus-within{border-top-color:var(--kc)}
 .kr .kqp{flex:none;color:var(--mute);font-weight:700;font-size:1.1rem;width:26px;text-align:center}
-.fbw{margin-top:10px;border-top:1px solid var(--line);padding-top:4px}
+.fbw{margin-top:4px}
+.fbw.open{border-top:1px solid var(--line);padding-top:4px}
+.btn.fbtog{display:flex;align-items:center;gap:8px;width:auto;min-height:36px;padding:6px 12px;font-size:.9rem;font-weight:600;color:var(--mute)}
+.btn.fbtog.on{color:inherit}
+.fbtb{font-size:.8rem;font-weight:700;color:var(--warn)}
+.fbtb.rep{color:var(--act)}
 .fbt{width:100%;box-sizing:border-box;font:inherit;font-size:1rem;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--bg,transparent);color:inherit;resize:vertical;margin:4px 0 6px}
 .fbs{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-top:1px solid var(--line)}
 .fbs small{color:var(--mute);font-size:.78rem}
@@ -1600,7 +1605,7 @@ function kidDel(d){
   setDoc(pdoc(d.id),{...packList(st),day:today()},{merge:true}).catch(()=>toast('המחיקה נכשלה.'));
 }
 /* ---------- פידבק כתוב מההורים לכל ילדה ---------- */
-let notes=[],notesUnsub=null;const fbDraft={},rpDraft={},rpOpen={},fbArch={};
+let notes=[],notesUnsub=null;const fbDraft={},rpDraft={},rpOpen={},fbArch={},fbOpen={};
 /* פידבק וצל״שים מוצגים רק ביום שנשלחו. בסוף היום הם עוברים לארכיון והמסך מתנקה (הנתונים נשמרים) */
 const dayStart=()=>{const d=new Date();d.setHours(0,0,0,0);return d.getTime();};
 const isTodayNote=n=>(n.at||0)>=dayStart();
@@ -1615,8 +1620,21 @@ function subNotes(){
 }
 function fbBox(id){
   const w=h('div','fbw');
+  /* הכול סגור מאחורי כפתור קטן אחד, כדי שרשימת המשימות של הבנות תישאר רציפה */
+  const tdy=notes.filter(n=>n.to===id&&isTodayNote(n));
+  const open=!!fbOpen[id];
+  const tg=h('button','btn quiet sm fbtog'+(open?' on':''));tg.type='button';
+  tg.setAttribute('aria-expanded',open?'true':'false');
+  tg.append(h('span',null,(open?'▾':'▸')+' 💬 פידבק ל'+byId[id].name));
+  const tm=tdy.filter(n=>n.medal).length,newRep=tdy.some(n=>n.reply&&Date.now()-(n.rAt||0)<864e5);
+  if(tm)tg.append(h('span','fbtb','🏅'.repeat(Math.min(tm,3))));
+  if(newRep)tg.append(h('span','fbtb rep','תגובה חדשה'));
+  tg.onclick=()=>{fbOpen[id]=!open;paintKidsTab();};
+  w.append(tg);
+  if(!open)return w;
+  w.classList.add('open');
   /* כותרת + כפתור צל״ש 🏅. אם כתוב משהו בתיבה, הוא נשלח יחד עם הצל״ש */
-  const hd=h('div','fbh');hd.append(h('div','kg','פידבק ל'+byId[id].name));
+  const hd=h('div','fbh');hd.append(h('div','kg',''));
   const ws=sunday(new Date()).getTime(),nm=notes.filter(n=>n.to===id&&n.medal&&(n.at||0)>=ws).length;
   if(nm)hd.append(h('span','fbcnt','השבוע: '+'🏅'.repeat(Math.min(nm,5))+(nm>5?' '+nm:'')));
   const md=h('button','btn sm fbmed','🏅 צל״ש');md.type='button';md.setAttribute('aria-label','לתת צל״ש ל'+byId[id].name);
