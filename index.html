@@ -15,7 +15,7 @@
 <script src="tm.js?v=1"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Rubik:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Rubik:wght@500;700&family=Frank+Ruhl+Libre:wght@700&display=swap">
 <style>
 :root{
   --bg:#EEF2F9; --surface:#FFFFFF; --ink:#12254A; --mute:#5E6B85; --line:#D5DCEA;
@@ -573,6 +573,14 @@ body.tv .pop,body.tv .toast{display:none!important}
 #tv .tvtop{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:2.4vmin 4vmin;z-index:4;pointer-events:none}
 #tv .tvclock{font:700 8vmin/1 var(--display);direction:ltr;letter-spacing:1px}
 #tv .tvdate{font:500 3.6vmin var(--body);opacity:.85}
+#tv .tvcl{display:flex;flex-direction:column;align-items:flex-end;gap:1vmin}
+#tv .tvshab{font:600 2.8vmin var(--body);opacity:.8;white-space:nowrap}
+#tv .tvpar .tvpv,#tv .tvpar .tvpc{width:min(86vw,1050px);text-align:center}
+#tv .tvpv .q{font:700 6vmin/1.35 'Frank Ruhl Libre','David Libre',David,serif}
+#tv .tvpv small,#tv .tvpc small{display:block;margin-top:1.2vmin;font:600 3vmin var(--body);opacity:.7}
+#tv .tvpc{margin-top:5vmin;padding:3vmin 4vmin;border-radius:3vmin;background:rgba(255,255,255,.07);border-inline-start:1vmin solid #FFD166}
+#tv .tvpc .q{font:500 4.4vmin/1.45 var(--body)}
+#tv .tvpc small{color:#FFD166;opacity:1}
 #tv .tvheb{display:block;font:700 3.2vmin var(--body);color:#FFD166;margin-top:.6vmin}
 #tv .tvs{position:absolute;inset:0;padding:15vmin 4vmin 8vmin;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity .9s ease}
 #tv .tvs.on{opacity:1}
@@ -916,7 +924,7 @@ body.tv .pop,body.tv .toast{display:none!important}
 <div id="toast" class="toast" hidden role="status"></div>
 <button id="updBar" class="updbar" type="button" hidden>🔄 יש עדכון · לחצו לרענון</button>
 <div id="tv" hidden aria-live="off">
-  <div class="tvtop"><div class="tvdate" id="tvDate"></div><div class="tvclock" id="tvClock"></div></div>
+  <div class="tvtop"><div class="tvdate" id="tvDate"></div><div class="tvcl"><div class="tvclock" id="tvClock"></div><div class="tvshab" id="tvShab" hidden></div></div></div>
   <div id="tvStage"></div>
   <div class="tvdots" id="tvDots"></div>
   <div class="tvctl" id="tvCtl" hidden>
@@ -5829,8 +5837,127 @@ function tvNightPaint(){
   else s.append(h('div','lun','לילה טוב 🌙'));
   st.append(s);$('tvDots').innerHTML='';
 }
+/* ---------- שבת בתצוגה: מיום שישי בבוקר ועד צאת השבת (אבא, 18/11/2026) ----------
+   זמני כניסה ויציאה של תל אביב בפינה, ליד השעון, בכל השקפים. ועוד שקף אחד של פרשת השבוע:
+   פסוק מרכזי ומשפט קצר של פרשן עליו. הזמנים מ-Hebcal (לוח ישראל). בלי רשת: חישוב לפי השקיעה בתל אביב */
+const PARASHOT=[
+ ['בראשית','בראשית ברא אלהים את השמים ואת הארץ','בראשית א, א','רש״י','אין המקרא הזה אומר אלא דרשני'],
+ ['נח','נח איש צדיק תמים היה בדרתיו','בראשית ו, ט','רש״י','יש מרבותינו דורשים אותו לשבח: כל שכן שאילו היה בדור צדיקים, היה צדיק יותר'],
+ ['לך לך','לך לך מארצך וממולדתך ומבית אביך','בראשית יב, א','רש״י','להנאתך ולטובתך'],
+ ['וירא','והוא ישב פתח האהל כחם היום','בראשית יח, א','רש״י','לראות אם יש עובר ושב ויכניסם בביתו'],
+ ['חיי שרה','ויהיו חיי שרה מאה שנה ועשרים שנה ושבע שנים','בראשית כג, א','רש״י','שני חיי שרה — כולן שוין לטובה'],
+ ['תולדות','ויגדלו הנערים, ויהי עשו איש ידע ציד איש שדה, ויעקב איש תם ישב אהלים','בראשית כה, כז','רש״י','כל זמן שהיו קטנים לא היו ניכרים במעשיהם'],
+ ['ויצא','ויצא יעקב מבאר שבע וילך חרנה','בראשית כח, י','רש״י','יציאת צדיק מן המקום עושה רושם: הוא הודה, הוא זיוה, הוא הדרה'],
+ ['וישלח','קטנתי מכל החסדים ומכל האמת אשר עשית את עבדך','בראשית לב, יא','רש״י','נתמעטו זכויותי על ידי החסדים והאמת שעשית עמי'],
+ ['וישב','וישב יעקב בארץ מגורי אביו','בראשית לז, א','רש״י','ביקש יעקב לישב בשלוה, קפץ עליו רוגזו של יוסף'],
+ ['מקץ','בלעדי, אלהים יענה את שלום פרעה','בראשית מא, טז','רש״י','אין החכמה משלי, אלא אלהים יענה'],
+ ['ויגש','אני יוסף, העוד אבי חי','בראשית מה, ג','מדרש רבה','אוי לנו מיום הדין, אוי לנו מיום התוכחה'],
+ ['ויחי','בך יברך ישראל לאמר: ישמך אלהים כאפרים וכמנשה','בראשית מח, כ','רש״י','הבא לברך את בניו, בברכתם יברכם'],
+ ['שמות','ויגדל משה ויצא אל אחיו וירא בסבלתם','שמות ב, יא','רש״י','נתן עיניו ולבו להיות מיצר עליהם'],
+ ['וארא','ולא שמעו אל משה מקצר רוח ומעבדה קשה','שמות ו, ט','רש״י','כל מי שהוא מיצר, רוחו ונשימתו קצרה'],
+ ['בא','החדש הזה לכם ראש חדשים','שמות יב, ב','רש״י','לא היה צריך להתחיל את התורה אלא מהחדש הזה לכם'],
+ ['בשלח','אז ישיר משה ובני ישראל את השירה הזאת','שמות טו, א','רש״י','אז, כשראה הנס, עלה בלבו שישיר שירה'],
+ ['יתרו','ויחן שם ישראל נגד ההר','שמות יט, ב','רש״י','כאיש אחד בלב אחד'],
+ ['משפטים','כל אשר דבר ה׳ נעשה ונשמע','שמות כד, ז','התלמוד, שבת פח','מי גילה לבני רז זה שמלאכי השרת משתמשין בו'],
+ ['תרומה','ועשו לי מקדש ושכנתי בתוכם','שמות כה, ח','האלשיך','בתוכו לא נאמר, אלא בתוכם — בתוך כל אחד ואחד'],
+ ['תצוה','ואתה תצוה את בני ישראל','שמות כז, כ','בעל הטורים','לא הוזכר משה בסדר זה, משום שאמר: מחני נא מספרך'],
+ ['כי תשא','ועתה הניחה לי','שמות לב, י','רש״י','פתח לו פתח והודיעו שבו תלוי הדבר: שאם יתפלל עליהם, לא יכלם'],
+ ['ויקהל','ויבאו כל איש אשר נשאו לבו','שמות לה, כא','רמב״ן','לא היה בהם מי שלמד את המלאכות, אלא מי שנשא לבו לגשת ולומר: אני אעשה'],
+ ['פקודי','אלה פקודי המשכן משכן העדת','שמות לח, כא','רש״י','משכן משכן שני פעמים — רמז למקדש שנתמשכן בשני חורבנין'],
+ ['ויקרא','ויקרא אל משה','ויקרא א, א','רש״י','לכל דברות ולכל אמירות ולכל צוויים קדמה קריאה — לשון חיבה'],
+ ['צו','אש תמיד תוקד על המזבח, לא תכבה','ויקרא ו, ו','מפרשי החסידות','אש תמיד — גם על המזבח שבלב כל אדם'],
+ ['שמיני','וידם אהרן','ויקרא י, ג','רש״י','קיבל שכר על שתיקתו'],
+ ['תזריע','אשה כי תזריע','ויקרא יב, ב','רש״י','כשם שיצירתו של אדם אחר כל בהמה חיה ועוף, כך תורתו'],
+ ['מצרע','זאת תהיה תורת המצרע','ויקרא יד, ב','התלמוד, ערכין טו','מצורע — מוציא שם רע'],
+ ['אחרי מות','ושמרתם את חקתי ואת משפטי, אשר יעשה אתם האדם וחי בהם','ויקרא יח, ה','התלמוד, יומא פה','וחי בהם — ולא שימות בהם'],
+ ['קדשים','ואהבת לרעך כמוך','ויקרא יט, יח','רבי עקיבא','זה כלל גדול בתורה'],
+ ['אמור','ונקדשתי בתוך בני ישראל','ויקרא כב, לב','רש״י','מסור עצמך וקדש שמי'],
+ ['בהר','כי לי הארץ, כי גרים ותושבים אתם עמדי','ויקרא כה, כג','רש״י','אל תרע עינך בה, שאינה שלך'],
+ ['בחקתי','אם בחקתי תלכו','ויקרא כו, ג','רש״י','שתהיו עמלים בתורה'],
+ ['במדבר','וידבר ה׳ אל משה במדבר סיני','במדבר א, א','רש״י','מתוך חיבתן לפניו, מונה אותם כל שעה'],
+ ['נשא','ישא ה׳ פניו אליך וישם לך שלום','במדבר ו, כו','ספרי','גדול השלום'],
+ ['בהעלתך','והאיש משה ענו מאד, מכל האדם אשר על פני האדמה','במדבר יב, ג','רש״י','שפל וסבלן'],
+ ['שלח','ונהי בעינינו כחגבים, וכן היינו בעיניהם','במדבר יג, לג','מפרשי החסידות','מי שקטן בעיני עצמו, נראה קטן גם בעיני אחרים'],
+ ['קרח','כי כל העדה כלם קדשים','במדבר טז, ג','רש״י','וקרח שפקח היה, מה ראה לשטות זו? עינו הטעתו'],
+ ['חקת','זאת חקת התורה','במדבר יט, ב','רש״י','גזירה היא מלפני, אין לך רשות להרהר אחריה'],
+ ['בלק','מה טבו אהליך יעקב, משכנתיך ישראל','במדבר כד, ה','רש״י','על שראה פתחיהם שאינן מכוונין זה מול זה'],
+ ['פינחס','יפקד ה׳ אלהי הרוחת לכל בשר איש על העדה','במדבר כז, טז','רש״י','מנה עליהם מנהיג שיהא סובל כל אחד ואחד לפי דעתו'],
+ ['מטות','לא יחל דברו, ככל היצא מפיו יעשה','במדבר ל, ג','רש״י','לא יעשה דבריו חולין'],
+ ['מסעי','אלה מסעי בני ישראל','במדבר לג, א','רש״י','כאן ישננו, כאן הוקרנו, כאן חששת את ראשך'],
+ ['דברים','אלה הדברים אשר דבר משה אל כל ישראל','דברים א, א','רש״י','סתם את הדברים והזכירן ברמז, מפני כבודן של ישראל'],
+ ['ואתחנן','ואהבת את ה׳ אלהיך בכל לבבך','דברים ו, ה','רש״י','בכל לבבך — בשני יצריך'],
+ ['עקב','והיה עקב תשמעון','דברים ז, יב','רש״י','אם המצוות הקלות שאדם דש בעקביו תשמעון'],
+ ['ראה','ראה אנכי נתן לפניכם היום ברכה וקללה','דברים יא, כו','ספורנו','ראה, שלא תהיה הנהגתכם בבינוניות כמנהג ההמון'],
+ ['שפטים','צדק צדק תרדף','דברים טז, כ','רש״י','הלך אחר בית דין יפה'],
+ ['כי תצא','לא תוכל להתעלם','דברים כב, ג','רש״י','לכבוש עיניך כאילו אינך רואה אותו'],
+ ['כי תבוא','היום הזה ה׳ אלהיך מצוך','דברים כו, טז','רש״י','בכל יום יהיו בעיניך כחדשים, כאילו בו ביום נצטוית עליהם'],
+ ['נצבים','כי קרוב אליך הדבר מאד, בפיך ובלבבך לעשתו','דברים ל, יד','רמב״ן','המצוה הזאת — היא התשובה'],
+ ['וילך','ועתה כתבו לכם את השירה הזאת','דברים לא, יט','התלמוד, סנהדרין כא','אף על פי שהניחו לו לאדם אבותיו ספר תורה, מצוה לכתוב משלו'],
+ ['האזינו','זכר ימות עולם, בינו שנות דר ודר','דברים לב, ז','רש״י','התבוננו מה עתיד להטיב לכם'],
+ ['וזאת הברכה','תורה צוה לנו משה, מורשה קהלת יעקב','דברים לג, ד','רש״י','אחזנוה ולא נעזבנה']
+];
+/* השוואת שמות בלי ניקוד, בלי ו׳ וי׳ (חוץ מהאות הראשונה) ובלי אותיות סופיות, כדי ש"בחוקותי" ו"בחקתי" יימצאו כאחד */
+const parKey=s=>String(s||'').replace(/[֑-ׇ]/g,'').replace(/^\s*פרשת\s*/,'').replace(/[ךםןףץ]/g,c=>({'ך':'כ','ם':'מ','ן':'נ','ף':'פ','ץ':'צ'})[c]).replace(/[^א-ת]/g,'').replace(/(?!^)[וי]/g,'');
+function parFind(name){
+  const full=parKey(name),first=parKey(String(name||'').split(/[־\-]/)[0]);
+  return PARASHOT.find(p=>parKey(p[0])===full)||PARASHOT.find(p=>parKey(p[0])===first)||null;
+}
+/* שקיעה וצאת השבת בתל אביב, לגיבוי בלי רשת */
+function sunTA(y,m,d,alt){
+  const rad=Math.PI/180,lat=32.0853,lon=34.7818;
+  const n=Math.ceil(Date.UTC(y,m,d,0)/864e5+2440587.5-2451545+0.0008),Js=n-lon/360;
+  const M=(357.5291+0.98560028*Js)%360,C=1.9148*Math.sin(M*rad)+0.02*Math.sin(2*M*rad)+0.0003*Math.sin(3*M*rad);
+  const L=(M+C+180+102.9372)%360,Jt=2451545+Js+0.0053*Math.sin(M*rad)-0.0069*Math.sin(2*L*rad);
+  const sd=Math.sin(L*rad)*Math.sin(23.4397*rad),cd=Math.cos(Math.asin(sd));
+  const w=Math.acos((Math.sin(alt*rad)-Math.sin(lat*rad)*sd)/(Math.cos(lat*rad)*cd))/rad;
+  return new Date((Jt+w/360-2440587.5)*864e5);
+}
+function shabLocal(){
+  const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+((5-d.getDay()+7)%7)-(d.getDay()===6?7:0));
+  const s=new Date(d);s.setDate(s.getDate()+1);
+  return {c:sunTA(d.getFullYear(),d.getMonth(),d.getDate(),-0.833).getTime()-20*6e4,hv:sunTA(s.getFullYear(),s.getMonth(),s.getDate(),-8.5).getTime(),par:'',loc:1};
+}
+let shab=null,shabTry=0;
+try{shab=JSON.parse(LS.get('yaya.shab')||'null');}catch(e){shab=null;}
+function shabLoad(){
+  const now=Date.now();
+  const fresh=shab&&!shab.loc&&shab.hv+36e5>now&&now-(shab.at||0)<12*36e5;
+  if(fresh||now-shabTry<10*6e4)return;
+  shabTry=now;
+  fetch('https://www.hebcal.com/shabbat?cfg=json&geonameid=293397&M=on&i=on').then(r=>r.ok?r.json():Promise.reject())
+    .then(j=>{
+      const it=j.items||[],c=it.find(x=>x.category==='candles'&&new Date(x.date).getDay()===5),hv=it.find(x=>x.category==='havdalah'&&new Date(x.date).getDay()===6),p=it.find(x=>x.category==='parashat');
+      if(!c||!hv)return;
+      shab={c:new Date(c.date).getTime(),hv:new Date(hv.date).getTime(),par:p?(p.hebrew||''):'',at:Date.now()};
+      LS.set('yaya.shab',JSON.stringify(shab));
+      if(tvOn)tvClock();
+    }).catch(()=>{});
+}
+/* מה מציגים עכשיו: מיום שישי ב-06:00 ועד חצי שעה אחרי צאת השבת */
+function shabNow(){
+  let s=shab;
+  if(!s||s.hv+36e5<Date.now())s=shabLocal();
+  const fri=new Date(s.c);fri.setHours(6,0,0,0);
+  const now=Date.now();
+  return now>=fri.getTime()&&now<=s.hv+30*6e4?s:null;
+}
+function tvShabPaint(){
+  const el=$('tvShab');if(!el)return;
+  const s=shabNow();el.hidden=!s;if(!s)return;
+  el.textContent='🕯️ כניסה '+hhmm(new Date(s.c))+' · יציאה '+hhmm(new Date(s.hv));
+}
+function tvParasha(s){
+  const sh=shabNow();if(!sh||!sh.par)return false;
+  const p=parFind(sh.par);
+  s.classList.add('tvpar');
+  s.append(h('div','tvh','📜 '+(/^פרשת/.test(sh.par)?sh.par:'פרשת '+sh.par)));
+  if(!p)return true;
+  const v=h('div','tvpv');v.append(h('div','q','״'+p[1]+'״'),h('small',null,'('+p[2]+')'));
+  const c=h('div','tvpc');c.append(h('div','q',p[4]),h('small',null,'— '+p[3]));
+  s.append(v,c);return true;
+}
 /* תמונה בין כל שקף מידע לבא אחריו, כדי שהתמונות ישתלבו לאורך כל הסיבוב */
-const TV_INFO=[tvChars,tvLuni,tvDay,tvProg,tvPod,tvMorning];
+const TV_INFO=[tvChars,tvLuni,tvDay,tvParasha,tvProg,tvPod,tvMorning];
 const TV_SLIDES=TV_INFO.flatMap(f=>[tvPhoto,f]);
 function tvShow(dir){
   if(!tvOn)return;
@@ -5850,7 +5977,7 @@ function tvShow(dir){
     requestAnimationFrame(()=>requestAnimationFrame(()=>made.classList.add('on')));
     if(old){old.classList.remove('on');setTimeout(()=>old.remove(),1000);}
     const dots=$('tvDots');dots.innerHTML='';
-    const cur=TV_SLIDES[tvI];if(cur!==tvPhoto)TV_INFO.forEach(f=>{if(f===tvMorning&&f!==cur&&new Date().getHours()<19)return;dots.append(h('i',f===cur?'on':''));});
+    const cur=TV_SLIDES[tvI];if(cur!==tvPhoto)TV_INFO.forEach(f=>{if(f!==cur&&((f===tvMorning&&new Date().getHours()<19)||(f===tvParasha&&!shabNow())))return;dots.append(h('i',f===cur?'on':''));});
   }
   tvT=setTimeout(()=>tvShow(1),TV_MS);
 }
@@ -5875,6 +6002,7 @@ function tvClock(){
   $('tvClock').textContent=hhmm(d);
   const el=$('tvDate');el.textContent=d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
   const hd=hebDate(d);if(hd)el.append(h('span','tvheb',hd));
+  shabLoad();tvShabPaint();
 }
 async function tvWake(){try{if(tvOn&&'wakeLock' in navigator&&!document.hidden)tvLock=await navigator.wakeLock.request('screen');}catch(e){}}
 function openTV(){
