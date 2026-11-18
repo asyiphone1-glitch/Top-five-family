@@ -4231,6 +4231,10 @@ async function tmLoad(force){
       const au=getAuth(tmApp);
       await new Promise((res,rej)=>{const off=onAuthStateChanged(au,u=>{off();if(u)res(u);else signInAnonymously(au).then(res,rej);});});
       tmDb=initializeFirestore(tmApp,{experimentalAutoDetectLongPolling:true});
+      /* 18.11.2026: teach-me ננעל לטלפונים מאושרים. הטלפון נרשם שם פעם אחת, ואבא מאשר ברשימת הטלפונים של teach-me */
+      try{const tu=au.currentUser&&au.currentUser.uid;if(tu){const dr=doc(tmDb,'dev',tu);const dd=await getDoc(dr);
+        if(!dd.exists()){const b={at:Date.now(),kind:devKind(),who:'yaya',pid:me||''};
+          try{await setDoc(dr,{...b,ok:true});}catch(e){try{await setDoc(dr,{...b,ok:false});}catch(e2){}}}}}catch(e){}
     }
     const un=x=>{if(x&&typeof x.j==='string'){try{return JSON.parse(x.j);}catch(e){}}return x||{};};
     const ds=await getDoc(doc(tmDb,'meta','examDates'));

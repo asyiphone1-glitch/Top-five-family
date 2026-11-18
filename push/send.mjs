@@ -190,19 +190,28 @@ const TM_KEY = 'AIzaSyAkpMP6QkJZS67fOvVwP3yeuz-gMu1150Q', TM_PROJECT = 'teach-me
 const TMSUBJ = { math: 'חשבון', torah: 'תורה', lit: 'ספרות', eng: 'אנגלית', hist: 'היסטוריה', heb: 'הבעה', dict: 'הכתבה באנגלית', kesher: 'קשרים לוגיים' };
 const tmPid = id => /^dict-base-/.test(id) ? id.slice(10) : id.replace(/^up-/, '').split('-')[0];
 async function tmExams() {
-  let tk = null, rt = null;
+  let tk = null, rt = null, uid = null;
   try { rt = fs.readFileSync(TM_STATE, 'utf8').trim(); } catch (e) {}
   const keep = r => { try { fs.mkdirSync('.state', { recursive: true }); fs.writeFileSync(TM_STATE, r); } catch (e) {} };
   if (rt) {
     const r = await net(`https://securetoken.googleapis.com/v1/token?key=${TM_KEY}`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(rt) });
-    if (r.ok) { const j = await r.json(); tk = j.id_token; keep(j.refresh_token); }
+    if (r.ok) { const j = await r.json(); tk = j.id_token; uid = j.user_id; keep(j.refresh_token); }
   }
   if (!tk) {
     const r = await net(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${TM_KEY}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"returnSecureToken":true}' });
     if (!r.ok) throw new Error('teach-me sign-in ' + r.status);
-    const j = await r.json(); tk = j.idToken; keep(j.refreshToken);
+    const j = await r.json(); tk = j.idToken; uid = j.localId; keep(j.refreshToken);
   }
   const TB = `https://firestore.googleapis.com/v1/projects/${TM_PROJECT}/databases/(default)/documents`;
+  // 18.11.2026: teach-me ננעל לטלפונים מאושרים. השרת נרשם שם פעם אחת (dev/{uid}), ואבא מאשר ברשימת הטלפונים של teach-me
+  if (uid) try {
+    const DH = { Authorization: 'Bearer ' + tk, 'Content-Type': 'application/json' };
+    const g = await net(`${TB}/dev/${uid}`, { headers: DH });
+    if (g.status === 404) {
+      const mk = ok => net(`${TB}/dev/${uid}?currentDocument.exists=false`, { method: 'PATCH', headers: DH, body: JSON.stringify({ fields: { ok: { booleanValue: ok }, kind: { stringValue: 'שרת ההתראות' }, who: { stringValue: 'yaya' }, at: { integerValue: String(Date.now()) } } }) });
+      if (!(await mk(true)).ok) { await mk(false); console.log('teach-me: השרת של yaya מחכה לאישור ברשימת הטלפונים של teach-me'); }
+    }
+  } catch (e) {}
   const un = x => { if (x && typeof x.j === 'string') { try { return JSON.parse(x.j); } catch (e) {} } return x || {}; };
   const r = await net(`${TB}/meta/examDates`, { headers: { Authorization: 'Bearer ' + tk } });
   if (!r.ok) throw new Error('teach-me examDates ' + r.status);
