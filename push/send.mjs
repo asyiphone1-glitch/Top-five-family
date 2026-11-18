@@ -49,7 +49,7 @@ let token = null;
 
 async function signIn() {
   const cand = [];
-  try { cand.push(fs.readFileSync(STATE, 'utf8').trim()); } catch (e) {}
+  try { cand.push(stateRead(STATE)); } catch (e) {}
   try { const x = rtOpen(fs.readFileSync(RT_ENC, 'utf8')); if (x) cand.push(x); } catch (e) {}
   for (const rt of [...new Set(cand.filter(Boolean))]) {
     const r = await net(`https://securetoken.googleapis.com/v1/token?key=${API_KEY}`, {
@@ -66,8 +66,12 @@ async function signIn() {
   if (!r.ok) throw new Error('כניסה ל-Firebase נכשלה: ' + r.status + ' ' + await r.text());
   const j = await r.json(); token = j.idToken; save(j.refreshToken);
 }
+// sec_cache (18.11.2026, אושר): גם המטמון של GitHub (.state) נשמר מוצפן. במאגר פומבי, Pull Request מבחוץ
+// יכול לשחזר מטמון, ובלי הצפנה היה מקבל את החיבור של השרת. קובץ ישן לא מוצפן נקרא פעם אחת ומוחלף.
+function stateRead(f) { const raw = fs.readFileSync(f, 'utf8').trim(); return rtOpen(raw) || (/^[A-Za-z0-9_-]{40,}$/.test(raw) ? raw : ''); }
+function stateWrite(f, rt) { try { fs.mkdirSync('.state', { recursive: true }); fs.writeFileSync(f, rtSeal(rt)); } catch (e) {} }
 function save(rt) {
-  try { fs.mkdirSync('.state', { recursive: true }); fs.writeFileSync(STATE, rt); } catch (e) {}
+  stateWrite(STATE, rt);
   // מעדכנים את העותק המוצפן רק כשהחיבור השתנה (ה-workflow שומר אותו במאגר)
   let old = null; try { old = rtOpen(fs.readFileSync(RT_ENC, 'utf8')); } catch (e) {}
   if (old !== rt && !DRY) try { fs.writeFileSync(RT_ENC, rtSeal(rt) + '\n'); } catch (e) {}
@@ -163,7 +167,7 @@ function secsToShabbat(t) {
 }
 
 // ---- גיבוי לילי (r5_autobk): כל לילה אחרי 03:00, נשמר בתוך מסד הנתונים הנעול, 14 לילות אחרונים ----
-const BK_COLS = ['people', 'jobs', 'rep', 'swaps', 'weeks', 'prefs', 'shop', 'cal', 'caltm', 'food'];
+const BK_COLS = ['people', 'jobs', 'rep', 'swaps', 'weeks', 'prefs', 'shop', 'cal', 'caltm', 'food', 'priv', 'share'];
 const BK_KEEP = 14, BK_CHUNK = 250000;
 async function nightly(F, now) {
   const p = parts(now);
@@ -174,7 +178,7 @@ async function nightly(F, now) {
   const out = { app: 'yaya', v: 1, at: now, data: {} };
   for (const c of BK_COLS) {
     out.data[c] = {};
-    for (const d of await list(F + '/' + c)) { const id = d.id; delete d.id; out.data[c][id] = d; }
+    for (const d of await list(F + '/' + c).catch(e => { if (c === 'priv' || c === 'share') return []; throw e; })) { const id = d.id; delete d.id; out.data[c][id] = d; }
   }
   const js = JSON.stringify(out), n = Math.max(1, Math.ceil(js.length / BK_CHUNK));
   const cnt = Object.values(out.data).reduce((a, x) => a + Object.keys(x).length, 0);
@@ -191,8 +195,8 @@ const TMSUBJ = { math: 'חשבון', torah: 'תורה', lit: 'ספרות', eng: 
 const tmPid = id => /^dict-base-/.test(id) ? id.slice(10) : id.replace(/^up-/, '').split('-')[0];
 async function tmExams() {
   let tk = null, rt = null, uid = null;
-  try { rt = fs.readFileSync(TM_STATE, 'utf8').trim(); } catch (e) {}
-  const keep = r => { try { fs.mkdirSync('.state', { recursive: true }); fs.writeFileSync(TM_STATE, r); } catch (e) {} };
+  try { rt = stateRead(TM_STATE) || null; } catch (e) {}
+  const keep = r => stateWrite(TM_STATE, r);
   if (rt) {
     const r = await net(`https://securetoken.googleapis.com/v1/token?key=${TM_KEY}`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(rt) });
     if (r.ok) { const j = await r.json(); tk = j.id_token; uid = j.user_id; keep(j.refresh_token); }
@@ -333,6 +337,8 @@ async function main() {
       });
     };
     for (const p of ppl) scan(p, p.id, [p.id], 'today');
+    // priv_people (18.11.2026): המשימות האישיות של אבא ושל אמא עברו ל-priv/{dad|mom}
+    for (const p of await list(F + '/priv').catch(() => [])) if (p.id === 'dad' || p.id === 'mom') scan(p, p.id, [p.id], 'today');
     // משימות שאבא ואמא שלחו זה לזו ועוד לא נכנסו לרשימה (האפליקציה של המקבל סגורה)
     for (const p of ppl) {
       if (!Array.isArray(p.inbox)) continue;

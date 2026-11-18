@@ -1009,6 +1009,13 @@ function authed(){
   });
 }
 const pdoc=id=>doc(db,'families',code,'people',id);
+/* priv_people (18.11.2026, אושר): המשימות האישיות של אבא ושל אמא ב-priv/{dad|mom}, שרק הטלפון שלהם קורא (נאכף בשרת).
+   מה שבן/בת הזוג שלחו נמצא גם ב-share/{dad|mom}, כדי שהשולח יראה רק אותו ואם בוצע */
+const privDoc=id=>doc(db,'families',code,'priv',id);
+const shareDoc=id=>doc(db,'families',code,'share',id);
+const TASKF=['tasks','done','lv','rm','by','day'];
+const PRIVP=['dad','mom','server'];
+let pRaw={},privData=null,privSt='wait',privUnsub=null,privKey='',shareData=null,shareUnsub=null,lastShare='',privWarned=false,myDev=undefined,myDevUnsub=null,migBusy=false;
 const metaDoc=()=>doc(db,'families',code,'prefs','meta');
 const famDoc=()=>doc(db,'families',code,'prefs','family');
 
@@ -1053,10 +1060,15 @@ function startFamily(){
   if(unsub)unsub();
   setNet('connecting');
   unsub=onSnapshot(collection(db,'families',code,'people'),{includeMetadataChanges:true},snap=>{
-    snap.docs.forEach(d=>{people[d.id]=d.data();});
+    snap.docs.forEach(d=>{people[d.id]=d.data();pRaw[d.id]=d.data();});
+    ovPeople();
+    if(me&&isAdult(me)&&privSt==='ok'&&privData&&!snap.metadata.fromCache)cleanOld(me);
     setNet(snap.metadata.fromCache?'cache':'ok');
     onPeople(snap);
   },()=>setNet('err'));
+  if(myDevUnsub){myDevUnsub();myDevUnsub=null;}
+  myDev=myUid?undefined:null;
+  if(myUid)myDevUnsub=onSnapshot(devRef(myUid),sn=>{myDev=sn.exists()?sn.data():null;subPriv();},()=>{myDev=null;subPriv();});
   if(me&&byId[me]&&!isAdult(me)&&!LS.get('yaya.lock'))LS.set('yaya.lock',me);
   if(me&&byId[me])openMain();else showWho();
 }
@@ -1165,6 +1177,14 @@ function progress(){paintProgress($('progress'),work,'הוסיפו את המשי
 function save(){
   dirty=true;clearTimeout(saveT);
   saveT=setTimeout(()=>{
+    if(isAdult(me)){
+      if(privSt==='wait'){save();return;}
+      dirty=false;
+      if(privSt!=='ok'){privDenied();return;}
+      setDoc(privDoc(me),{...packList(work),day:today()},{merge:true}).catch(()=>setNet('err'));
+      writeShare(work);
+      return;
+    }
     dirty=false;
     setDoc(pdoc(me),{name:byId[me].name,...packList(work),day:today()},{merge:true}).catch(()=>setNet('err'));
   },600);
@@ -1395,9 +1415,95 @@ function paintSent(){
   });
   b.append(ul);jobsVis();
 }
+/* priv_people: מציגים את המשימות מ-priv (שלי) ומ-share (מה ששלחתי לבן/בת הזוג) כאילו הן במסמך הרגיל */
+function ovOne(id,src){const b={...(pRaw[id]||people[id]||{})};TASKF.forEach(k=>delete b[k]);TASKF.forEach(k=>{if(k in src)b[k]=src[k];});people[id]=b;}
+function ovPeople(){
+  if(!me||!isAdult(me))return;
+  if(privSt==='ok'&&privData)ovOne(me,privData);
+  if(shareData)ovOne(spouse(me),shareData);
+}
+function privDenied(){
+  if(privWarned||!me)return;privWarned=true;
+  toast('הטלפון הזה עוד לא אושר כטלפון של '+byId[me].name+'. מאשרים בטלפון של '+byId[spouse(me)].name+': הגדרות > טלפונים במשפחה');
+}
+function subPriv(){
+  if(myUid&&myDev===undefined)return;
+  const k=(me&&isAdult(me)&&code)?code+'|'+me+'|'+((myDev&&myDev.pid)||''):'';
+  if(k===privKey)return;privKey=k;
+  if(privUnsub){privUnsub();privUnsub=null;}
+  if(shareUnsub){shareUnsub();shareUnsub=null;}
+  privData=null;shareData=null;privSt='wait';lastShare='';
+  if(!k)return;
+  const who=me;
+  privUnsub=onSnapshot(privDoc(who),{includeMetadataChanges:true},sn=>{
+    if(who!==me)return;
+    if(!sn.exists()){if(sn.metadata.fromCache)return;privSt='ok';privData=null;migratePriv(who);return;}
+    privSt='ok';privWarned=false;privData=sn.data();
+    ovPeople();cleanOld(who);
+    if(sn.metadata.hasPendingWrites)return;
+    writeShare(myState());
+    if(!me||$('s-main').hidden||dirty)return;
+    const a=document.activeElement;
+    if(!(a&&a.tagName==='INPUT')){const st=myState();if(JSON.stringify(st)!==JSON.stringify(work)){work=st;renderTasks();}}
+    paintHome();checkInbox();
+  },()=>{if(who!==me)return;privSt='denied';privDenied();});
+  shareUnsub=onSnapshot(shareDoc(spouse(who)),sn=>{
+    if(who!==me)return;
+    shareData=sn.exists()?sn.data():null;
+    if(!shareData)people[spouse(who)]={...(pRaw[spouse(who)]||{})};
+    ovPeople();paintSent();
+  },()=>{});
+}
+/* העברה חד-פעמית: המשימות שהיו במסמך הרגיל עוברות ל-priv, ונמחקות משם */
+async function migratePriv(who){
+  if(migBusy)return;
+  if(!pRaw[who]){setTimeout(()=>{if(who===me&&privSt==='ok'&&!privData)migratePriv(who);},1000);return;}
+  migBusy=true;
+  try{
+    const r=pRaw[who]||{},d={tasks:[],done:[],lv:[],rm:[]};
+    TASKF.forEach(k=>{if(k in r)d[k]=r[k];});
+    await setDoc(privDoc(who),d);
+  }catch(e){}
+  migBusy=false;
+}
+/* אם משהו כתב משימות למסמך הרגיל אחרי ההעברה (גרסה ישנה בטלפון אחר, או שחזור מגיבוי ישן) – מוסיפים ל-priv מה שחסר, ומוחקים משם */
+function cleanOld(who){
+  const r=pRaw[who];if(!r)return;
+  const u={};['tasks','done','lv','rm','by'].forEach(k=>{if(k in r)u[k]=deleteField();});
+  if(!Object.keys(u).length)return;
+  const a=listState(r),b=listState(privData||{});let add=0;
+  for(let m=0;m<a.tasks.length;m++){
+    if(a.lv[m]||!a.tasks[m].trim())continue;
+    const e=blockEnd(a,m);let bm=b.tasks.findIndex((t,i)=>!b.lv[i]&&t.trim()===a.tasks[m].trim());
+    if(bm<0){for(let k=m;k<e;k++){b.tasks.push(a.tasks[k]);b.done.push(a.done[k]);b.lv.push(k===m?0:1);b.rm.push(a.rm[k]||0);add++;}continue;}
+    for(let k=m+1;k<e;k++){
+      const be=blockEnd(b,bm);
+      if(b.tasks.slice(bm+1,be).some(t=>t.trim()===a.tasks[k].trim()))continue;
+      b.tasks.splice(be,0,a.tasks[k]);b.done.splice(be,0,a.done[k]);b.lv.splice(be,0,1);b.rm.splice(be,0,a.rm[k]||0);add++;
+    }
+  }
+  const go=()=>setDoc(pdoc(who),u,{merge:true}).catch(()=>{});
+  if(add&&b.tasks.length<=MAXT)setDoc(privDoc(who),{...packList(b),day:today()},{merge:true}).then(go).catch(()=>{});
+  else go();
+}
+/* רק הקטגוריה "משימה מאבא"/"משימה מאמא" ותתי-המשימות שלה */
+function shareOf(st){
+  const cat=fromCat(spouse(me)),o={tasks:[],done:[],lv:[],rm:[],day:today()};
+  st.tasks.forEach((t,i)=>{
+    if(st.lv[i]||t.trim()!==cat)return;
+    o.tasks.push(t);o.done.push(!!st.done[i]);o.lv.push(0);o.rm.push(0);
+    for(let k=i+1;k<st.tasks.length&&st.lv[k];k++){if(!st.tasks[k].trim())continue;o.tasks.push(st.tasks[k]);o.done.push(!!st.done[k]);o.lv.push(1);o.rm.push(0);}
+  });
+  return o;
+}
+function writeShare(st){
+  if(!me||!isAdult(me)||privSt!=='ok')return;
+  const o=shareOf(st),j=JSON.stringify(o);if(j===lastShare)return;lastShare=j;
+  setDoc(shareDoc(me),o).catch(()=>{lastShare='';});
+}
 let inboxBusy=false;
 async function checkInbox(){
-  if(!me||!isAdult(me)||inboxBusy)return;
+  if(!me||!isAdult(me)||inboxBusy||privSt!=='ok')return;
   const ib=(people[me]||{}).inbox;
   if(!Array.isArray(ib)||!ib.length)return;
   const a=document.activeElement;
@@ -1412,10 +1518,11 @@ async function checkInbox(){
       if(!got.length){nx=null;return;}
       nx=JSON.parse(JSON.stringify(work));
       mergeInbox(nx,got);
-      tx.set(pdoc(me),{name:byId[me].name,...packList(nx),day:today(),inbox:[]},{merge:true});
+      tx.set(privDoc(me),{...packList(nx),day:today()},{merge:true});
+      tx.set(pdoc(me),{inbox:[]},{merge:true});
     });
     if(nx){
-      work=nx;renderTasks();
+      work=nx;renderTasks();writeShare(nx);
       const fr=[...new Set(got.map(x=>x.from).filter(f=>byId[f]))];
       toast(fr.map(f=>byId[f].name).join(' ו')+(fr.length===1&&fr[0]==='mom'?' שלחה':' שלח')+' לך '+(got.length>1?got.length+' משימות':'משימה'));
     }
@@ -1805,7 +1912,8 @@ function paintDevs(){
   card.hidden=!isAdult(me);if(card.hidden)return;
   const box=$('devBox');box.innerHTML='';
   const ids=Object.keys(devs),pend=ids.filter(i=>devs[i].ok!==true).sort((a,b)=>(devs[b].at||0)-(devs[a].at||0));
-  $('devH').textContent='טלפונים במשפחה'+(pend.length?' ('+pend.length+' מחכים לאישור)':'');
+  const wants=ids.filter(i=>devs[i].ok===true&&devs[i].want&&byId[devs[i].want]&&devs[i].want!==devs[i].pid);
+  $('devH').textContent='טלפונים במשפחה'+(pend.length+wants.length?' ('+(pend.length+wants.length)+' מחכים לאישור)':'');
   const nm=d=>d.pid==='server'?'שרת ההתראות':byId[d.pid]?byId[d.pid].name:'';
   /* r7_fakeserver: אם השרת האמיתי כבר מאושר ורץ, "שרת" חדש שמבקש אישור הוא חשוד ואי אפשר לאשר אותו */
   const realSrv=ids.some(i=>devs[i].ok===true&&devs[i].pid==='server')&&health&&Date.now()-(health.at||0)<15*60e3;
@@ -1815,11 +1923,25 @@ function paintDevs(){
     row.append(h('i','dot'),h('span',null,(fake?'⚠️ חשוד: ':'🆕 ')+(d.kind||'טלפון')+(nm(d)?' · '+nm(d):'')),h('small',null,fake?'השרת האמיתי כבר עובד. לא לאשר':'ביקש '+ago(Date.now()-(d.at||Date.now()))));
     const acts=h('div','acts');
     const ok=h('button','btn sm',me==='mom'?'מאשרת':'מאשר');ok.type='button';
-    ok.onclick=()=>setDoc(devRef(id),{ok:true,by:me,okAt:Date.now()},{merge:true}).then(()=>toast('הטלפון אושר')).catch(()=>toast('האישור נכשל. בדקו חיבור.'));
+    ok.onclick=()=>setDoc(devRef(id),{ok:true,by:me,okAt:Date.now(),...(d.want&&byId[d.want]?{pid:d.want,want:deleteField()}:{})},{merge:true}).then(()=>toast('הטלפון אושר')).catch(()=>toast('האישור נכשל. בדקו חיבור.'));
     const no=h('button','btn sm quiet','דחייה');no.type='button';
     no.onclick=()=>{if(confirm('לדחות את הטלפון הזה? הוא לא יוכל להיכנס למשפחה.'))deleteDoc(devRef(id)).catch(()=>toast('הדחייה נכשלה.'));};
     if(fake)ok.hidden=true;
     acts.append(ok,no);row.append(acts);box.append(row);
+  });
+  /* sec_approve: טלפון מאושר שמבקש להיות הטלפון של אבא או של אמא (רואה את המשימות האישיות). לא מאשרים לעצמך */
+  wants.forEach(id=>{
+    const d=devs[id],row=h('div','prow');
+    row.append(h('i','dot'),h('span',null,'🔑 '+(d.kind||'טלפון')+(nm(d)?' · '+nm(d):'')),h('small',null,'מבקש להיות הטלפון של '+byId[d.want].name));
+    const acts=h('div','acts');
+    if(id!==myUid){
+      const ok=h('button','btn sm',me==='mom'?'מאשרת':'מאשר');ok.type='button';
+      ok.onclick=()=>setDoc(devRef(id),{pid:d.want,want:deleteField(),by:me,okAt:Date.now()},{merge:true}).then(()=>toast('אושר')).catch(()=>toast('האישור נכשל. בדקו חיבור.'));
+      acts.append(ok);
+    }else acts.append(h('small',null,'מאשרים מהטלפון השני'));
+    const no=h('button','btn sm quiet','דחייה');no.type='button';
+    no.onclick=()=>setDoc(devRef(id),{want:deleteField()},{merge:true}).catch(()=>toast('הדחייה נכשלה.'));
+    acts.append(no);row.append(acts);box.append(row);
   });
   const okIds=ids.filter(i=>devs[i].ok===true);
   const per={};okIds.forEach(i=>{const k=devs[i].pid||'?';(per[k]=per[k]||[]).push(i);});
@@ -1938,7 +2060,16 @@ async function beat(){
   pushSt=await pushState();
   const app=navigator.standalone===true||matchMedia('(display-mode: standalone)').matches;
   setDoc(pdoc(me),{name:byId[me].name,seen:Date.now(),dev:{ver:APP_VER,since:verSince(),push:pushSt,app:app,at:Date.now()}},{merge:true}).catch(()=>{});
-  if(myUid)setDoc(devRef(myUid),{pid:me,seen:Date.now(),kind:devKind()},{merge:true}).catch(()=>{});
+  /* sec_approve: טלפון קובע לעצמו רק פרופיל של בת. להיות "הטלפון של אבא/אמא" – בקשה (want) שההורה השני מאשר */
+  if(myUid){
+    const u={seen:Date.now(),kind:devKind()},cur=(myDev&&myDev.pid)||'';
+    if(cur!==me){
+      if(PRIVP.includes(me)){if(!myDev||myDev.want!==me)u.want=me;}
+      else if(!PRIVP.includes(cur))u.pid=me;
+    }
+    if(!PRIVP.includes(me)&&myDev&&myDev.want)u.want=deleteField();
+    setDoc(devRef(myUid),u,{merge:true}).catch(()=>{});
+  }
 }
 const PUSHTX={on:'🔔 התראות פעילות',off:'🔕 התראות כבויות',blocked:'🚫 התראות חסומות בטלפון',web:'🔕 נפתח מהדפדפן, לא מהאייקון',no:'🔕 הטלפון לא תומך בהתראות'};
 function startBeat(){clearInterval(hb);hb=setInterval(beat,120000);beat();}
@@ -1987,15 +2118,19 @@ function tab(n){
   if(n==='cal'){paintCal();tmLoad(false);}
 }
 /* --- גיבוי ושחזור (אבא) --- */
-const BK_COLS=['people','jobs','rep','swaps','weeks','prefs','shop','cal','caltm','food'];
+const BK_COLS=['people','jobs','rep','swaps','weeks','prefs','shop','cal','caltm','food','priv','share'];
+/* priv/share: כל הורה רואה רק את שלו (priv_people). השרת שומר את הכול בגיבוי הלילי */
+const BK_OWN=['priv','share'];
 function paintBackup(){const c=$('bkCard');if(c)c.hidden=me!=='dad';const l=LS.get('yaya.bk.last');if(me==='dad'&&l&&!$('bkMsg').textContent)say($('bkMsg'),'גיבוי אחרון מהטלפון הזה: '+new Date(Number(l)).toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'numeric'}),true);}
 $('bkSave').onclick=async()=>{
   const m=$('bkMsg');say(m,'אוסף את הנתונים...',true);
   try{
     const out={app:'yaya',v:1,at:Date.now(),data:{}};
     for(const c of BK_COLS){
+      out.data[c]={};
+      if(BK_OWN.includes(c)){try{const d=await getDoc(doc(db,'families',code,c,me));if(d.exists())out.data[c][me]=d.data();}catch(e){}continue;}
       const sn=await getDocs(collection(db,'families',code,c));
-      out.data[c]={};sn.docs.forEach(d=>out.data[c][d.id]=d.data());
+      sn.docs.forEach(d=>out.data[c][d.id]=d.data());
     }
     const n=Object.values(out.data).reduce((a,x)=>a+Object.keys(x).length,0);
     const url=URL.createObjectURL(new Blob([JSON.stringify(out)],{type:'application/json'}));
@@ -2038,7 +2173,7 @@ async function bkRestore(j){
   say(m,'משחזר...',true);
   try{
     const w=[];
-    for(const c of BK_COLS){const g=j.data[c]||{};for(const id in g)w.push([c,id,g[id]]);}
+    for(const c of BK_COLS){const g=j.data[c]||{};for(const id in g)if(!BK_OWN.includes(c)||id===me)w.push([c,id,g[id]]);}
     for(let i=0;i<w.length;i+=40)await Promise.all(w.slice(i,i+40).map(([c,id,d])=>setDoc(doc(db,'families',code,c,id),d)));
     say(m,'השחזור הסתיים ('+w.length+' פריטים).',true);
   }catch(e){say(m,'השחזור נעצר באמצע. בדקו חיבור ונסו שוב, זה בטוח לנסות שוב.');}
@@ -2063,6 +2198,7 @@ $('quizClose').onclick=()=>quizShow(false);
 let lazyT=null;
 function openMain(){
   const p=byId[me];
+  subPriv();ovPeople();
   document.body.style.setProperty('--pc',p.l);
   document.body.style.setProperty('--pc-d',p.d);
   work=myState();

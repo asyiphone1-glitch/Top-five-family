@@ -1,5 +1,10 @@
 rules_version = '2';
 // yaya: רק טלפונים שאבא או אמא אישרו יכולים לקרוא ולכתוב (r5_rules, שלב 1).
+// 18.11.2026 (סקירת אבטחה, אושר):
+//   sec_approve – רק טלפון של אבא או של אמא מאשר, מנתק או משנה טלפונים. טלפון של בת לא.
+//   priv_people – המשימות האישיות של אבא ושל אמא נמצאות ב-priv/{dad|mom}, ורק הטלפון שלהם קורא אותן.
+//                 מה שאחד שלח לשני נמצא ב-share/{dad|mom}, ורק אבא ואמא רואים אותו.
+// "של מי הטלפון" (pid) נקבע באישור. טלפון יכול לשנות לעצמו pid רק לבת, לא לאבא, לאמא או לשרת.
 // מדביקים את הקובץ הזה ב-Firebase: Firestore Database > Rules > Publish.
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -8,6 +13,15 @@ service cloud.firestore {
     }
     function member(code) {
       return request.auth != null && exists(devPath(code)) && get(devPath(code)).data.ok == true;
+    }
+    function pidIs(code, p) {
+      return member(code) && get(devPath(code)).data.get('pid', '') == p;
+    }
+    function parent(code) {
+      return member(code) && get(devPath(code)).data.get('pid', '') in ['dad', 'mom'];
+    }
+    function server(code) {
+      return pidIs(code, 'server');
     }
 
     // אי אפשר לקבל רשימה של משפחות
@@ -20,16 +34,42 @@ service cloud.firestore {
       allow get: if request.auth != null;
     }
 
-    // טלפון חדש רושם את עצמו כ"מחכה לאישור", ורואה רק את הרישום של עצמו
+    // טלפונים במשפחה
     match /families/{code}/dev/{uid} {
+      // טלפון חדש רושם את עצמו כ"מחכה לאישור", ורואה רק את הרישום של עצמו
       allow get: if request.auth != null && request.auth.uid == uid;
       allow create: if request.auth != null && request.auth.uid == uid
         && request.resource.data.ok == false;
+      // טלפון מאושר מעדכן אצלו רק "נראה לאחרונה", סוג מכשיר, ובקשה להיות הטלפון של אבא/אמא (want).
+      // מותר לו לקבוע לעצמו פרופיל של בת, לא של אבא, אמא או השרת
+      allow update: if member(code) && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['seen', 'kind', 'pid', 'want'])
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['pid'])
+            || !(request.resource.data.get('pid', '') in ['dad', 'mom', 'server']));
+      // אישור, ניתוק ורשימת הטלפונים: רק אבא ואמא
+      allow read, update, delete: if parent(code);
+      // השרת קורא את הרשימה כדי לא לשלוח התראות לטלפון שנותק
+      allow read: if server(code);
+    }
+
+    // המשימות האישיות של אבא ושל אמא: רק הטלפון של אותו הורה (והשרת, לתזכורות ולגיבוי)
+    match /families/{code}/priv/{p} {
+      allow read, write: if pidIs(code, p);
+      allow read: if server(code);
+    }
+
+    // משימות שאבא ואמא שלחו זה לזו, ומה כבר בוצע: רק אבא ואמא (והשרת לגיבוי)
+    match /families/{code}/share/{p} {
+      allow read: if parent(code) || server(code);
+      allow write: if pidIs(code, p);
     }
 
     // כל השאר: רק טלפון מאושר
-    match /families/{code}/{col}/{rest=**} {
-      allow read, write: if member(code);
+    match /families/{code}/{col}/{d} {
+      allow read, write: if member(code) && !(col in ['dev', 'priv', 'share']);
+    }
+    match /families/{code}/{col}/{d}/{sub=**} {
+      allow read, write: if member(code) && !(col in ['dev', 'priv', 'share']);
     }
   }
 }
