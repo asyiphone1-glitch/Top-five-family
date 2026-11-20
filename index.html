@@ -6629,8 +6629,17 @@ function tvWeather(s){
   if(Math.max(0,...P.slice(i,i+4).map(Number))>=50)s.append(h('div','tvnext','☔ צפוי גשם בשעות הקרובות. כדאי מטריה ליציאה עם לוני'));
   return true;
 }
+/* (אבא, 20/11/2026) מודעת שבת ארגון בסניף כפר גנים: זמנית, רק עד מוצאי שבת 21/11. אחרי זה נעלמת לבד */
+const TV_EVT_END=new Date(2026,10,22,0,0);
+function tvEvent(s){
+  if(Date.now()>=TV_EVT_END)return false;
+  s.classList.add('pic');s.dataset.ms='20000';
+  const bg=new Image();bg.className='tvbg';bg.alt='';bg.src='img/shabbat-irgun.webp';
+  const im=new Image();im.className='tvph';im.alt='שבת ארגון בסניף כפר גנים';im.src='img/shabbat-irgun.webp';
+  s.append(bg,im);return true;
+}
 /* תמונה בין כל שקף מידע לבא אחריו, כדי שהתמונות ישתלבו לאורך כל הסיבוב */
-const TV_INFO=[tvChars,tvLuni,tvDay,tvWeather,tvParasha,tvProg,tvPod,tvMorning];
+const TV_INFO=[tvEvent,tvChars,tvLuni,tvDay,tvEvent,tvWeather,tvParasha,tvProg,tvPod,tvMorning];
 const TV_SLIDES=TV_INFO.flatMap(f=>[tvPhoto,f]);
 function tvShow(dir){
   if(!tvOn)return;
@@ -6650,9 +6659,9 @@ function tvShow(dir){
     requestAnimationFrame(()=>requestAnimationFrame(()=>made.classList.add('on')));
     if(old){old.classList.remove('on');setTimeout(()=>old.remove(),1000);}
     const dots=$('tvDots');dots.innerHTML='';
-    const cur=TV_SLIDES[tvI];if(cur!==tvPhoto)TV_INFO.forEach(f=>{if(f!==cur&&((f===tvMorning&&new Date().getHours()<19)||(f===tvParasha&&!shabNow())||(f===tvWeather&&!wxOk())))return;dots.append(h('i',f===cur?'on':''));});
+    const cur=TV_SLIDES[tvI];if(cur!==tvPhoto)TV_INFO.forEach((f,k)=>{const me=k===(tvI>>1);if(!me&&((f===tvMorning&&new Date().getHours()<19)||(f===tvParasha&&!shabNow())||(f===tvWeather&&!wxOk())||(f===tvEvent&&Date.now()>=TV_EVT_END)))return;dots.append(h('i',me?'on':''));});
   }
-  tvT=setTimeout(()=>tvShow(1),TV_MS);
+  tvT=setTimeout(()=>tvShow(1),(made&&+made.dataset.ms)||TV_MS);
 }
 /* תאריך עברי באותיות, למשל: ח׳ בכסלו תשפ״ז */
 function gemStr(n){
