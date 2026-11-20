@@ -1,0 +1,25 @@
+name: yaya tv pictures (one-off)
+on: workflow_dispatch
+concurrency:
+  group: yaya-push
+  cancel-in-progress: false
+jobs:
+  up:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Restore sign-in
+        uses: actions/cache/restore@v4
+        with:
+          path: .state
+          key: yaya-state-x
+          restore-keys: yaya-state-
+      - run: node push/tvpics.mjs
+        env:
+          FAMILY_CODE: ${{ secrets.FAMILY_CODE }}
+          VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
+          TVPIC_KEY: ${{ secrets.TVPIC_KEY }}
