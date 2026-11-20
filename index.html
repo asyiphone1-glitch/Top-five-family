@@ -3545,7 +3545,10 @@ const ADV8_AT=new Date(2026,10,15,22,0).getTime();
 /* החלטות סבב 13 (18/11/2026), בשיחה: הכול אושר. r11_satmorning לא רלוונטית במצב שבת */
 const ADV13={r13_shabplan:'yes',r13_shabmark:'yes',r13_shabsrc:'yes',r13_satdrop:'yes',r13_hanukkah:'yes',r13_motsash:'yes',r13_decide:'yes',r11_satmorning:'no'};
 const ADV13_AT=new Date(2026,10,18,20,50).getTime();
-function decision(id){if(id==='r_approve')return {s:'no',by:'dad',at:0};return adv[id]||(ADV0[id]?{s:ADV0[id],by:'dad',at:ADV0_AT}:ADV5[id]?{s:ADV5[id],by:'dad',at:ADV5_AT}:ADV7[id]?{s:ADV7[id],by:'dad',at:ADV7_AT}:ADV8[id]?{s:ADV8[id],by:'dad',at:ADV8_AT}:ADV13[id]?{s:ADV13[id],by:'dad',at:ADV13_AT}:null);}
+/* החלטות 20/11/2026, בשיחה (בדיקת מה פתוח): 9 אושרו, השאר עדיין מחכות */
+const ADV20={r9_comic:'yes',r10_once:'yes',r10_errclear:'yes',r10_away:'yes',r10_news:'yes',r11_results:'yes',r11_mine:'yes',r11_care:'yes',r11_nowline:'yes'};
+const ADV20_AT=new Date(2026,10,20,13,45).getTime();
+function decision(id){if(id==='r_approve')return {s:'no',by:'dad',at:0};return adv[id]||(ADV0[id]?{s:ADV0[id],by:'dad',at:ADV0_AT}:ADV5[id]?{s:ADV5[id],by:'dad',at:ADV5_AT}:ADV7[id]?{s:ADV7[id],by:'dad',at:ADV7_AT}:ADV8[id]?{s:ADV8[id],by:'dad',at:ADV8_AT}:ADV13[id]?{s:ADV13[id],by:'dad',at:ADV13_AT}:ADV20[id]?{s:ADV20[id],by:'dad',at:ADV20_AT}:null);}
 /* המלצות נמצאות בהגדרות, מאחורי כפתור. קטגוריות: חדשות, אושרו (בדרך לפיתוח), יושמו, לא אושרו.
    המלצה שיושמה נמחקת מהמסך יום אחרי שיושמה, כדי שלא יצטבר מידע */
 let advOpen=false,advCat='new';
