@@ -209,6 +209,26 @@ body.typing .nav,body.typing .fab{display:none}
 .nb{position:absolute;top:4px;inset-inline-end:calc(50% - 22px);background:var(--bad);color:#fff;border-radius:999px;font-size:.72rem;min-width:18px;line-height:18px;padding:0 5px;text-align:center}
 .ubell{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:12px;z-index:40;width:46px;height:46px;border-radius:999px;border:2px solid var(--line);background:var(--surface);font-size:1.35rem;display:grid;place-items:center;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.12)}
 #updBell{left:66px}
+.ubell.wxb{width:auto;padding:0 12px;left:66px;font:700 1rem var(--body);color:var(--ink);gap:4px;display:flex;align-items:center;direction:ltr}
+#updBell:not([hidden])~.ubell.wxb{left:120px}
+body.tv .ubell.wxb{display:none}
+.wxbox{max-width:460px;max-height:calc(100vh - 40px);overflow:auto}
+.wxph .tvh{font:800 1.35rem var(--display);color:var(--accent);margin:0 0 10px;text-align:center}
+.wxph .wxnow{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:14px}
+.wxph .wxt{display:flex;align-items:center;gap:6px}
+.wxph .wxt .ic{font-size:3rem;line-height:1}
+.wxph .wxt b{font:800 3.2rem/1 var(--display);direction:ltr}
+.wxph .wxd div{font:800 1.3rem var(--display)}
+.wxph .wxd small{display:block;margin-top:2px;color:var(--mute);font-size:.95rem}
+.wxph .wxhr,.wxph .wxdays{display:flex;gap:6px;margin-bottom:8px}
+.wxph .wxh,.wxph .wxday{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px;border-radius:12px;background:var(--bg);border:1px solid var(--line)}
+.wxph .wxh small{color:var(--mute);font-weight:700;direction:ltr}
+.wxph .ic{font-size:1.5rem;line-height:1.2}
+.wxph .wxh b{font:800 1.1rem var(--display);direction:ltr}
+.wxph .wxday b{font:800 1rem var(--display)}
+.wxph .wxday span{font-weight:700;direction:ltr}
+.wxph i{font-style:normal;font-weight:700;font-size:.85rem;color:#2C7BBF}
+.wxph .tvnext{margin:6px 0 10px;font-weight:700;text-align:center;color:var(--accent)}
 .ubell.gear{font-size:1.25rem}
 .ubell.gear.on{border-color:var(--accent)}
 .ubell.has{border-color:var(--upd);animation:ubp 2.4s ease-in-out infinite}
@@ -747,6 +767,7 @@ body.tv .pop,body.tv .toast{display:none!important}
 
   <button id="gearBtn" class="ubell gear" type="button" aria-label="הגדרות">⚙️</button>
   <button id="updBell" class="ubell" type="button" hidden aria-label="עדכונים">🔔<span id="updN" class="nb" hidden></span></button>
+  <button id="wxPill" class="ubell wxb" type="button" hidden aria-label="מזג האוויר בפתח תקווה"></button>
   <div id="tab-today">
     <div id="myMeet" class="card tcal" hidden></div>
     <h2 id="mineH" class="ttl">המשימות שלי</h2>
@@ -926,6 +947,11 @@ body.tv .pop,body.tv .toast{display:none!important}
     <div id="updList"></div>
     <button id="updAll" class="btn pri" type="button">אישרתי הכל</button>
     <button id="updClose" class="btn quiet" type="button">סגירה</button>
+  </div>
+</div>
+<div id="wxPop" class="pop" hidden role="dialog" aria-modal="true" aria-label="מזג האוויר בפתח תקווה">
+  <div class="box wxbox"><div id="wxBody"></div>
+    <button id="wxClose" class="btn quiet" type="button">סגירה</button>
   </div>
 </div>
 <div id="foodPop" class="pop fpop" hidden role="dialog" aria-modal="true" aria-labelledby="foodPopH">
@@ -6517,6 +6543,7 @@ function wxLoad(){
     wx={c:j.current,h:j.hourly,d:j.daily,at:Date.now()};
     LS.set('yaya.wx',JSON.stringify(wx));
     if(tvOn)tvWxPaint();
+    wxApp(false);
   }).catch(()=>{});
 }
 const wxOk=()=>!!(wx&&Date.now()-(wx.at||0)<6*36e5);
@@ -6549,6 +6576,24 @@ function tvWxPaint(){
   const c=wx.c,[ic]=wxInfo(c.weather_code,c.is_day),r=(wx.d.precipitation_probability_max||[])[0];
   el.hidden=false;el.textContent=ic+' '+wxDeg(c.temperature_2m)+' פתח תקווה'+(r>=40?' · ☔ '+r+'%':'');
 }
+/* בטלפון (אבא, 20/11/2026): כפתור קטן בפינה העליונה בכל המסכים, ובלחיצה מסך מלא של מזג האוויר */
+function wxApp(load){
+  if(load!==false)wxLoad();
+  const b=$('wxPill');if(!b)return;
+  if(!wxOk()){b.hidden=true;return;}
+  const c=wx.c;b.hidden=false;b.textContent=wxInfo(c.weather_code,c.is_day)[0]+' '+wxDeg(c.temperature_2m);
+  if(!$('wxPop').hidden)wxPaintPop();
+}
+function wxPaintPop(){
+  const b=$('wxBody');b.innerHTML='';
+  const s=h('div','wxph');if(tvWeather(s))b.append(s);
+  else b.append(h('p',null,'אין כרגע נתוני מזג אוויר'));
+}
+$('wxPill').onclick=()=>{wxPaintPop();$('wxPop').hidden=false;wxLoad();};
+$('wxClose').onclick=()=>{$('wxPop').hidden=true;};
+$('wxPop').addEventListener('click',e=>{if(e.target===$('wxPop'))$('wxPop').hidden=true;});
+setTimeout(()=>wxApp(),1500);setInterval(()=>{if(!document.hidden)wxApp();},5*6e4);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)wxApp();});
 function tvWeather(s){
   if(!wxOk())return false;
   const c=wx.c,D=wx.d,[ic,tx]=wxInfo(c.weather_code,c.is_day);
