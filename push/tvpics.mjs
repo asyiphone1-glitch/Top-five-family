@@ -47,3 +47,4 @@ for (let i = 0; i < Math.min(room, pics.length); i++) {
 }
 console.log('נוספו ' + ok + ' מתוך ' + pics.length);
 fs.writeFileSync('push/tvpics.done', 'נוספו ' + ok + '\n');
+// run
