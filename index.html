@@ -6638,8 +6638,27 @@ function tvEvent(s){
   const im=new Image();im.className='tvph';im.alt='שבת ארגון בסניף כפר גנים';im.src='img/shabbat-irgun.webp';
   s.append(bg,im);return true;
 }
+/* (אבא, 20/11/2026) תכנית שבת של רוני: זמנית, עד מוצאי שבת 21/11. שורה שעברה (10 דקות אחרי השעה) יורדת, ואחרי האחרונה השקף נעלם */
+const TV_RONI=[
+  {d:new Date(2026,10,20,19,30),g:'ערב שבת',t:'19:30',x:'מתחת לבית של רונה'},
+  {d:new Date(2026,10,20,19,35),g:'ערב שבת',t:'19:35',x:'ביוניקורן אצל הילה'},
+  {d:new Date(2026,10,21,9,55),g:'מחר בבוקר',t:'9:55',x:'בחלון עם רונה'},
+  {d:new Date(2026,10,21,14,50),g:'צהריים',t:'14:50',x:''}
+];
+function tvRoni(s){
+  const now=Date.now(),L=TV_RONI.filter(r=>now<+r.d+10*6e4);
+  if(!L.length)return false;
+  s.append(h('div','tvh','סיכום שבת רוני💗'));
+  const tb=h('div','tvmorn');let g='';
+  L.forEach(r=>{
+    if(r.g!==g){g=r.g;const gh=h('div','tvnext',g);gh.style.color=tvC('roni');tb.append(gh);}
+    const e=h('div','tvmr');e.style.setProperty('--c',tvC('roni'));e.style.gridTemplateColumns='18vmin 1fr';
+    const f=h('div','fd',r.x||'—');f.style.fontSize='4.2vmin';e.append(h('div','wk','⏰ '+r.t),f);tb.append(e);
+  });
+  s.append(tb);return true;
+}
 /* תמונה בין כל שקף מידע לבא אחריו, כדי שהתמונות ישתלבו לאורך כל הסיבוב */
-const TV_INFO=[tvEvent,tvChars,tvLuni,tvDay,tvEvent,tvWeather,tvParasha,tvProg,tvPod,tvMorning];
+const TV_INFO=[tvEvent,tvChars,tvRoni,tvLuni,tvDay,tvEvent,tvWeather,tvRoni,tvParasha,tvProg,tvPod,tvMorning];
 const TV_SLIDES=TV_INFO.flatMap(f=>[tvPhoto,f]);
 function tvShow(dir){
   if(!tvOn)return;
@@ -6659,7 +6678,7 @@ function tvShow(dir){
     requestAnimationFrame(()=>requestAnimationFrame(()=>made.classList.add('on')));
     if(old){old.classList.remove('on');setTimeout(()=>old.remove(),1000);}
     const dots=$('tvDots');dots.innerHTML='';
-    const cur=TV_SLIDES[tvI];if(cur!==tvPhoto)TV_INFO.forEach((f,k)=>{const me=k===(tvI>>1);if(!me&&((f===tvMorning&&new Date().getHours()<19)||(f===tvParasha&&!shabNow())||(f===tvWeather&&!wxOk())||(f===tvEvent&&Date.now()>=TV_EVT_END)))return;dots.append(h('i',me?'on':''));});
+    const cur=TV_SLIDES[tvI];if(cur!==tvPhoto)TV_INFO.forEach((f,k)=>{const me=k===(tvI>>1);if(!me&&((f===tvMorning&&new Date().getHours()<19)||(f===tvParasha&&!shabNow())||(f===tvWeather&&!wxOk())||(f===tvEvent&&Date.now()>=TV_EVT_END)||(f===tvRoni&&!TV_RONI.some(r=>Date.now()<+r.d+10*6e4))))return;dots.append(h('i',me?'on':''));});
   }
   tvT=setTimeout(()=>tvShow(1),(made&&+made.dataset.ms)||TV_MS);
 }
