@@ -582,6 +582,22 @@ body.tv .pop,body.tv .toast{display:none!important}
 #tv .tvpc{margin-top:5vmin;padding:3vmin 4vmin;border-radius:3vmin;background:rgba(255,255,255,.07);border-inline-start:1vmin solid #FFD166}
 #tv .tvpc .q{font:500 4.4vmin/1.45 var(--body)}
 #tv .tvpc small{color:#FFD166;opacity:1}
+#tv .tvwxs{opacity:.9}
+#tv .tvwx .wxnow{display:flex;align-items:center;gap:5vmin;margin-bottom:4vmin}
+#tv .tvwx .wxt{display:flex;align-items:center;gap:2vmin}
+#tv .tvwx .wxt .ic{font-size:14vmin;line-height:1}
+#tv .tvwx .wxt b{font:800 15vmin/1 var(--display);direction:ltr}
+#tv .tvwx .wxd div{font:800 5.6vmin var(--display)}
+#tv .tvwx .wxd small{display:block;margin-top:1vmin;font:600 3.4vmin var(--body);opacity:.8}
+#tv .tvwx .wxhr,#tv .tvwx .wxdays{display:flex;justify-content:center;gap:2.4vmin;width:min(92vw,1100px)}
+#tv .tvwx .wxhr{margin-bottom:3vmin}
+#tv .tvwx .wxh,#tv .tvwx .wxday{flex:1;display:flex;flex-direction:column;align-items:center;gap:.8vmin;padding:2vmin 1vmin;border-radius:2.4vmin;background:rgba(255,255,255,.07)}
+#tv .tvwx .wxh small{font:700 3.2vmin var(--body);opacity:.75;direction:ltr}
+#tv .tvwx .ic{font-size:6vmin;line-height:1.1}
+#tv .tvwx .wxh b{font:800 4.6vmin var(--display);direction:ltr}
+#tv .tvwx .wxday b{font:800 4.2vmin var(--display)}
+#tv .tvwx .wxday span{font:700 4vmin var(--body);direction:ltr}
+#tv .tvwx i{font:700 2.8vmin var(--body);font-style:normal;color:#8FD3FF}
 #tv .tvheb{display:block;font:700 3.2vmin var(--body);color:#FFD166;margin-top:.6vmin}
 #tv .tvs{position:absolute;inset:0;padding:15vmin 4vmin 8vmin;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity .9s ease}
 #tv .tvs.on{opacity:1}
@@ -925,7 +941,7 @@ body.tv .pop,body.tv .toast{display:none!important}
 <div id="toast" class="toast" hidden role="status"></div>
 <button id="updBar" class="updbar" type="button" hidden>🔄 יש עדכון · לחצו לרענון</button>
 <div id="tv" hidden aria-live="off">
-  <div class="tvtop"><div class="tvdate" id="tvDate"></div><div class="tvcl"><div class="tvclock" id="tvClock"></div><div class="tvshab" id="tvShab" hidden></div></div></div>
+  <div class="tvtop"><div class="tvdate" id="tvDate"></div><div class="tvcl"><div class="tvclock" id="tvClock"></div><div class="tvshab" id="tvShab" hidden></div><div class="tvshab tvwxs" id="tvWx" hidden></div></div></div>
   <div id="tvStage"></div>
   <div class="tvdots" id="tvDots"></div>
   <div class="tvctl" id="tvCtl" hidden>
@@ -6486,8 +6502,80 @@ function tvParasha(s){
   const c=h('div','tvpc');c.append(h('div','q','💡 '+p[2]));
   s.append(v,c);return true;
 }
+/* ---------- מזג אוויר בפתח תקווה (אבא, 20/11/2026) ----------
+   שקף נפרד בתצוגה, ועוד שורה קטנה בצד מתחת לשעון בכל השקפים. Open-Meteo: חינם, בלי מפתח. מתרענן כל 30 דקות,
+   ובלי רשת מוצג המידע האחרון שנשמר (עד 6 שעות) */
+const WX_URL='https://api.open-meteo.com/v1/forecast?latitude=32.0871&longitude=34.8875&current=temperature_2m,apparent_temperature,weather_code,is_day&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FJerusalem&forecast_days=3';
+let wx=null,wxTry=0;
+try{wx=JSON.parse(LS.get('yaya.wx')||'null');}catch(e){wx=null;}
+function wxLoad(){
+  const now=Date.now();
+  if((wx&&now-(wx.at||0)<30*6e4)||now-wxTry<5*6e4)return;
+  wxTry=now;
+  fetch(WX_URL).then(r=>r.ok?r.json():Promise.reject()).then(j=>{
+    if(!j||!j.current||!j.daily||!j.hourly)return;
+    wx={c:j.current,h:j.hourly,d:j.daily,at:Date.now()};
+    LS.set('yaya.wx',JSON.stringify(wx));
+    if(tvOn)tvWxPaint();
+  }).catch(()=>{});
+}
+const wxOk=()=>!!(wx&&Date.now()-(wx.at||0)<6*36e5);
+function wxInfo(code,day){
+  const c=+code;
+  if(c===0)return [day===0?'🌙':'☀️','בהיר'];
+  if(c===1)return [day===0?'🌙':'🌤️','בהיר ברובו'];
+  if(c===2)return ['⛅','מעונן חלקית'];
+  if(c===3)return ['☁️','מעונן'];
+  if(c===45||c===48)return ['🌫️','ערפל'];
+  if(c>=51&&c<=57)return ['🌦️','טפטוף'];
+  if(c===61||c===80)return ['🌦️','גשם קל'];
+  if(c===63||c===81)return ['🌧️','גשם'];
+  if(c===65||c===82||c===66||c===67)return ['🌧️','גשם חזק'];
+  if((c>=71&&c<=77)||c===85||c===86)return ['🌨️','שלג'];
+  if(c>=95)return ['⛈️','סופת רעמים'];
+  return ['🌡️',''];
+}
+const wxDeg=t=>Math.round(+t)+'°';
+/* השעות הבאות מהתחזית, החל מהשעה הנוכחית */
+function wxHours(n,step){
+  const H=wx.h,now=new Date(),key=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')+'T'+String(now.getHours()).padStart(2,'0');
+  let i=(H.time||[]).findIndex(t=>t.slice(0,13)===key);if(i<0)i=0;
+  const out=[];for(let k=i+step;k<H.time.length&&out.length<n;k+=step)out.push({t:H.time[k].slice(11,16),temp:H.temperature_2m[k],code:H.weather_code[k],rain:H.precipitation_probability[k]});
+  return {i,out};
+}
+function tvWxPaint(){
+  const el=$('tvWx');if(!el)return;
+  if(!wxOk()){el.hidden=true;return;}
+  const c=wx.c,[ic]=wxInfo(c.weather_code,c.is_day),r=(wx.d.precipitation_probability_max||[])[0];
+  el.hidden=false;el.textContent=ic+' '+wxDeg(c.temperature_2m)+' פתח תקווה'+(r>=40?' · ☔ '+r+'%':'');
+}
+function tvWeather(s){
+  if(!wxOk())return false;
+  const c=wx.c,D=wx.d,[ic,tx]=wxInfo(c.weather_code,c.is_day);
+  s.classList.add('tvwx');
+  s.append(h('div','tvh','מזג האוויר בפתח תקווה'));
+  const now=h('div','wxnow');
+  const t=h('div','wxt');t.append(h('span','ic',ic),h('b',null,wxDeg(c.temperature_2m)));
+  const d=h('div','wxd');d.append(h('div',null,tx),h('small',null,'מרגיש כמו '+wxDeg(c.apparent_temperature)+' · היום בין '+wxDeg(D.temperature_2m_min[0])+' ל-'+wxDeg(D.temperature_2m_max[0])));
+  now.append(t,d);s.append(now);
+  const {i,out}=wxHours(5,3),hr=h('div','wxhr');
+  out.forEach(x=>{const e=h('div','wxh');e.append(h('small',null,x.t),h('span','ic',wxInfo(x.code,1)[0]),h('b',null,wxDeg(x.temp)));if(x.rain>=30)e.append(h('i',null,'☔ '+x.rain+'%'));hr.append(e);});
+  if(out.length)s.append(hr);
+  const dy=h('div','wxdays'),names=['היום','מחר'];
+  (D.time||[]).slice(0,3).forEach((k,j)=>{
+    const e=h('div','wxday'),nm=names[j]||new Date(k+'T12:00').toLocaleDateString('he-IL',{weekday:'long'});
+    e.append(h('b',null,nm),h('span','ic',wxInfo(D.weather_code[j],1)[0]),h('span',null,wxDeg(D.temperature_2m_max[j])+' / '+wxDeg(D.temperature_2m_min[j])));
+    if(D.precipitation_probability_max[j]>=30)e.append(h('i',null,'☔ '+D.precipitation_probability_max[j]+'%'));
+    dy.append(e);
+  });
+  s.append(dy);
+  /* גשם ב-3 השעות הקרובות: תזכורת קטנה לפני היציאה עם לוני */
+  const P=wx.h.precipitation_probability||[];
+  if(Math.max(0,...P.slice(i,i+4).map(Number))>=50)s.append(h('div','tvnext','☔ צפוי גשם בשעות הקרובות. כדאי מטריה ליציאה עם לוני'));
+  return true;
+}
 /* תמונה בין כל שקף מידע לבא אחריו, כדי שהתמונות ישתלבו לאורך כל הסיבוב */
-const TV_INFO=[tvChars,tvLuni,tvDay,tvParasha,tvProg,tvPod,tvMorning];
+const TV_INFO=[tvChars,tvLuni,tvDay,tvWeather,tvParasha,tvProg,tvPod,tvMorning];
 const TV_SLIDES=TV_INFO.flatMap(f=>[tvPhoto,f]);
 function tvShow(dir){
   if(!tvOn)return;
@@ -6507,7 +6595,7 @@ function tvShow(dir){
     requestAnimationFrame(()=>requestAnimationFrame(()=>made.classList.add('on')));
     if(old){old.classList.remove('on');setTimeout(()=>old.remove(),1000);}
     const dots=$('tvDots');dots.innerHTML='';
-    const cur=TV_SLIDES[tvI];if(cur!==tvPhoto)TV_INFO.forEach(f=>{if(f!==cur&&((f===tvMorning&&new Date().getHours()<19)||(f===tvParasha&&!shabNow())))return;dots.append(h('i',f===cur?'on':''));});
+    const cur=TV_SLIDES[tvI];if(cur!==tvPhoto)TV_INFO.forEach(f=>{if(f!==cur&&((f===tvMorning&&new Date().getHours()<19)||(f===tvParasha&&!shabNow())||(f===tvWeather&&!wxOk())))return;dots.append(h('i',f===cur?'on':''));});
   }
   tvT=setTimeout(()=>tvShow(1),TV_MS);
 }
@@ -6532,7 +6620,7 @@ function tvClock(){
   $('tvClock').textContent=hhmm(d);
   const el=$('tvDate');el.textContent=d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
   const hd=hebDate(d);if(hd)el.append(h('span','tvheb',hd));
-  shabLoad();tvShabPaint();
+  shabLoad();tvShabPaint();wxLoad();tvWxPaint();
 }
 async function tvWake(){try{if(tvOn&&'wakeLock' in navigator&&!document.hidden)tvLock=await navigator.wakeLock.request('screen');}catch(e){}}
 function openTV(){
