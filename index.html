@@ -59,7 +59,8 @@ input{font:inherit;color:var(--ink)}
 .msg.ok{color:var(--good)}
 .hint{color:var(--mute);font-size:.92rem;margin-top:18px}
 .net{position:fixed;top:calc(8px + env(safe-area-inset-top,0px));left:120px;z-index:20;display:flex;gap:8px;align-items:center;
-  padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:.82rem;color:var(--mute);max-width:calc(100vw - 24px)}
+  padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:.82rem;color:var(--mute);max-width:calc(100vw - 24px);white-space:nowrap;overflow:hidden}
+.net span{overflow:hidden;text-overflow:ellipsis}
 .net i{flex:none;width:10px;height:10px;border-radius:50%;background:var(--mute)}
 .net[data-s="ok"] i{background:var(--good)}
 .net[data-s="err"] i{background:var(--bad)}
@@ -1065,6 +1066,15 @@ const famDoc=()=>doc(db,'families',code,'prefs','family');
 /* ---------- חיווי חיבור ---------- */
 const NETTXT={ok:'מחובר, נשמר בענן',cache:'אין חיבור לשרת. נשמר בטלפון ויסונכרן',connecting:'מתחבר...',err:'בעיית חיבור לשרת'};
 function paintNet(s){const el=$('net');el.hidden=false;el.dataset.s=s;el.querySelector('span').textContent=NETTXT[s]||'';}
+/* (אבא, 20/11/2026) "מחובר" לא מוסתר: יושב תמיד מימין לכפתורים העגולים שלמעלה (הגדרות, פעמון, מזג אוויר) */
+function placeNet(){
+  const el=$('net');if(!el)return;let x=0;
+  ['gearBtn','updBell','wxPill'].forEach(id=>{const b=$(id);if(!b||b.hidden)return;const r=b.getBoundingClientRect();if(r.width&&r.right>x)x=r.right;});
+  const L=x?Math.round(x+8):120;el.style.left=L+'px';el.style.maxWidth='calc(100vw - '+(L+12)+'px)';
+}
+(()=>{const mo=new MutationObserver(()=>requestAnimationFrame(placeNet));
+  ['gearBtn','updBell','wxPill','s-main'].forEach(id=>{const b=$(id);if(b)mo.observe(b,{attributes:true,attributeFilter:['hidden','class'],childList:true,characterData:true,subtree:true});});
+  addEventListener('resize',placeNet);requestAnimationFrame(placeNet);})();
 function setNet(s){
   clearTimeout(netT);
   if(s==='cache'){netT=setTimeout(()=>paintNet('cache'),4000);return;}
