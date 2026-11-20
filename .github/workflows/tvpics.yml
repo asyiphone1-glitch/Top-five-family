@@ -1,5 +1,10 @@
 name: yaya tv pictures (one-off)
-on: workflow_dispatch
+on:
+  push:
+    branches: [main]
+    paths: ['push/tvpics.mjs', 'push/tvpics.key']
+permissions:
+  contents: write
 concurrency:
   group: yaya-push
   cancel-in-progress: false
@@ -22,4 +27,8 @@ jobs:
         env:
           FAMILY_CODE: ${{ secrets.FAMILY_CODE }}
           VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
-          TVPIC_KEY: ${{ secrets.TVPIC_KEY }}
+      - name: Save
+        run: |
+          git config user.name "yaya-bot"; git config user.email "yaya-bot@users.noreply.github.com"
+          git add push/tvkey.pub push/tvkey.sealed push/tvpics.done 2>/dev/null || true
+          if [ -n "$(git status --porcelain push)" ]; then git commit -qm "תמונות לתצוגה: שלב" && git pull --rebase -q origin main && git push -q origin HEAD:main; fi
