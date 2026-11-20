@@ -5754,7 +5754,7 @@ function updBusy(){
 }
 async function checkUpdate(fresh){
   if(updNew){updApply(false);return;}
-  if(Date.now()-updAt<60e3)return;updAt=Date.now();
+  if(Date.now()-updAt<45e3)return;updAt=Date.now();
   try{
     /* בחזרה לאפליקציה: כתובת חדשה שעוקפת כל זיכרון. בבדיקה התקופתית: בדיקה זולה שלא מורידה שוב אם לא השתנה */
     const r=fresh?await fetch('./?v='+Date.now(),{cache:'no-store'}):await fetch('./',{cache:'no-cache'});
@@ -5798,7 +5798,14 @@ window.addEventListener('pageshow',e=>{if(e.persisted)setTimeout(()=>checkUpdate
 window.addEventListener('online',()=>{updAt=0;setTimeout(()=>checkUpdate(true),1500);});
 document.addEventListener('focusout',()=>{if(updNew)setTimeout(()=>updApply(false),1500);});
 $('updBar').onclick=()=>updApply(true);
-setInterval(()=>{if(!document.hidden)checkUpdate(false);},10*60e3);
+/* בטאבלט שמציג את מסך התצוגה בודקים כל דקה, בכתובת חדשה שעוקפת את הזיכרון של האתר, כדי שנתונים חדשים יופיעו תוך דקה-שתיים.
+   בטלפונים נשארת בדיקה כל 10 דקות (ובכל חזרה לאפליקציה) */
+let updLast=Date.now();
+setInterval(()=>{
+  if(document.hidden)return;
+  if(tvOn){checkUpdate(true);return;}
+  if(Date.now()-updLast>=10*60e3){updLast=Date.now();checkUpdate(false);}
+},60e3);
 setTimeout(()=>checkUpdate(true),5000);
 
 /* ---------- התראות כשהאפליקציה סגורה ---------- */
