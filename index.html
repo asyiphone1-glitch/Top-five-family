@@ -586,6 +586,28 @@ p.fask{background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin:1
 .cview p{margin:4px 0}
 .cview .cvt{font:700 1.25rem var(--display)}
 @media (max-width:360px){.mc{min-height:52px}.cev .ct{width:44px;font-size:.98rem}}
+/* ---------- מוצאי שבת: מסך "שבוע טוב" עם הבדלה (אבא, 21/11/2026) ---------- */
+.motz{position:fixed;inset:0;z-index:80;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px 18px calc(24px + env(safe-area-inset-bottom));text-align:center;color:#FFF6E0;background:radial-gradient(120% 80% at 50% 10%,#2B2F6B 0%,#161A42 55%,#0B0D26 100%);cursor:pointer}
+.motz[hidden]{display:none}
+body.tv .motz{display:none!important}
+.motz .mzart{width:min(92vw,440px);height:auto}
+.motz h2{margin:4px 0 0;font:800 clamp(2.6rem,13vw,4.2rem)/1.05 var(--display);background:linear-gradient(180deg,#FFE9A8,#F2B84B);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 30px rgba(255,200,90,.25)}
+.motz .mzb{font:600 clamp(1.25rem,5.6vw,1.7rem)/1.35 var(--display);color:#FFF1CC;letter-spacing:.01em}
+.motz .mzok{margin-top:14px;background:rgba(255,233,168,.14);border:1.5px solid rgba(255,233,168,.55);color:#FFE9A8;border-radius:999px;padding:12px 30px;font:700 1.15rem var(--display);cursor:pointer}
+.mzart .fl{transform-box:fill-box;transform-origin:50% 100%;animation:mzfl 1.6s ease-in-out infinite alternate}
+.mzart .fl2{animation-duration:1.15s;animation-delay:-.4s}
+.mzart .glow{transform-box:fill-box;transform-origin:50% 50%;animation:mzgl 2.4s ease-in-out infinite alternate}
+.mzart .st{animation:mzst 2.8s ease-in-out infinite alternate}
+.mzart .st:nth-of-type(3n){animation-delay:-1.1s}.mzart .st:nth-of-type(3n+1){animation-delay:-2s}
+.mzart .smk{animation:mzsm 3.5s ease-in-out infinite}
+@keyframes mzfl{0%{transform:scale(1,1) skewX(0)}40%{transform:scale(.94,1.06) skewX(2deg)}100%{transform:scale(1.04,.95) skewX(-2deg)}}
+@keyframes mzgl{from{opacity:.55;transform:scale(.95)}to{opacity:.9;transform:scale(1.06)}}
+@keyframes mzst{from{opacity:.25}to{opacity:1}}
+@keyframes mzsm{0%{opacity:0;transform:translateY(4px)}40%{opacity:.7}100%{opacity:0;transform:translateY(-14px)}}
+#tv .tvs.tvmotz{background:radial-gradient(120% 80% at 50% 10%,#2B2F6B 0%,#161A42 55%,#0B0D26 100%);padding:13vmin 3vmin 7vmin}
+#tv .tvmotz .mzart{width:auto;height:46vmin;max-width:92vw}
+#tv .tvmotz h2{margin:1vmin 0 0;font:800 13vmin/1.05 var(--display);background:linear-gradient(180deg,#FFE9A8,#F2B84B);-webkit-background-clip:text;background-clip:text;color:transparent}
+#tv .tvmotz .mzb{font:600 5.6vmin/1.3 var(--display);color:#FFF1CC;margin-top:1.5vmin}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 /* ---------- מסך תצוגה לטאבלט ---------- */
 body.tv{overflow:hidden}
@@ -965,6 +987,7 @@ body.tv .pop,body.tv .toast{display:none!important}
     <div id="calForm"></div>
   </div>
 </div>
+<div id="motz" class="motz" hidden role="dialog" aria-modal="true" aria-label="שבוע טוב"></div>
 <div id="toast" class="toast" hidden role="status"></div>
 <button id="updBar" class="updbar" type="button" hidden>🔄 יש עדכון · לחצו לרענון</button>
 <div id="tv" hidden aria-live="off">
@@ -3578,7 +3601,7 @@ const RECS=[
   {id:'r13_shabsrc',w:'maya',t:'אותם זמני שבת בכל מקום',d:'הטלפונים משתתקים 30 דקות לפני השקיעה בפתח תקווה ומצלצלים שוב 45 דקות אחריה, לפי חישוב שלנו. הטאבלט מציג את זמני Hebcal לתל אביב. יוצא שבטאבלט כתוב שעת כניסה, והטלפונים שקטים כבר בערך 10 דקות לפניה, ובצאת השבת הצלצולים חוזרים כמה דקות אחרי השעה שמופיעה. ההצעה: מקור אחד. השרת והאפליקציה לוקחים פעם בשבוע את הזמנים מ-Hebcal (ואם אין רשת, החישוב הקיים), וכך מה שכתוב בטאבלט הוא בדיוק מתי משתתק ומתי חוזר.',build:true},
   {id:'r13_satdrop',w:'yoav',t:'לבטל את "צלצול בוקר מאוחר בשבת"',d:'המלצה r11_satmorning (צלצול ב-08:30 בשבת) כבר לא רלוונטית: במצב שבת אין צלצול בשבת בכלל. אישור = היא יוצאת מהרשימה כ"לא רלוונטית" ולא נבנית.',build:false},
   {id:'r13_hanukkah',w:'shira',t:'חנוכה מתחיל בעוד שבועיים',d:'"חנוכה ב-yaya" (r7_hanukkah) אושר ועדיין לא נבנה. הנר הראשון ביום שישי 4/12 בערב. לבנות עד 3/12, ובטאבלט: משעת השקיעה שקף חנוכייה עם נרות דולקים לפי מספר הנרות של הערב, ועובדה מעניינת על חנוכה שמתחלפת כל ערב. (אבא, 18/11: בלי "מי מדליקה")',build:true},
-  {id:'r13_motsash',w:'dana',t:'"שבוע טוב" בטאבלט',d:'אחרי צאת השבת, בטאבלט שקף "שבוע טוב" עם תמונה של נר הבדלה, בשמים ויין, הפודיום של השבוע והצל״שים שקיבלו, עד שהולכים לישון. מתחבר להמלצה r11_results (תוצאות במוצאי שבת), כך שכולם רואים את התוצאות יחד בסלון. (אבא, 18/11: להוסיף נר הבדלה, בשמים ויין)',build:true},
+  {id:'r13_motsash',w:'dana',t:'"שבוע טוב" בטאבלט',d:'אחרי צאת השבת, בטאבלט שקף "שבוע טוב" עם תמונה של נר הבדלה, בשמים ויין, הפודיום של השבוע והצל״שים שקיבלו, עד שהולכים לישון. מתחבר להמלצה r11_results (תוצאות במוצאי שבת), כך שכולם רואים את התוצאות יחד בסלון. (אבא, 18/11: להוסיף נר הבדלה, בשמים ויין. 21/11: נבנה כמסך "שבוע טוב" עם צלצול קצר, בטאבלט ובכל הטלפונים)',build:true},
   {id:'r13_decide',w:'galit',t:'מסך החלטות מהיר',d:'מחכות היום 28 המלצות להחלטה (12 מסבב 9, 7 מסבב 10, 9 מסבב 11). ההצעה: כפתור "להחליט עכשיו" שמראה המלצה אחת על כל המסך, עם ✓ ו-✗ גדולים (או החלקה ימינה ושמאלה), ומונה "נשארו 28". ככה מסיימים את כל הרשימה בכמה דקות.',build:true},
 ];
 let adv={},advUnsub=null;
@@ -3609,7 +3632,8 @@ let advOpen=false,advCat='new';
 const BUILT_AT={r_dogring:'2026-11-08',r_pre10:'2026-11-08',r_approve:'2026-11-08',r_fair:'2026-11-08',r_cheer:'2026-11-08',r_push:'2026-11-08',r_week:'2026-11-08',
   r5_autobk:'2026-11-12',r5_health:'2026-11-12',r5_60:'2026-11-12',r5_errors:'2026-11-12',r5_offline:'2026-11-12',r5_lazy:'2026-11-12',r5_badge:'2026-11-12',r5_icons:'2026-11-12',r5_swipe:'2026-11-12',r5_taskpts:'2026-11-12',r5_party:'2026-11-12',r5_cant:'2026-11-12',
   r2_today:'2026-11-10',r2_gender:'2026-11-10',r2_repeat:'2026-11-10',r2_taxi:'2026-11-10',r2_status:'2026-11-10',r2_backup:'2026-11-10',r2_study:'2026-11-10',
-  r7_week:'2026-11-15',r7_server:'2026-11-15',r7_logs:'2026-11-15',r7_phones:'2026-11-15',r7_music:'2026-11-15'};
+  r7_week:'2026-11-15',r7_server:'2026-11-15',r7_logs:'2026-11-15',r7_phones:'2026-11-15',r7_music:'2026-11-15',
+  r13_motsash:'2026-11-21'};
 const BUILT=new Set(Object.keys(BUILT_AT));
 const builtTxt=id=>'✅ יושם באפליקציה'+(BUILT_AT[id]?' ב-'+dshort(BUILT_AT[id]):'');
 const isDone=r=>{const st=decision(r.id);return !!st&&st.s==='yes'&&(BUILT.has(r.id)||!r.build);};
@@ -6672,8 +6696,100 @@ function tvRoni(s){
   });
   s.append(tb);return true;
 }
+/* ---------- מוצאי שבת (אבא, 21/11/2026): צלצול קצר ומסך "שבוע טוב" עם נר הבדלה, כוס יין ובשמים ----------
+   מצאת השבת (45 דק׳ אחרי השקיעה בפתח תקווה, אותו רגע שהצלצולים חוזרים) ועד חצות.
+   בטלפון: פעם אחת בכל מוצאי שבת, בפתיחה הראשונה. בטאבלט: נפתח על השקף הזה עם צלצול, ואחר כך הוא חלק מהסבב */
+function motzWin(t){
+  const d=new Date(t||Date.now());if(d.getDay()!==6)return false;
+  return d.getTime()>=sunsetMs(d.getFullYear(),d.getMonth()+1,d.getDate())+45*6e4;
+}
+const MOTZ_TXT='ברוך המבדיל בין קדש לחול';
+function motzArt(){
+  const stars=[[22,24,1.6],[58,12,1.1],[96,34,1.3],[132,10,1],[230,14,1.2],[268,36,1],[304,12,1.5],[338,30,1.1],[14,70,1],[346,74,1.2],[40,120,.9],[322,128,1]]
+    .map(([x,y,r])=>`<circle class="st" cx="${x}" cy="${y}" r="${r}" fill="#FFF3C4"/>`).join('');
+  const big=[[118,40],[242,40],[58,64]].map(([x,y])=>`<path class="st" d="M${x} ${y-6}l1.7 4.3 4.3 1.7-4.3 1.7-1.7 4.3-1.7-4.3-4.3-1.7 4.3-1.7z" fill="#FFE9A8"/>`).join('');
+  let br='';for(let y=96;y<214;y+=13)br+=`<path d="M160 ${y+10}L200 ${y-6}v8L160 ${y+18}z" fill="#3F6FD1"/><path d="M160 ${y+3}L200 ${y-13}v3.5L160 ${y+6.5}z" fill="#E9B949" opacity=".9"/>`;
+  return `<svg class="mzart" viewBox="0 0 360 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="נר הבדלה, כוס יין ובשמים">
+<defs>
+ <radialGradient id="mzG" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#FFD98A" stop-opacity=".75"/><stop offset=".45" stop-color="#FFB347" stop-opacity=".25"/><stop offset="1" stop-color="#FFB347" stop-opacity="0"/></radialGradient>
+ <linearGradient id="mzF" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FF7A1A"/><stop offset=".5" stop-color="#FFC23D"/><stop offset="1" stop-color="#FFF4C2"/></linearGradient>
+ <linearGradient id="mzAu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A9762A"/><stop offset=".35" stop-color="#F6D27A"/><stop offset=".6" stop-color="#E2AE48"/><stop offset="1" stop-color="#8E5F1E"/></linearGradient>
+ <linearGradient id="mzAg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7E8796"/><stop offset=".35" stop-color="#F1F4F8"/><stop offset=".65" stop-color="#C5CCD6"/><stop offset="1" stop-color="#6D7584"/></linearGradient>
+ <linearGradient id="mzW" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C0213A"/><stop offset="1" stop-color="#6E0B1E"/></linearGradient>
+ <clipPath id="mzC"><path d="M160 92Q180 86 200 92V214Q180 220 160 214Z"/></clipPath>
+</defs>
+${stars}${big}
+<ellipse cx="180" cy="218" rx="165" ry="8" fill="#000" opacity=".25"/>
+<!-- כוס יין -->
+<g>
+ <path d="M38 96H112C112 136 98 154 75 154C52 154 38 136 38 96Z" fill="url(#mzAu)"/>
+ <path d="M43 108H107C105 136 93 148 75 148C57 148 45 136 43 108Z" fill="url(#mzW)"/>
+ <ellipse cx="75" cy="108" rx="32" ry="4.5" fill="#D8344F"/>
+ <ellipse cx="75" cy="96" rx="37" ry="5" fill="#F6D27A" stroke="#A9762A" stroke-width="1.2"/>
+ <ellipse cx="75" cy="97" rx="33" ry="3.2" fill="#8E1428"/>
+ <path d="M50 112Q54 134 66 144" stroke="#fff" stroke-width="3" fill="none" opacity=".25" stroke-linecap="round"/>
+ <path d="M70 154H80V186H70Z" fill="url(#mzAu)"/>
+ <ellipse cx="75" cy="168" rx="8" ry="4" fill="#F6D27A"/>
+ <path d="M48 196Q75 182 102 196Q75 204 48 196Z" fill="url(#mzAu)"/>
+ <ellipse cx="75" cy="200" rx="30" ry="6" fill="url(#mzAu)"/>
+</g>
+<!-- נר הבדלה קלוע -->
+<g>
+ <circle class="glow" cx="180" cy="62" r="62" fill="url(#mzG)"/>
+ <g clip-path="url(#mzC)"><rect x="160" y="80" width="40" height="140" fill="#F7F1E3"/>${br}</g>
+ <path d="M160 92Q180 86 200 92V214Q180 220 160 214Z" fill="none" stroke="#fff" stroke-opacity=".35"/>
+ <path d="M166 100V208" stroke="#fff" stroke-width="3" opacity=".22" stroke-linecap="round"/>
+ <path d="M172 91V80M180 89V76M188 91V80" stroke="#2A2118" stroke-width="2" stroke-linecap="round"/>
+ <path class="fl" d="M180 84C163 76 160 56 167 44C170 55 174 52 174 42C175 30 182 22 186 14C186 28 198 36 198 54C198 72 192 82 180 84Z" fill="url(#mzF)"/>
+ <path class="fl fl2" d="M180 82C172 78 171 66 175 58C177 64 180 62 180 56C182 50 185 48 187 44C188 56 192 62 191 70C190 78 186 81 180 82Z" fill="#FFF8D6"/>
+ <path class="smk" d="M184 14Q178 8 184 2" stroke="#fff" stroke-opacity=".3" fill="none"/>
+</g>
+<!-- בשמים: מגדל הדס וציפורן -->
+<g>
+ <ellipse cx="288" cy="202" rx="30" ry="6" fill="url(#mzAg)"/>
+ <path d="M266 200Q288 188 310 200Z" fill="url(#mzAg)"/>
+ <path d="M283 188H293V172H283Z" fill="url(#mzAg)"/>
+ <ellipse cx="288" cy="172" rx="13" ry="3.5" fill="#DDE2E9"/>
+ <path d="M268 170H308V122H268Z" fill="url(#mzAg)"/>
+ <path d="M276 160V138Q276 132 281 132Q286 132 286 138V160Z M290 160V138Q290 132 295 132Q300 132 300 138V160Z" fill="#2A3150"/>
+ <path d="M278 160V146M284 160V146M292 160V146M298 160V146" stroke="#C5CCD6" stroke-width="1.2"/>
+ <ellipse cx="288" cy="122" rx="22" ry="4" fill="#E8ECF1"/>
+ <path d="M264 122L288 80L312 122Z" fill="url(#mzAg)"/>
+ <path d="M288 80V60" stroke="#C5CCD6" stroke-width="2"/>
+ <path d="M288 60L302 65L288 70Z" fill="#3F6FD1"/>
+ <circle cx="288" cy="80" r="3" fill="#F1F4F8"/>
+ <path d="M318 206Q326 180 342 160" stroke="#3E7B3A" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+ ${[[324,190,-30],[329,180,-40],[334,172,-45],[339,164,-50],[321,196,30],[327,186,25],[332,177,20],[337,168,15]].map(([x,y,a])=>`<ellipse cx="${x}" cy="${y}" rx="5" ry="2.3" transform="rotate(${a} ${x} ${y})" fill="#5DA34E"/>`).join('')}
+ ${[[250,206],[258,209],[244,210]].map(([x,y])=>`<g transform="translate(${x} ${y})"><path d="M0 0V-7" stroke="#5A3420" stroke-width="2.2" stroke-linecap="round"/><circle cx="0" cy="-8" r="2.6" fill="#7A4628"/></g>`).join('')}
+</g>
+</svg>`;
+}
+function motzFill(el){
+  el.innerHTML=motzArt();
+  el.append(h('h2',null,'שבוע טוב'),h('div','mzb',MOTZ_TXT));
+}
+function motzShow(ring){
+  const el=$('motz');if(!el)return;
+  motzFill(el);
+  const b=h('button','mzok','שבוע טוב! ✓');b.type='button';el.append(b);
+  el.hidden=false;
+  el.onclick=()=>{el.hidden=true;el.innerHTML='';};
+  if(ring)setTimeout(chime,250);
+}
+function motzCheck(){
+  if(!me||tvOn||document.hidden||!motzWin())return;
+  const k='yaya.motz.'+me;if(LS.get(k)===today())return;
+  LS.set(k,today());motzShow(true);
+}
+setTimeout(motzCheck,2500);setInterval(motzCheck,15000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(motzCheck,600);});
+function tvMotz(s){
+  if(!motzWin())return false;
+  s.classList.add('tvmotz');s.dataset.ms='20000';
+  motzFill(s);return true;
+}
 /* תמונה בין כל שקף מידע לבא אחריו, כדי שהתמונות ישתלבו לאורך כל הסיבוב */
-const TV_INFO=[tvEvent,tvChars,tvRoni,tvLuni,tvDay,tvEvent,tvWeather,tvRoni,tvParasha,tvProg,tvPod,tvMorning];
+const TV_INFO=[tvEvent,tvMotz,tvChars,tvRoni,tvLuni,tvDay,tvEvent,tvWeather,tvRoni,tvMotz,tvParasha,tvProg,tvPod,tvMorning];
 const TV_SLIDES=TV_INFO.flatMap(f=>[tvPhoto,f]);
 function tvShow(dir){
   if(!tvOn)return;
@@ -6682,6 +6798,11 @@ function tvShow(dir){
   if(nt){tvNightPaint();tvT=setTimeout(()=>tvShow(1),30000);return;}
   const st=$('tvStage'),old=st.querySelector('.tvs.on');
   let made=null;
+  /* צאת השבת: הטאבלט עובר מיד לשקף "שבוע טוב" עם צלצול קצר, פעם אחת */
+  if(motzWin()&&LS.get('yaya.motzTv')!==today()){
+    const s=h('div','tvs');
+    if(tvMotz(s)){made=s;LS.set('yaya.motzTv',today());tvI=TV_SLIDES.indexOf(tvMotz);setTimeout(chime,400);}
+  }
   for(let n=0;n<TV_SLIDES.length&&!made;n++){
     tvI=(tvI+(dir<0?-1:1)+TV_SLIDES.length)%TV_SLIDES.length;
     const s=h('div','tvs');
@@ -6693,7 +6814,7 @@ function tvShow(dir){
     requestAnimationFrame(()=>requestAnimationFrame(()=>made.classList.add('on')));
     if(old){old.classList.remove('on');setTimeout(()=>old.remove(),1000);}
     const dots=$('tvDots');dots.innerHTML='';
-    const cur=TV_SLIDES[tvI];if(cur!==tvPhoto)TV_INFO.forEach((f,k)=>{const me=k===(tvI>>1);if(!me&&((f===tvMorning&&new Date().getHours()<19)||(f===tvParasha&&!shabNow())||(f===tvWeather&&!wxOk())||((f===tvEvent||f===tvChars)&&tvNoPic())||(f===tvEvent&&Date.now()>=TV_EVT_END)||(f===tvRoni&&!TV_RONI.some(r=>Date.now()<+r.d+10*6e4))))return;dots.append(h('i',me?'on':''));});
+    const cur=TV_SLIDES[tvI];if(cur!==tvPhoto)TV_INFO.forEach((f,k)=>{const me=k===(tvI>>1);if(!me&&((f===tvMorning&&new Date().getHours()<19)||(f===tvParasha&&!shabNow())||(f===tvMotz&&!motzWin())||(f===tvWeather&&!wxOk())||((f===tvEvent||f===tvChars)&&tvNoPic())||(f===tvEvent&&Date.now()>=TV_EVT_END)||(f===tvRoni&&!TV_RONI.some(r=>Date.now()<+r.d+10*6e4))))return;dots.append(h('i',me?'on':''));});
   }
   tvT=setTimeout(()=>tvShow(1),(made&&+made.dataset.ms)||TV_MS);
 }

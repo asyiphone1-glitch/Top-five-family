@@ -436,6 +436,15 @@ async function main() {
     }
   }
 
+  // מוצאי שבת (אבא, 21/11/2026): בצאת השבת, הודעה קצרה עם צלצול לכולם
+  {
+    const p = parts(now);
+    if (p.wd === 6) {
+      const t = sunsetMs(p.y, p.m, p.d) + SH_OUT;
+      if (t <= now && now - t <= WINDOW) out.push({ key: `mz_${ymd(p.y, p.m, p.d)}`, who: ['dad', 'mom', ...KIDS], tab: 'today', body: '🕯️🍷🌿 שבוע טוב! ברוך המבדיל בין קדש לחול' });
+    }
+  }
+
   // בקשות החלפה בתורנות של לוני: הודעה למי שביקשו ממנה, ולמבקשת כשענו לה
   {
     const sw = await query('swaps', 'at', 'GREATER_THAN_OR_EQUAL', now - 12 * 3600e3).catch(() => []);
