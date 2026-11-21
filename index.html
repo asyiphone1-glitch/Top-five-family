@@ -3255,7 +3255,6 @@ function avatar(id,sz){
   const w=document.createElement('span');w.className='avl';
   w.style.width=w.style.height=sz+'px';w.style.fontSize=Math.round(sz*.42)+'px';w.style.background=p.l;
   w.textContent=p.name[0];w.setAttribute('aria-hidden','true');
-  if(document.body.classList.contains('tv')&&tvNoPic())return w; /* בתצוגה בשבת: רק עיגול צבעוני עם האות */
   let tm=null;
   if(window.TM_HAS&&TM_HAS(id)){tm=new Image();tm.alt='';tm.src=TM_IMG(id,'av');w.textContent='';w.style.background='var(--soft)';w.append(tm);}
   if(AVIMG[id]&&avOk[id]!==false){
@@ -5940,7 +5939,7 @@ function tvWhen(w){
   return (w.o===0?'היום':w.o===1?'מחר':'ביום '+DAYN[w.wd])+' · '+t;
 }
 /* --- השקפים --- */
-/* (אבא, 21/11/2026) מכניסת שבת ועד צאתה: בלי תמונות בתצוגה, לא תמונות משפחה, לא מודעות ולא הציורים. רק שקפי מידע.
+/* (אבא, 21/11/2026) מכניסת שבת ועד צאתה: בלי תמונות משפחה ובלי מודעות. שקף "הבנות שלנו" עם הציורים נשאר (אבא, 21/11 בערב).
    השעות מ-Hebcal כמו בפינה ליד השעון, ובלי רשת לפי החישוב המקומי */
 function tvNoPic(){
   try{const s=shabNow();if(!s)return false;
@@ -5957,7 +5956,6 @@ function tvPhoto(s){
   return true;
 }
 function tvChars(s){
-  if(tvNoPic())return false;
   s.append(h('div','tvh','הבנות שלנו 💛'));
   const row=h('div','tvfigs');
   KIDS.forEach((id,i)=>{
@@ -5974,7 +5972,7 @@ function tvLuni(s){
   L.forEach((w,i)=>{
     const c=h('div','tvw'+(i===0?' main':''));c.style.setProperty('--c',w.who?tvC(w.who):'#9AA8C4');
     c.append(h('div','lbl',i===0?'עכשיו בתור':'ואחר כך'));
-    if(w.who&&byId[w.who]){if(!tvNoPic())c.append(figure(w.who,240));c.append(h('div','nm',byId[w.who].name));}
+    if(w.who&&byId[w.who])c.append(figure(w.who,240),h('div','nm',byId[w.who].name));
     else c.append(h('div','nm','עוד לא שובץ'));
     c.append(h('div','wh'+(w.now?' now':''),tvWhen(w)));
     box.append(c);
@@ -6040,7 +6038,7 @@ function tvPod(s){
   [1,0,2].forEach(i=>{
     const r=rows[i],col=h('div','tvpc r'+(i+1));col.style.setProperty('--c',tvC(r.id));
     if(any&&i===0)col.append(h('div','crown','👑'));
-    if(!tvNoPic())col.append(figure(r.id,i===0?260:210));col.append(h('b',null,byId[r.id].name));
+    col.append(figure(r.id,i===0?260:210),h('b',null,byId[r.id].name));
     const st=h('div','step');st.append(h('span',null,String(i+1)),h('small',null,r.pts+' נק׳ · 🐾 '+r.w));col.append(st);
     stage.append(col);
   });
@@ -6817,7 +6815,7 @@ function tvShow(dir){
     requestAnimationFrame(()=>requestAnimationFrame(()=>made.classList.add('on')));
     if(old){old.classList.remove('on');setTimeout(()=>old.remove(),1000);}
     const dots=$('tvDots');dots.innerHTML='';
-    const cur=TV_SLIDES[tvI];if(cur!==tvPhoto)TV_INFO.forEach((f,k)=>{const me=k===(tvI>>1);if(!me&&((f===tvMorning&&new Date().getHours()<19)||(f===tvParasha&&!shabNow())||(f===tvMotz&&!motzWin())||(f===tvWeather&&!wxOk())||((f===tvEvent||f===tvChars)&&tvNoPic())||(f===tvEvent&&Date.now()>=TV_EVT_END)||(f===tvRoni&&!TV_RONI.some(r=>Date.now()<+r.d+10*6e4))))return;dots.append(h('i',me?'on':''));});
+    const cur=TV_SLIDES[tvI];if(cur!==tvPhoto)TV_INFO.forEach((f,k)=>{const me=k===(tvI>>1);if(!me&&((f===tvMorning&&new Date().getHours()<19)||(f===tvParasha&&!shabNow())||(f===tvMotz&&!motzWin())||(f===tvWeather&&!wxOk())||(f===tvEvent&&tvNoPic())||(f===tvEvent&&Date.now()>=TV_EVT_END)||(f===tvRoni&&!TV_RONI.some(r=>Date.now()<+r.d+10*6e4))))return;dots.append(h('i',me?'on':''));});
   }
   tvT=setTimeout(()=>tvShow(1),(made&&+made.dataset.ms)||TV_MS);
 }
