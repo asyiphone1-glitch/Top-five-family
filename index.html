@@ -6551,13 +6551,13 @@ function shabLoad(){
       if(tvOn)tvClock();
     }).catch(()=>{});
 }
-/* מה מציגים עכשיו: מיום שישי ב-06:00 ועד חצי שעה אחרי צאת השבת */
+/* מה מציגים עכשיו: מיום שישי ב-06:00 ועד צאת השבת (אבא, 21/11/2026: לא חצי שעה אחרי) */
 function shabNow(){
   let s=shab;
   if(!s||s.hv+36e5<Date.now())s=shabLocal();
   const fri=new Date(s.c);fri.setHours(6,0,0,0);
   const now=Date.now();
-  return now>=fri.getTime()&&now<=s.hv+30*6e4?s:null;
+  return now>=fri.getTime()&&now<s.hv?s:null;
 }
 function tvShabPaint(){
   const el=$('tvShab');if(!el)return;
@@ -6697,11 +6697,18 @@ function tvRoni(s){
   s.append(tb);return true;
 }
 /* ---------- מוצאי שבת (אבא, 21/11/2026): צלצול קצר ומסך "שבוע טוב" עם נר הבדלה, כוס יין ובשמים ----------
-   מצאת השבת (45 דק׳ אחרי השקיעה בפתח תקווה, אותו רגע שהצלצולים חוזרים) ועד חצות.
+   מצאת השבת ולמשך 3 שעות.
    בטלפון: פעם אחת בכל מוצאי שבת, בפתיחה הראשונה. בטאבלט: נפתח על השקף הזה עם צלצול, ואחר כך הוא חלק מהסבב */
+/* (אבא, 21/11/2026 בלילה) "שבוע טוב" מוצג 3 שעות מצאת השבת. צאת השבת: השעה של Hebcal שמוצגת בטאבלט, ובלי רשת החישוב המקומי */
+function motzStart(d){
+  try{const s=shab&&!shab.loc?shab:null;
+    if(s&&new Date(s.hv).toDateString()===d.toDateString())return s.hv;}catch(e){}
+  return sunsetMs(d.getFullYear(),d.getMonth()+1,d.getDate())+45*6e4;
+}
 function motzWin(t){
   const d=new Date(t||Date.now());if(d.getDay()!==6)return false;
-  return d.getTime()>=sunsetMs(d.getFullYear(),d.getMonth()+1,d.getDate())+45*6e4;
+  const st=motzStart(d),x=d.getTime();
+  return x>=st&&x<st+3*36e5;
 }
 const MOTZ_TXT='״ברוך המבדיל בין קדש לחול״';
 const MOTZ_WISH='שיהיה לכן שבוע מלא אור, שמחה והצלחות, כמו האור של נר ההבדלה 🕯️💛';
