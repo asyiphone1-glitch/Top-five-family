@@ -441,7 +441,7 @@ async function main() {
     const p = parts(now);
     if (p.wd === 6) {
       const t = sunsetMs(p.y, p.m, p.d) + SH_OUT;
-      if (t <= now && now - t <= WINDOW) out.push({ key: `mz_${ymd(p.y, p.m, p.d)}`, who: ['dad', 'mom', ...KIDS], tab: 'today', body: '🕯️🍷🌿 שבוע טוב! ברוך המבדיל בין קדש לחול' });
+      if (t <= now && now - t <= WINDOW) out.push({ key: `mz_${ymd(p.y, p.m, p.d)}`, who: ['dad', 'mom', ...KIDS], tab: 'today', body: '🕯️🍷🌿 שבוע טוב! ״ברוך המבדיל בין קדש לחול״. שיהיה לכן שבוע מלא אור, שמחה והצלחות 💛' });
     }
   }
 

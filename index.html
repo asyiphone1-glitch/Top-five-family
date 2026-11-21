@@ -593,6 +593,7 @@ body.tv .motz{display:none!important}
 .motz .mzart{width:min(92vw,440px);height:auto}
 .motz h2{margin:4px 0 0;font:800 clamp(2.6rem,13vw,4.2rem)/1.05 var(--display);background:linear-gradient(180deg,#FFE9A8,#F2B84B);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 30px rgba(255,200,90,.25)}
 .motz .mzb{font:600 clamp(1.25rem,5.6vw,1.7rem)/1.35 var(--display);color:#FFF1CC;letter-spacing:.01em}
+.motz .mzw{max-width:340px;margin-top:6px;font:500 clamp(1.05rem,4.6vw,1.3rem)/1.45 var(--body);color:#E6E2FF}
 .motz .mzok{margin-top:14px;background:rgba(255,233,168,.14);border:1.5px solid rgba(255,233,168,.55);color:#FFE9A8;border-radius:999px;padding:12px 30px;font:700 1.15rem var(--display);cursor:pointer}
 .mzart .fl{transform-box:fill-box;transform-origin:50% 100%;animation:mzfl 1.6s ease-in-out infinite alternate}
 .mzart .fl2{animation-duration:1.15s;animation-delay:-.4s}
@@ -608,6 +609,7 @@ body.tv .motz{display:none!important}
 #tv .tvmotz .mzart{width:auto;height:46vmin;max-width:92vw}
 #tv .tvmotz h2{margin:1vmin 0 0;font:800 13vmin/1.05 var(--display);background:linear-gradient(180deg,#FFE9A8,#F2B84B);-webkit-background-clip:text;background-clip:text;color:transparent}
 #tv .tvmotz .mzb{font:600 5.6vmin/1.3 var(--display);color:#FFF1CC;margin-top:1.5vmin}
+#tv .tvmotz .mzw{font:500 4vmin/1.4 var(--body);color:#E6E2FF;margin-top:1.5vmin;max-width:80vw;text-align:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 /* ---------- מסך תצוגה לטאבלט ---------- */
 body.tv{overflow:hidden}
@@ -6703,7 +6705,8 @@ function motzWin(t){
   const d=new Date(t||Date.now());if(d.getDay()!==6)return false;
   return d.getTime()>=sunsetMs(d.getFullYear(),d.getMonth()+1,d.getDate())+45*6e4;
 }
-const MOTZ_TXT='ברוך המבדיל בין קדש לחול';
+const MOTZ_TXT='״ברוך המבדיל בין קדש לחול״';
+const MOTZ_WISH='שיהיה לכן שבוע מלא אור, שמחה והצלחות, כמו האור של נר ההבדלה 🕯️💛';
 function motzArt(){
   const stars=[[22,24,1.6],[58,12,1.1],[96,34,1.3],[132,10,1],[230,14,1.2],[268,36,1],[304,12,1.5],[338,30,1.1],[14,70,1],[346,74,1.2],[40,120,.9],[322,128,1]]
     .map(([x,y,r])=>`<circle class="st" cx="${x}" cy="${y}" r="${r}" fill="#FFF3C4"/>`).join('');
@@ -6766,7 +6769,7 @@ ${stars}${big}
 }
 function motzFill(el){
   el.innerHTML=motzArt();
-  el.append(h('h2',null,'שבוע טוב'),h('div','mzb',MOTZ_TXT));
+  el.append(h('h2',null,'שבוע טוב'),h('div','mzb',MOTZ_TXT),h('div','mzw',MOTZ_WISH));
 }
 function motzShow(ring){
   const el=$('motz');if(!el)return;
